@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="590" height="300" viewBox="0 0 590 300" fill="none">
+  <defs>
+    <linearGradient id="back" x1="26" y1="14" x2="551" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1230"/>
+      <stop offset=".52" stop-color="#201047"/>
+      <stop offset="1" stop-color="#090B1D"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="72" y1="93" x2="347" y2="174" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF3B5"/>
+      <stop offset=".48" stop-color="#FFD05A"/>
+      <stop offset="1" stop-color="#F39820"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#60F5FF"/>
+      <stop offset="1" stop-color="#8061FF"/>
+    </linearGradient>
+    <linearGradient id="card" x1="373" y1="64" x2="565" y2="254" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#26184A"/>
+      <stop offset="1" stop-color="#0A112A"/>
+    </linearGradient>
+    <radialGradient id="flare" cx="0" cy="0" r="1" gradientTransform="matrix(270 140 -160 309 476 129)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BB3FFF" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#16214C" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="365" y="49" width="218" height="225" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="9"/>
+      <feOffset dy="5"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".45"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="textGlow" x="43" y="70" width="319" height="73" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="590" height="300" rx="22" fill="url(#back)"/>
+  <rect width="590" height="300" rx="22" fill="url(#flare)"/>
+  <path d="M0 224C104 183 150 280 269 232C379 187 442 234 590 181V300H0V224Z" fill="#081126" fill-opacity=".72"/>
+  <path d="M0 244C115 206 166 294 285 250C399 208 470 258 590 211" stroke="#7353C8" stroke-opacity=".23"/>
+  <path d="M0 266C127 224 174 314 302 273C411 238 488 279 590 242" stroke="#37D8E9" stroke-opacity=".18"/>
+  <g fill="#FFF2AE">
+    <circle cx="37" cy="38" r="1.5"/><circle cx="222" cy="42" r="1"/><circle cx="335" cy="27" r="1.5"/>
+    <circle cx="476" cy="39" r="1"/><circle cx="551" cy="90" r="1.5"/><circle cx="31" cy="186" r="1"/>
+    <circle cx="345" cy="215" r="1.2"/><circle cx="559" cy="177" r="1"/>
+  </g>
+  <g transform="translate(40 34)">
+    <rect width="43" height="43" rx="12" fill="#171239" stroke="#E7BE53" stroke-opacity=".8"/>
+    <path d="M10 28V18L17 23L21.5 14L26 23L33 18V29L21.5 34L10 29V28Z" fill="url(#gold)" stroke="#FFF0AE" stroke-width="1.3" stroke-linejoin="round"/>
+    <circle cx="10" cy="17" r="2" fill="#74EDFF"/><circle cx="21.5" cy="12" r="2.5" fill="#74EDFF"/><circle cx="33" cy="17" r="2" fill="#74EDFF"/>
+  </g>
+  <text x="95" y="52" fill="#FFDA75" font-family="Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="3">SPIN PALACE</text>
+  <text x="43" y="121" fill="url(#gold)" font-family="Arial,sans-serif" font-size="39" font-weight="900" letter-spacing=".5" filter="url(#textGlow)">SLOT ARCADE</text>
+  <text x="46" y="151" fill="#D9D5F0" font-family="Arial,sans-serif" font-size="15" font-weight="600" letter-spacing="1.1">39 BROWSER GAMES · FREE PLAY</text>
+  <rect x="46" y="174" width="211" height="34" rx="17" fill="#10182D" stroke="#48DCEB" stroke-opacity=".7"/>
+  <circle cx="64" cy="191" r="4" fill="#5AF3B1"/>
+  <text x="77" y="195" fill="#E9F7FF" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing=".65">FREE PLAY · VIRTUAL CREDITS</text>
+  <text x="47" y="239" fill="#9FA7C9" font-family="Arial,sans-serif" font-size="11" font-weight="600" letter-spacing="1">EXPLORE • PLAY • CUSTOMIZE</text>
+  <g filter="url(#shadow)">
+    <rect x="381" y="62" width="184" height="195" rx="20" fill="url(#card)" stroke="#E6BD55" stroke-opacity=".65"/>
+    <rect x="393" y="75" width="160" height="27" rx="9" fill="#0C1024" stroke="#4E466A"/>
+    <text x="473" y="93" fill="#FFD666" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="800" letter-spacing="2">SPIN • WIN • REPEAT</text>
+    <g>
+      <rect x="394" y="111" width="46" height="72" rx="10" fill="#12152B" stroke="#7255A5"/>
+      <rect x="450" y="111" width="46" height="72" rx="10" fill="#12152B" stroke="#7255A5"/>
+      <rect x="506" y="111" width="46" height="72" rx="10" fill="#12152B" stroke="#7255A5"/>
+      <text x="417" y="160" fill="#FFCF4F" text-anchor="middle" font-family="Arial,sans-serif" font-size="35" font-weight="900">7</text>
+      <text x="473" y="158" fill="#62E9F2" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="900">✦</text>
+      <text x="529" y="158" fill="#FF77D5" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="900">♦</text>
+    </g>
+    <rect x="399" y="196" width="148" height="43" rx="13" fill="url(#gold)"/>
+    <text x="473" y="223" fill="#221331" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="900" letter-spacing="3">PLAY DEMO</text>
+  </g>
+  <rect x=".75" y=".75" width="588.5" height="298.5" rx="21.25" stroke="#EBC95D" stroke-opacity=".72" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b1c">
+  <link rel="icon" type="image/png" href="assets/spin-palace-icon-80x80.png">
+  <link rel="stylesheet" href="static/demo.css">
+  <title>Admin Preview — Spin Palace</title>
+</head>
+<body class="admin-page">
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Spin Palace home">
+      <img src="assets/spin-palace-icon-80x80.png" alt="" width="42" height="42">
+      <span>SPIN <b>PALACE</b></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="./">Public demo</a>
+      <span class="demo-pill"><i></i> ADMIN PREVIEW</span>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-title">
+      <div>
+        <p class="eyebrow">SPIN PALACE / CONTROL ROOM</p>
+        <h1>Admin <em>preview</em></h1>
+        <p class="admin-subtitle">A static look at the included admin experience.</p>
+      </div>
+      <span class="read-only"><span></span> READ-ONLY DEMO</span>
+    </div>
+
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-avatar">♛</div>
+        <p class="admin-label">DEMO ADMIN</p>
+        <button class="side-link selected" data-panel="overview">◫ <span>Overview</span></button>
+        <button class="side-link" data-panel="games">▦ <span>Game library</span></button>
+        <button class="side-link" data-panel="users">♙ <span>Players</span></button>
+        <button class="side-link" data-panel="settings">⚙ <span>Settings</span></button>
+        <a class="side-back" href="./">← Back to lobby</a>
+      </aside>
+
+      <section class="admin-content">
+        <div class="sample-warning"><b>Preview mode</b><span>Sample figures only — this static page does not manage accounts or change game data.</span></div>
+        <div class="admin-panel active" id="panel-overview">
+          <div class="panel-heading"><div><p class="eyebrow">YOUR ARCADE AT A GLANCE</p><h2>Overview</h2></div><span class="date-tag">STATIC SHOWCASE</span></div>
+          <div class="stat-grid">
+            <article class="stat-card"><span>Games in library</span><strong id="statGames">39</strong><small>Configured demo pages</small></article>
+            <article class="stat-card"><span>Demo players</span><strong>128</strong><small>Illustrative sample</small></article>
+            <article class="stat-card"><span>Free-play sessions</span><strong>2,481</strong><small>Illustrative sample</small></article>
+            <article class="stat-card"><span>Real-money activity</span><strong class="off">OFF</strong><small>No cash features in demo</small></article>
+          </div>
+          <div class="panel-card">
+            <div class="panel-heading compact"><div><p class="eyebrow">READY TO EXPLORE</p><h3>Game library</h3></div><button class="text-button" data-open="games">Browse all →</button></div>
+            <div class="featured-row" id="featuredGames"></div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-heading compact"><div><p class="eyebrow">SAMPLE ACTIVITY</p><h3>Recent events</h3></div><span class="date-tag">MOCK DATA</span></div>
+            <div class="activity-row"><span class="activity-dot mint"></span><span>New free-play session</span><time>2 min ago</time></div>
+            <div class="activity-row"><span class="activity-dot blue"></span><span>Game opened · Aurora Descent</span><time>12 min ago</time></div>
+            <div class="activity-row"><span class="activity-dot gold"></span><span>Demo library viewed</span><time>28 min ago</time></div>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="panel-games">
+          <div class="panel-heading"><div><p class="eyebrow">STATIC GAME CATALOGUE</p><h2>Game library</h2></div><span class="date-tag" id="gameCount">39 GAMES</span></div>
+          <label class="search admin-search"><span aria-hidden="true">⌕</span><input id="adminSearch" type="search" placeholder="Search game titles..." autocomplete="off"></label>
+          <div class="table-wrap"><table><thead><tr><th>GAME</th><th>TYPE</th><th>STATUS</th><th>PREVIEW</th></tr></thead><tbody id="adminGameRows"></tbody></table></div>
+        </div>
+
+        <div class="admin-panel" id="panel-users">
+          <div class="panel-heading"><div><p class="eyebrow">SAMPLE DATA</p><h2>Players</h2></div><span class="date-tag">NOT CONNECTED</span></div>
+          <div class="panel-card player-list">
+            <div class="player-row"><span class="player-avatar violet">AL</span><span><b>Alex Lane</b><small>Free-play visitor</small></span><span class="status-tag">DEMO</span></div>
+            <div class="player-row"><span class="player-avatar cyan">JM</span><span><b>Jamie Morgan</b><small>Free-play visitor</small></span><span class="status-tag">DEMO</span></div>
+            <div class="player-row"><span class="player-avatar gold">SK</span><span><b>Sam Kim</b><small>Free-play visitor</small></span><span class="status-tag">DEMO</span></div>
+          </div>
+          <p class="subtle-copy">These names are illustrative placeholders. The static showcase does not collect or store player accounts.</p>
+        </div>
+
+        <div class="admin-panel" id="panel-settings">
+          <div class="panel-heading"><div><p class="eyebrow">DEMO CONFIGURATION</p><h2>Settings</h2></div><span class="date-tag">PREVIEW ONLY</span></div>
+          <div class="panel-card settings-list">
+            <div><span>Site name</span><b>Spin Palace</b></div>
+            <div><span>Play mode</span><b class="setting-value">Virtual credits only</b></div>
+            <div><span>Payment processing</span><b class="off">Disabled</b></div>
+            <div><span>Backend connection</span><b class="off">Not included</b></div>
+            <div><span>GitHub Pages ready</span><b class="setting-value">Static files</b></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>
+    <a class="brand footer-brand" href="./"><img src="assets/spin-palace-icon-80x80.png" alt="" width="28" height="28"><span>SPIN <b>PALACE</b></span></a>
+    <span>Admin UI preview · No backend or account management</span>
+    <a href="./">Public demo</a>
+  </footer>
+  <script src="static/admin-demo.js" defer></script>
+</body>
+</html>
+

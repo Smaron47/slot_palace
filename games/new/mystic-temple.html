@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mystic Temple — Jade Cluster Cascade</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Mulish:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --jade:#0d9488;
+  --jade-2:#2dd4bf;
+  --jade-3:#14b8a6;
+  --jade-deep:#042f2e;
+  --gold:#fbbf24;
+  --gold-2:#fde68a;
+  --gold-deep:#78350f;
+  --crimson:#dc2626;
+  --crimson-2:#f87171;
+  --ink:#0a1a18;
+  --ink-2:#0f2422;
+  --text:#d1fae5;
+  --dim:#6ee7b7;
+  --radius:14px;
+  --radius-lg:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Mulish',system-ui,sans-serif;
+  background:var(--ink);color:var(--text);
+  overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;user-select:none;
+}
+
+/* ============== BACKGROUND ============== */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#042f2e center/cover no-repeat url('../../assets/bg9.gif');
+  transition:filter .7s, opacity .7s;
+  filter:brightness(.55) saturate(1.2) hue-rotate(65deg);
+  opacity:.92;
+}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 15% 10%,rgba(45,212,191,.28),transparent 55%),
+    radial-gradient(ellipse at 85% 90%,rgba(220,38,38,.18),transparent 55%),
+    radial-gradient(ellipse at 50% 50%,rgba(251,191,36,.08),transparent 60%),
+    linear-gradient(180deg,rgba(4,47,46,.5),rgba(10,26,24,.9));
+}
+#bgLayer.free { filter:brightness(.65) saturate(1.35) hue-rotate(45deg) }
+#bgLayer.big  { filter:brightness(.75) saturate(1.4) hue-rotate(120deg) }
+
+/* drifting leaf particles */
+#leaves{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+#leaves span{
+  position:absolute;width:6px;height:6px;
+  border-radius:50% 0 50% 50%;
+  background:radial-gradient(circle at 30% 30%,var(--jade-2),var(--jade-deep));
+  box-shadow:0 0 8px var(--jade-3);
+  animation:leafFall linear infinite;
+}
+@keyframes leafFall{
+  0%{transform:translateY(0) rotate(0deg);opacity:0}
+  10%{opacity:1}
+  90%{opacity:.6}
+  100%{transform:translateY(110vh) rotate(720deg) translateX(60px);opacity:0}
+}
+
+/* ============== GAME SHELL ============== */
+#game{
+  position:relative;z-index:5;
+  width:min(1250px,97vw);height:min(810px,96vh);
+  background:linear-gradient(155deg,rgba(15,36,34,.82),rgba(10,26,24,.9));
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(251,191,36,.4);
+  border-radius:var(--radius-lg);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.85),
+    inset 0 0 80px rgba(13,148,136,.08),
+    0 0 100px rgba(251,191,36,.12),
+    0 0 40px rgba(45,212,191,.15);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(120deg,transparent 42%,rgba(251,191,36,.09) 50%,transparent 58%);
+  animation:shine 10s ease-in-out infinite;
+}
+@keyframes shine{0%,58%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+
+/* ornamental top corner brackets */
+#game::after{
+  content:"";position:absolute;inset:8px;pointer-events:none;border-radius:inherit;z-index:58;
+  border-top:2px solid transparent;
+  border-bottom:2px solid transparent;
+  background:
+    linear-gradient(90deg,var(--gold) 0,transparent 12%,transparent 88%,var(--gold) 100%) top/100% 1px no-repeat,
+    linear-gradient(90deg,var(--gold) 0,transparent 12%,transparent 88%,var(--gold) 100%) bottom/100% 1px no-repeat;
+}
+
+/* ============== TOP BAR ============== */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 22px;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(10,26,24,.75),transparent);
+  border-bottom:1px solid rgba(251,191,36,.22);
+  position:relative;z-index:2;
+}
+.brand{
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.5rem;letter-spacing:3px;
+  color:var(--gold);display:flex;align-items:center;gap:10px;
+  text-shadow:0 0 18px rgba(251,191,36,.7),0 0 30px rgba(45,212,191,.4);
+}
+.brand .dragon{
+  font-size:1.35rem;
+  filter:drop-shadow(0 0 8px var(--jade-3)) drop-shadow(0 0 14px var(--gold));
+  animation:breathe 2.6s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 14px;border-radius:20px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(251,191,36,.45);
+  color:var(--gold-2);font-size:.68rem;font-weight:800;
+  letter-spacing:1.5px;cursor:pointer;transition:.2s;
+  font-family:'Cinzel',serif;text-transform:uppercase;
+}
+.pill:hover{background:rgba(251,191,36,.2);color:#fff;transform:translateY(-1px);
+  box-shadow:0 0 14px rgba(251,191,36,.55)}
+.pill.on{background:rgba(13,148,136,.35);border-color:var(--jade-2);color:#fff;
+  box-shadow:0 0 14px var(--jade-2)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--gold-2) 50%),
+    linear-gradient(135deg,var(--gold-2) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+  background-size:5px 5px;background-repeat:no-repeat}
+
+/* ============== MAIN ============== */
+.main{
+  flex:1;display:grid;grid-template-columns:1fr 270px;
+  gap:14px;padding:14px;min-height:0;position:relative;z-index:2;
+}
+.board-wrap{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(15,36,34,.6),rgba(10,26,24,.88));
+  border:1px solid rgba(251,191,36,.34);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.75),
+    0 0 40px rgba(13,148,136,.24),
+    0 0 30px rgba(251,191,36,.12);
+  overflow:hidden;min-height:0;
+}
+.board-wrap::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(circle at 20% 20%,rgba(45,212,191,.04),transparent 40%),
+    radial-gradient(circle at 80% 80%,rgba(220,38,38,.04),transparent 40%);
+}
+canvas#board{display:block;width:100%;height:100%;position:relative;z-index:2}
+
+/* chain badge */
+#chainBadge{
+  position:absolute;top:14px;left:14px;z-index:20;
+  padding:6px 14px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(13,148,136,.9),rgba(10,26,24,.9));
+  border:2px solid var(--jade-2);color:#fff;
+  font-family:'Cinzel',serif;font-weight:900;letter-spacing:2px;font-size:.72rem;
+  box-shadow:0 0 22px rgba(13,148,136,.7);display:none;
+}
+#chainBadge.on{display:block;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* free spins banner */
+#fsBanner{
+  position:absolute;top:14px;right:14px;z-index:20;
+  padding:8px 20px;border-radius:30px;
+  background:linear-gradient(160deg,rgba(220,38,38,.88),rgba(10,26,24,.9));
+  border:2px solid #fff;
+  box-shadow:0 0 30px var(--crimson),0 0 60px rgba(220,38,38,.5);
+  font-family:'Cinzel',serif;font-weight:900;letter-spacing:3px;font-size:.82rem;
+  color:#fff;text-shadow:0 0 10px #fff;display:none;
+}
+#fsBanner.on{display:block;animation:pulse 1.3s ease-in-out infinite}
+
+/* ============== MULTIPLIER REEL (top-to-bottom scroll) ============== */
+#multReel{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  z-index:22;width:110px;height:60px;overflow:hidden;
+  border-radius:12px;
+  background:linear-gradient(160deg,rgba(251,191,36,.28),rgba(10,26,24,.94));
+  border:2px solid var(--gold);
+  box-shadow:0 0 26px rgba(251,191,36,.55),inset 0 0 16px rgba(0,0,0,.7);
+  transition:box-shadow .35s;
+}
+#multReel.flash{
+  box-shadow:0 0 44px rgba(251,191,36,1),0 0 80px rgba(45,212,191,.6),
+    inset 0 0 16px rgba(0,0,0,.7);
+}
+#multReel::before{
+  content:"MULT";position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+  z-index:3;font-family:'Cinzel',serif;font-size:.5rem;font-weight:900;
+  letter-spacing:2px;color:#042f2e;background:var(--gold);
+  padding:2px 10px;border-radius:0 0 6px 6px;pointer-events:none;
+}
+#multReel::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+  border-radius:inherit;
+  background:linear-gradient(180deg,rgba(10,26,24,.88) 0%,transparent 22%,
+    transparent 78%,rgba(10,26,24,.88) 100%);
+}
+.mult-strip{
+  position:absolute;left:0;right:0;top:0;will-change:transform;
+  transition:transform 900ms cubic-bezier(.15,.75,.2,1);
+}
+.mult-cell{
+  height:60px;display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.5rem;
+  color:#fff;text-shadow:0 0 12px var(--gold),0 0 24px var(--jade-2);
+  font-variant-numeric:tabular-nums;letter-spacing:1px;
+}
+
+/* ============== DASHBOARD ============== */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0;position:relative;z-index:2}
+.stat{
+  background:linear-gradient(160deg,rgba(15,36,34,.78),rgba(10,26,24,.9));
+  border:1px solid rgba(251,191,36,.32);
+  border-radius:var(--radius);padding:12px 14px;position:relative;overflow:hidden;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(45,212,191,.12) 50%,transparent 60%);
+  animation:shine 7s ease-in-out infinite;
+}
+.stat .lbl{font-size:.6rem;letter-spacing:2.5px;color:var(--dim);font-weight:800;
+  text-transform:uppercase;font-family:'Cinzel',serif}
+.stat .val{font-family:'Cinzel',serif;font-weight:900;font-size:1.4rem;
+  margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.stat.balance .val{color:var(--jade-2);text-shadow:0 0 14px rgba(45,212,191,.7)}
+.stat.win .val{color:var(--gold);text-shadow:0 0 14px rgba(251,191,36,.7)}
+.stat .val.pop{animation:pop .55s cubic-bezier(.2,.7,.3,1.6)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3);filter:brightness(1.8)}100%{transform:scale(1)}}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(251,191,36,.38);
+  border-radius:12px;padding:6px;
+}
+.bet-row .btn{
+  width:38px;height:38px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--gold-2),var(--gold));
+  border:none;border-radius:50%;
+  color:#3d2408;font-weight:900;font-size:1.15rem;cursor:pointer;transition:.15s;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.6),
+    0 0 12px rgba(251,191,36,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 22px var(--gold)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7);box-shadow:none}
+.bet-row .amt{
+  flex:1;text-align:center;font-family:'Cinzel',serif;
+  font-weight:900;font-size:1.05rem;color:#fff;font-variant-numeric:tabular-nums;
+}
+.bet-row .amt small{display:block;font-size:.55rem;color:var(--dim);
+  letter-spacing:1.8px;font-weight:800;margin-top:2px;font-family:'Mulish',sans-serif}
+
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:10px 6px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(251,191,36,.14),rgba(13,148,136,.08));
+  border:1px solid rgba(251,191,36,.42);color:var(--gold-2);
+  font-family:'Cinzel',serif;font-size:.65rem;font-weight:800;
+  letter-spacing:1.2px;cursor:pointer;transition:.15s;
+}
+.mini:hover{background:rgba(251,191,36,.25);color:#fff;
+  box-shadow:0 0 14px rgba(251,191,36,.6)}
+.mini.on{background:linear-gradient(160deg,var(--jade),var(--jade-2));
+  color:#042f2e;border-color:#fff;box-shadow:0 0 22px var(--jade-2);
+  animation:pulse 1.3s ease-in-out infinite}
+
+.spin{
+  padding:22px 10px;border-radius:18px;border:none;cursor:pointer;
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.35rem;letter-spacing:4px;
+  color:#3d2408;
+  background:radial-gradient(circle at 32% 28%,#fff8dd 0%,var(--gold) 42%,var(--gold-deep) 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.5),0 0 45px rgba(251,191,36,.6),
+    inset 0 2px 0 rgba(255,255,255,.7);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(var(--gold),#fff,var(--jade-2),var(--gold));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spinGlow 3.5s linear infinite;opacity:.75;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.spin:hover:not(:disabled){transform:translateY(-2px);
+  box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 70px var(--gold),
+  0 0 110px rgba(45,212,191,.6),inset 0 2px 0 rgba(255,255,255,.7)}
+.spin:active:not(:disabled){transform:translateY(3px);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px var(--gold)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+.spin .autocnt{display:block;font-size:.6rem;letter-spacing:2px;
+  color:rgba(0,0,0,.6);margin-top:3px;font-weight:800;font-family:'Mulish',sans-serif}
+
+/* ============== MODALS ============== */
+.modal{
+  position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(4,47,46,.9);backdrop-filter:blur(10px);
+  padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  width:min(820px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(15,36,34,.98),rgba(10,26,24,.98));
+  border:2px solid rgba(251,191,36,.6);
+  border-radius:20px;padding:24px 28px;
+  box-shadow:0 0 60px rgba(251,191,36,.35),0 0 90px rgba(13,148,136,.25);
+}
+.modal-card h2{
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.5rem;
+  letter-spacing:2px;color:var(--gold);margin-bottom:12px;
+  text-shadow:0 0 20px rgba(251,191,36,.6);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.modal-card h2 button{
+  background:rgba(251,191,36,.15);border:1px solid var(--gold);
+  color:var(--gold-2);padding:6px 14px;border-radius:10px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:.7rem;font-weight:800;letter-spacing:1px;
+}
+.modal-card h2 button:hover{background:rgba(251,191,36,.3);color:#fff}
+.modal-card p{line-height:1.7;color:#c9e4e0;font-size:.9rem;margin:8px 0}
+.modal-card .rules{color:#a8d4c9;font-size:.87rem}
+.modal-card .rules b{color:var(--gold-2)}
+.modal-card .grid-sym{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:12px;margin:16px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.5);border:1px solid rgba(251,191,36,.3);
+  border-radius:14px;padding:12px;text-align:center;
+}
+.sym-card .ic{
+  width:74px;height:74px;margin:0 auto 8px;
+  border-radius:12px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);border:1px solid rgba(251,191,36,.28);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.sym-card .nm{font-size:.68rem;color:#a8d4c9;letter-spacing:1.2px;
+  text-transform:uppercase;font-weight:800}
+.sym-card .py{font-family:'Cinzel',serif;font-size:.68rem;
+  color:var(--jade-2);font-weight:800;margin-top:4px;line-height:1.3}
+.sym-card .py small{display:block;color:var(--dim);font-weight:600;font-size:.9em}
+.sym-card.wild .ic{border-color:var(--jade-2);box-shadow:0 0 16px rgba(45,212,191,.6)}
+.sym-card.wild .py{color:var(--jade-2)}
+.sym-card.scatter .ic{border-color:var(--crimson);box-shadow:0 0 16px rgba(220,38,38,.6)}
+.sym-card.scatter .py{color:var(--crimson-2)}
+.history{list-style:none;font-size:.78rem}
+.history li{display:flex;justify-content:space-between;gap:10px;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.history li b{color:var(--jade-2);font-family:'Cinzel',serif}
+.history li.loss b{color:#f87171}
+
+/* ============== WIN OVERLAY ============== */
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(4,47,46,.55),rgba(4,47,46,.92));
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+#winOv.on{display:flex;animation:fadeIn .25s ease}
+#winOv .box{
+  text-align:center;padding:32px 56px;border-radius:26px;
+  background:linear-gradient(160deg,rgba(15,36,34,.96),rgba(10,26,24,.96));
+  border:3px solid var(--gold);
+  box-shadow:0 0 90px var(--gold),0 0 130px rgba(45,212,191,.5),
+    inset 0 0 50px rgba(251,191,36,.18);
+  animation:winPop .6s cubic-bezier(.2,.7,.3,1.5);
+  position:relative;overflow:hidden;
+}
+#winOv .box::before{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(transparent 30%,rgba(251,191,36,.32) 50%,transparent 70%);
+  animation:spinGlow 3s linear infinite;
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Cinzel',serif;font-weight:900;font-size:2rem;letter-spacing:6px;
+  color:#fff;text-shadow:0 0 30px var(--gold),0 0 60px var(--jade-2);
+  position:relative;z-index:2;
+}
+#winOv .amt{
+  font-family:'Cinzel',serif;font-weight:900;font-size:2.5rem;
+  color:var(--gold);text-shadow:0 0 30px var(--gold),0 0 60px #fff;
+  margin-top:10px;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+}
+#winOv .sub{font-size:.72rem;color:var(--dim);letter-spacing:3px;
+  margin-top:12px;font-weight:800;text-transform:uppercase;position:relative;z-index:2;
+  font-family:'Mulish',sans-serif}
+
+/* ============== TOASTS ============== */
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:950;
+  display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(15,36,34,.96),rgba(10,26,24,.96));
+  border:1px solid var(--gold);color:var(--gold-2);
+  font-size:.82rem;font-weight:800;letter-spacing:1.2px;
+  box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(251,191,36,.5);
+  animation:toastIn .3s ease,toastOut .3s ease 2.6s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+/* ============== RESPONSIVE ============== */
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .dash .stat{flex:1;min-width:120px;padding:8px 10px}
+  .dash .stat .val{font-size:1.05rem}
+  .controls{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .bet-row{flex:1 1 100%}
+  .mini-row{flex:1 1 45%}
+  .spin{flex:1 1 100%;padding:15px;font-size:1.05rem}
+  .brand{font-size:1.1rem;letter-spacing:1px}
+  .topbar{padding:8px 12px}
+  .pill{padding:5px 10px;font-size:.58rem}
+  #fsBanner{font-size:.66rem;padding:6px 14px;right:8px}
+  #chainBadge{font-size:.62rem;padding:4px 10px;left:8px}
+  #multReel{width:84px;height:48px;top:8px}
+  .mult-cell{height:48px;font-size:1.15rem}
+  #multReel::before{font-size:.42rem;padding:1px 6px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  #leaves{display:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="leaves"></div>
+
+<div id="game">
+  <div class="topbar">
+    <div class="brand">
+      <span class="dragon">🐉</span>
+      <span>MYSTIC TEMPLE</span>
+      <span class="dragon">🐉</span>
+    </div>
+    <div class="topbar-right">
+      <select id="speedSel" class="pill">
+        <option value="0.7">🐢 Slow</option>
+        <option value="1" selected>⚡ Normal</option>
+        <option value="1.6">🚀 Fast</option>
+        <option value="2.4">💨 Turbo</option>
+      </select>
+      <button class="pill" id="paytableBtn">Paytable</button>
+      <button class="pill" id="helpBtn">Rules</button>
+      <button class="pill" id="historyBtn">History</button>
+      <button class="pill" id="soundBtn">🔊</button>
+      <button class="pill" id="resetBtn">♻</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="board-wrap">
+      <div id="chainBadge">CHAIN ×<span id="chainVal">1</span></div>
+      <div id="fsBanner">🐉 FREE SPINS: <span id="fsCount">0</span></div>
+      <div id="multReel"><div class="mult-strip" id="multStrip"></div></div>
+      <canvas id="board"></canvas>
+    </div>
+
+    <div class="dash">
+      <div class="stat balance">
+        <div class="lbl">Jade Credits</div>
+        <div class="val" id="balanceVal">1,000</div>
+      </div>
+      <div class="stat win">
+        <div class="lbl">Last Offering</div>
+        <div class="val" id="winVal">0</div>
+      </div>
+
+      <div class="controls">
+        <div class="bet-row">
+          <button class="btn" id="betDown">−</button>
+          <div class="amt"><span id="betVal">50</span><small>TOTAL BET</small></div>
+          <button class="btn" id="betUp">+</button>
+        </div>
+        <div class="mini-row">
+          <button class="mini" id="autoBtn">🔁 AUTO</button>
+          <button class="mini" id="stopBtn">⏹ STOP</button>
+        </div>
+        <button class="spin" id="spinBtn">
+          SPIN
+          <span class="autocnt" id="autoCnt"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYTABLE -->
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>🐉 Cluster Paytable <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Match <b>4 or more identical symbols</b> connected up/down/left/right anywhere on the grid. Bigger clusters pay exponentially more.</p>
+    <div class="grid-sym" id="paytableGrid"></div>
+    <p class="rules" style="margin-top:14px">
+      <b>Cluster size tiers:</b><br>
+      4–5 · ×1 · 6–8 · ×2 · 9–12 · ×4 · 13–16 · ×8 · 17–19 · ×15 · 20+ · ×30
+    </p>
+    <p class="rules" style="margin-top:12px">
+      <b>🐉 Jade Cascade:</b> winning clusters dissolve into mist, symbols fall, new ones descend from above. Each new cascade step multiplies the win by the rolling <b>Chain Multiplier</b>.<br>
+      <b>🏮 Temple Scatter:</b> 3 on board → 8 Free Spins · 4 → 12 · 5+ → 15. Retriggers add +3.
+    </p>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>🐉 How To Play <button data-close>✕ CLOSE</button></h2>
+    <p>1. Set your <b>total bet</b> with the + / − buttons.</p>
+    <p>2. Press <b>SPIN</b> (or SPACE) to spin the reels. Columns scroll from top to bottom.</p>
+    <p>3. Symbols forming <b>clusters of 4+</b> connected cells dissolve and pay out.</p>
+    <p>4. Remaining symbols <b>fall down</b>, new ones <b>descend from above</b>, and any new clusters pay again — this is the <b>Jade Cascade</b>. The <b>Chain Multiplier</b> reel at the top increases each step.</p>
+    <p>5. <b>Dragon Wilds</b> substitute for any regular symbol. <b>Temple Scatters</b> trigger Free Spins.</p>
+    <p>6. During Free Spins every win is multiplied <b>×3</b> and no bet is deducted.</p>
+    <p>7. Press <b>AUTO</b> for 25 automatic spins, or <b>STOP</b> to cancel.</p>
+    <p style="color:var(--dim);font-size:.82rem;margin-top:14px">🎮 Virtual-credit demo — for entertainment only. Not for real-money wagering.</p>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>🐉 Session Log <button data-close>✕ CLOSE</button></h2>
+    <ul class="history" id="historyList"><li style="color:var(--dim)">No spins yet.</li></ul>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   MYSTIC TEMPLE — Jade Cluster Cascade
+   5×4 grid · Cluster pays min 4 · Cascade tumble · Rolling multiplier
+   All columns scroll TOP → BOTTOM
+   ===================================================================== */
+
+/* ---------- GIF BACKGROUNDS ---------- */
+const GIF_ASSETS = {
+  normal:    "../../assets/bg9.gif",
+  freeSpins: "../../assets/bg10.gif",
+  bigWin:    "../../assets/bg11.gif"
+};
+
+/* ---------- CONFIG ---------- */
+const CONFIG = {
+  cols: 5,
+  rows: 4,
+  startingBalance: 1000,
+  betSteps: [10, 20, 30, 50, 75, 100, 200, 300, 500],
+  defaultBetIndex: 3,   // 50
+  autoSpinMax: 25,
+  clusterMinSize: 4,
+  maxCascadeSteps: 20,
+  tumbleMult: [1, 2, 3, 5, 8, 12, 18, 25, 35, 50, 70, 100, 150, 200, 300, 500],
+  freeSpins: {
+    three: 8,
+    four: 12,
+    fivePlus: 15,
+    multiplier: 3,
+    retrigger: true,
+    retriggerAdd: 3
+  },
+  sizeTier: [
+    { min: 20, mult: 30 },
+    { min: 17, mult: 15 },
+    { min: 13, mult: 8 },
+    { min: 9,  mult: 4 },
+    { min: 6,  mult: 2 },
+    { min: 4,  mult: 1 }
+  ]
+};
+
+/* Values shown by the rolling multiplier reel */
+const MULT_SEQ = [1, 2, 3, 5, 8, 12, 18, 25, 35, 50, 70, 100, 150, 200, 300, 500];
+
+/* ---------- SYMBOLS ---------- */
+/* Sprite indices chosen for a fresh look; includes sprites unused elsewhere */
+const SYMBOLS = {
+  wild:    { id:"wild",    name:"Dragon",  sprite:14, weight:4,  base:2.5,  color:"#2dd4bf", special:"wild" },
+  scatter: { id:"scatter", name:"Temple",  sprite:2,  weight:3,  base:0,    color:"#dc2626", special:"scatter" },
+  jade:    { id:"jade",    name:"Jade",    sprite:12, weight:7,  base:1.8,  color:"#34d399" },
+  lotus:   { id:"lotus",   name:"Lotus",   sprite:17, weight:9,  base:1.4,  color:"#f472b6" },
+  fan:     { id:"fan",     name:"Fan",     sprite:16, weight:11, base:1.1,  color:"#fbbf24" },
+  lantern: { id:"lantern", name:"Lantern", sprite:18, weight:14, base:0.9,  color:"#f97316" },
+  coin:    { id:"coin",    name:"Coin",    sprite:19, weight:17, base:0.7,  color:"#facc15" },
+  bamboo:  { id:"bamboo",  name:"Bamboo",  sprite:20, weight:20, base:0.5,  color:"#4ade80" }
+};
+
+/* Order clusters are searched — highest value first */
+const CLUSTER_ORDER = ["wild","jade","lotus","fan","lantern","coin","bamboo"];
+
+/* ---------- RNG (crypto-based, unbiased) ---------- */
+const RNG = (function() {
+  const buf = new Uint32Array(1);
+  const hasCrypto = (typeof crypto !== "undefined" && crypto.getRandomValues);
+  function uint32() {
+    if (hasCrypto) { crypto.getRandomValues(buf); return buf[0] >>> 0; }
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  function int(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error("RNG.int: " + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;
+    let r; do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  function weighted(items) {
+    const total = items.reduce((s, x) => s + x.weight, 0);
+    if (total <= 0) throw new Error("RNG.weighted: total 0");
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++) {
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted, uint32 };
+})();
+
+/* ---------- SPRITE LOADER ---------- */
+const SPRITE_COORDS = [
+  {x:25,y:402,w:82,h:64},{x:115,y:401,w:78,h:67},{x:199,y:403,w:78,h:61},
+  {x:287,y:402,w:75,h:66},{x:376,y:401,w:73,h:69},{x:25,y:477,w:79,h:58},
+  {x:116,y:474,w:77,h:60},{x:202,y:474,w:75,h:60},{x:289,y:481,w:66,h:46},
+  {x:372,y:477,w:79,h:60},{x:27,y:569,w:69,h:84},{x:112,y:568,w:66,h:85},
+  {x:197,y:569,w:65,h:84},{x:280,y:569,w:65,h:84},{x:479,y:125,w:67,h:68},
+  {x:562,y:207,w:66,h:67},{x:716,y:205,w:68,h:66},{x:799,y:207,w:63,h:62},
+  {x:881,y:204,w:58,h:70},{x:973,y:125,w:76,h:69},{x:1058,y:126,w:71,h:71},
+  {x:1141,y:126,w:71,h:69},{x:1224,y:130,w:71,h:64},{x:1304,y:126,w:76,h:68},
+  {x:976,y:606,w:128,h:49}
+];
+
+const SpriteLoader = (function() {
+  const img = new Image();
+  let ready = false;
+  const url = "../../assets/ultimate_multi_slot_sprite.jpg";
+  function load() {
+    return new Promise(resolve => {
+      img.onload = () => { ready = true; resolve(true); };
+      img.onerror = () => { console.warn("[sprite] missing " + url); resolve(false); };
+      img.src = url;
+      setTimeout(() => { if (!ready) resolve(false); }, 8000);
+    });
+  }
+  function drawTo(c, idx, dx, dy, dw, dh, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const s = SPRITE_COORDS[idx];
+    c.save(); c.globalAlpha = alpha;
+    if (ready && s) {
+      try { c.drawImage(img, s.x, s.y, s.w, s.h, dx, dy, dw, dh); }
+      catch (e) { fallback(c, idx, dx, dy, dw, dh); }
+    } else fallback(c, idx, dx, dy, dw, dh);
+    c.restore();
+  }
+  function fallback(c, idx, x, y, w, h) {
+    const p = ["#2dd4bf","#dc2626","#fbbf24","#34d399","#f472b6","#f97316","#facc15","#4ade80"];
+    c.fillStyle = p[idx % p.length];
+    c.beginPath(); c.arc(x+w/2, y+h/2, Math.min(w,h)*0.4, 0, Math.PI*2); c.fill();
+    c.fillStyle = "#042f2e";
+    c.font = "bold " + Math.floor(h*0.32) + "px Cinzel,Arial";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(String(idx+1), x+w/2, y+h/2);
+  }
+  function dataUrl(idx, w, h) {
+    if (w === undefined) w = 64;
+    if (h === undefined) h = 64;
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    drawTo(c.getContext("2d"), idx, 0, 0, w, h, 1);
+    return c.toDataURL();
+  }
+  return { load, drawTo, dataUrl, isReady: () => ready };
+})();
+
+/* ---------- CLUSTER ENGINE ---------- */
+const ClusterEngine = (function() {
+  const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+
+  function findClusters(board) {
+    const cols = CONFIG.cols, rows = CONFIG.rows;
+    const claimed = {};
+    const clusters = [];
+    for (let oi = 0; oi < CLUSTER_ORDER.length; oi++) {
+      const sym = CLUSTER_ORDER[oi];
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const key = c + "," + r;
+          if (claimed[key]) continue;
+          if (board[c][r] !== sym) continue;
+          const cluster = [];
+          const seen = {}; seen[key] = true;
+          const queue = [[c, r]];
+          while (queue.length) {
+            const cur = queue.shift();
+            const cc = cur[0], rr = cur[1];
+            cluster.push([cc, rr]);
+            for (let d = 0; d < DIRS.length; d++) {
+              const nc = cc + DIRS[d][0];
+              const nr = rr + DIRS[d][1];
+              if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
+              const nk = nc + "," + nr;
+              if (seen[nk] || claimed[nk]) continue;
+              const ns = board[nc][nr];
+              const match = (ns === sym) || (sym !== "wild" && ns === "wild");
+              if (match) { seen[nk] = true; queue.push([nc, nr]); }
+            }
+          }
+          if (cluster.length >= CONFIG.clusterMinSize) {
+            for (let k = 0; k < cluster.length; k++)
+              claimed[cluster[k][0] + "," + cluster[k][1]] = true;
+            clusters.push({ cells: cluster, symbol: sym, size: cluster.length });
+          }
+        }
+      }
+    }
+    return clusters;
+  }
+
+  function sizeTierMult(size) {
+    for (let i = 0; i < CONFIG.sizeTier.length; i++)
+      if (size >= CONFIG.sizeTier[i].min) return CONFIG.sizeTier[i].mult;
+    return 0;
+  }
+
+  function clusterPayout(cluster, bet) {
+    const sym = SYMBOLS[cluster.symbol];
+    if (!sym) return 0;
+    const tier = sizeTierMult(cluster.size);
+    return Math.max(1, Math.round(bet * sym.base * tier / 10));
+  }
+
+  function countScatters(board) {
+    let n = 0;
+    for (let c = 0; c < CONFIG.cols; c++)
+      for (let r = 0; r < CONFIG.rows; r++)
+        if (board[c][r] === "scatter") n++;
+    return n;
+  }
+  return { findClusters, sizeTierMult, clusterPayout, countScatters };
+})();
+
+/* ---------- STATE ---------- */
+const state = {
+  phase: "idle",
+  balance: CONFIG.startingBalance,
+  betIndex: CONFIG.defaultBetIndex,
+  board: [],
+  lastWin: 0,
+  lastNet: 0,
+  freeSpinsLeft: 0,
+  inFreeSpins: false,
+  autoActive: false,
+  autoSpinsLeft: 0,
+  spinWin: 0,
+  chainLevel: 0
+};
+function lineBet() { return CONFIG.betSteps[state.betIndex]; }
+function totalBet() { return lineBet(); }
+function canSpin() {
+  if (state.phase === "spinning" || state.phase === "cascading") return false;
+  if (state.inFreeSpins && state.freeSpinsLeft > 0) return true;
+  return state.balance >= totalBet();
+}
+
+const POOL = Object.keys(SYMBOLS).map(k => SYMBOLS[k]).filter(s => s.weight > 0);
+
+function generateBoard() {
+  const b = [];
+  for (let c = 0; c < CONFIG.cols; c++) {
+    const col = [];
+    for (let r = 0; r < CONFIG.rows; r++) col.push(RNG.weighted(POOL).id);
+    b.push(col);
+  }
+  return b;
+}
+function randomSymbolId() { return RNG.weighted(POOL).id; }
+
+/* =====================================================================
+   UI LAYER
+   ===================================================================== */
+(function() {
+  const canvas = document.getElementById("board");
+  const ctx = canvas.getContext("2d");
+  const el = id => document.getElementById(id);
+
+  const ui = {
+    balance: el("balanceVal"),
+    win: el("winVal"),
+    bet: el("betVal"),
+    spin: el("spinBtn"),
+    auto: el("autoBtn"),
+    stop: el("stopBtn"),
+    autoCnt: el("autoCnt"),
+    fsBanner: el("fsBanner"),
+    fsCount: el("fsCount"),
+    chainBadge: el("chainBadge"),
+    chainVal: el("chainVal"),
+    multReel: el("multReel"),
+    multStrip: el("multStrip"),
+    winOv: el("winOv"),
+    winTier: el("winTier"),
+    winAmt: el("winAmt"),
+    winSub: el("winSub"),
+    speed: el("speedSel"),
+    sound: el("soundBtn"),
+    bgLayer: el("bgLayer"),
+    history: []
+  };
+
+  /* ---------- Background ---------- */
+  function setBg(kind) {
+    const url = kind === "free" ? GIF_ASSETS.freeSpins
+              : kind === "big"  ? GIF_ASSETS.bigWin
+              : GIF_ASSETS.normal;
+    ui.bgLayer.style.backgroundImage = "url('" + url + "')";
+    ui.bgLayer.classList.remove("free","big");
+    if (kind === "free") ui.bgLayer.classList.add("free");
+    if (kind === "big")  ui.bgLayer.classList.add("big");
+  }
+  [GIF_ASSETS.normal, GIF_ASSETS.freeSpins, GIF_ASSETS.bigWin].forEach(u => {
+    const im = new Image(); im.src = u;
+  });
+
+  /* ---------- Leaves ---------- */
+  (function() {
+    const wrap = el("leaves");
+    if (!wrap) return;
+    for (let i = 0; i < 20; i++) {
+      const s = document.createElement("span");
+      s.style.left = RNG.int(100) + "%";
+      s.style.top = "-20px";
+      s.style.animationDuration = (9 + RNG.int(14)) + "s";
+      s.style.animationDelay = (-RNG.int(20)) + "s";
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* ---------- Canvas sizing ---------- */
+  let CW = 1, CH = 1;
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    CW = Math.max(1, Math.floor(r.width));
+    CH = Math.max(1, Math.floor(r.height));
+    canvas.width = CW * DPR; canvas.height = CH * DPR;
+    canvas.style.width = CW + "px"; canvas.style.height = CH + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  const PAD = { x: 16, top: 24, bottom: 12 };
+  function cellSize() {
+    return {
+      cw: (CW - PAD.x * 2) / CONFIG.cols,
+      ch: (CH - PAD.top - PAD.bottom) / CONFIG.rows
+    };
+  }
+  function cellXY(c, r) {
+    const s = cellSize();
+    return { x: PAD.x + c * s.cw, y: PAD.top + r * s.ch, w: s.cw, h: s.ch };
+  }
+
+  /* ---------- Animation state ---------- */
+  const anim = {
+    phase: "idle",
+    winCells: {},
+    particles: [],
+    shockwaves: [],
+    cellFall: {},
+    cellPop: {},
+    cellSpawn: {},
+    glowPhase: 0,
+    lastFrame: performance.now(),
+    shake: 0
+  };
+
+  /* ---------- Reel anim state (top → bottom scroll) ---------- */
+  const reelAnim = { active: false, cols: [], onComplete: null };
+
+  state.board = generateBoard();
+
+  /* ---------- Multiplier reel ---------- */
+  let multAbsIdx = 0;
+  function buildMultStrip() {
+    const strip = ui.multStrip;
+    strip.innerHTML = "";
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < MULT_SEQ.length; j++) {
+        const d = document.createElement("div");
+        d.className = "mult-cell";
+        d.textContent = "×" + MULT_SEQ[j];
+        strip.appendChild(d);
+      }
+    }
+    strip.style.transition = "none";
+    strip.style.transform = "translateY(0px)";
+    multAbsIdx = 0;
+  }
+  function multCellH() {
+    const first = ui.multStrip.querySelector(".mult-cell");
+    return first ? first.offsetHeight : 60;
+  }
+  function rollMultTo(value, duration, flash) {
+    const seq = MULT_SEQ;
+    const len = seq.length;
+    let targetInSeq = seq.indexOf(value);
+    if (targetInSeq < 0) targetInSeq = 0;
+    const curInSeq = multAbsIdx % len;
+    let delta = (targetInSeq - curInSeq + len) % len;
+    if (delta < len * 0.5) delta += len;
+    const targetIdx = multAbsIdx + delta;
+    const cellH = multCellH();
+    const offset = -targetIdx * cellH;
+    ui.multStrip.style.transition =
+      "transform " + duration + "ms cubic-bezier(.15,.75,.2,1)";
+    ui.multStrip.style.transform = "translateY(" + offset + "px)";
+    multAbsIdx = targetIdx;
+
+    if (flash) {
+      ui.multReel.classList.add("flash");
+      setTimeout(() => ui.multReel.classList.remove("flash"), duration * 0.8);
+    }
+
+    if (multAbsIdx > len * 3) {
+      setTimeout(() => {
+        const resetIdx = (multAbsIdx % len) + len;
+        ui.multStrip.style.transition = "none";
+        ui.multStrip.style.transform = "translateY(" + (-resetIdx * cellH) + "px)";
+        multAbsIdx = resetIdx;
+      }, duration + 80);
+    }
+  }
+
+  /* ---------- Helpers ---------- */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function spawnParticles(cx, cy, count, colors, opts) {
+    opts = opts || {};
+    for (let i = 0; i < count; i++) {
+      const a = RNG.int(360) * Math.PI / 180;
+      const sp = (opts.speed || 90) + RNG.int(140);
+      anim.particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp * 0.1,
+        vy: Math.sin(a) * sp * 0.1 - 1.5,
+        size: (opts.minSize || 2) + RNG.int(opts.sizeRange || 3),
+        rot: RNG.int(360) * Math.PI / 180,
+        vr: (RNG.int(200) - 100) / 300,
+        col: colors[RNG.int(colors.length)],
+        life: 1, maxLife: 800 + RNG.int(700),
+        square: opts.square !== false
+      });
+    }
+  }
+  function spawnShockwave(cx, cy, maxR, col) {
+    anim.shockwaves.push({ x: cx, y: cy, r: maxR * 0.2, maxR: maxR, col: col, life: 1 });
+  }
+
+  /* ---------- Plate + symbol drawer (used by reel strips) ---------- */
+  function drawSymbolPlate(symId, x, y, w, h, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const sym = SYMBOLS[symId];
+    if (!sym) return;
+    const pad = Math.min(w, h) * 0.06;
+    const px = x + pad, py = y + pad;
+    const pw = w - pad * 2, ph = h - pad * 2;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // jade plate
+    ctx.beginPath();
+    roundRect(ctx, px, py, pw, ph, Math.min(pw, ph) * 0.22);
+    ctx.fillStyle = "rgba(4,47,46,0.68)";
+    ctx.fill();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(251,191,36,0.28)";
+    ctx.stroke();
+
+    // inner gold trim
+    ctx.beginPath();
+    roundRect(ctx, px + 3, py + 3, pw - 6, ph - 6, Math.min(pw, ph) * 0.18);
+    ctx.strokeStyle = "rgba(45,212,191,0.22)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // symbol sprite
+    SpriteLoader.drawTo(ctx, sym.sprite, px + 4, py + 4, pw - 8, ph - 8, 1);
+
+    // special tag
+    if (sym.special) {
+      ctx.fillStyle = sym.special === "wild"
+        ? "rgba(45,212,191,.95)" : "rgba(220,38,38,.95)";
+      ctx.fillRect(px, py + ph - 14, pw, 14);
+      ctx.fillStyle = sym.special === "wild" ? "#042f2e" : "#fff";
+      ctx.font = "900 9px Cinzel, Arial";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(sym.special === "wild" ? "DRAGON" : "TEMPLE",
+        px + pw / 2, py + ph - 7);
+    }
+    ctx.restore();
+  }
+
+  /* ---------- Reel strip drawing (TOP → BOTTOM scroll) ---------- */
+  function drawReelStrip(c, now) {
+    const reel = reelAnim.cols[c];
+    if (!reel) return;
+    const base = cellXY(c, 0);
+    const colX = base.x, colY = base.y, colW = base.w;
+    const sz = cellSize();
+    const ch = sz.ch;
+    const rows = CONFIG.rows;
+    const N = reel.list.length;
+
+    const elapsed = now - reel.startT;
+    const p = Math.max(0, Math.min(1, elapsed / reel.duration));
+    const eased = easeOutCubic(p);
+
+    // TOP → BOTTOM: strip content moves DOWNWARD.
+    // Transform offset goes from 0 (settled) to +offset (scrolled down).
+    // We scroll by shifting the strip downward, revealing lower list items
+    // from above.
+    // scrollTop: 0 → (N - rows) * ch. This moves content UP visually — NOT
+    // what we want. To move content DOWN, we instead place the strip with
+    // a positive Y offset that starts above the visible window and comes
+    // back to 0:
+    //   offset = -(N - rows) * ch * (1 - eased)   → strip starts above
+    //   showing early list items, and settles to showing last items.
+    // Simpler: place the strip so that row r of the list is at y = colY + i*ch + stripY.
+    // When stripY = 0, item[0] is at colY, item[rows-1] at colY+(rows-1)*ch → shows first `rows` items.
+    // When stripY = +(N-rows)*ch, item[N-rows] at colY, item[N-1] at bottom → shows last `rows` items.
+    // Going from +big → 0 means the strip moves UP, so the visual result is content falling downward.
+    const stripY = (N - rows) * ch * (1 - eased);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(colX, colY, colW, rows * ch);
+    ctx.clip();
+
+    for (let i = 0; i < N; i++) {
+      const y = colY + i * ch - (N - rows) * ch + stripY;
+      if (y + ch < colY - 1) continue;
+      if (y > colY + rows * ch + 1) continue;
+      let a = 1;
+      if (y < colY) a = Math.max(0.25, 1 - (colY - y) / ch);
+      else if (y + ch > colY + rows * ch)
+        a = Math.max(0.25, 1 - (y + ch - (colY + rows * ch)) / ch);
+      drawSymbolPlate(reel.list[i], colX, y, colW, ch, a);
+    }
+    ctx.restore();
+
+    // motion blur flash while fast
+    if (p < 0.65) {
+      ctx.save();
+      ctx.globalAlpha = (1 - p / 0.65) * 0.34;
+      const grad = ctx.createLinearGradient(0, colY, 0, colY + rows * ch);
+      grad.addColorStop(0, "rgba(45,212,191,0.55)");
+      grad.addColorStop(0.5, "rgba(255,255,255,0.15)");
+      grad.addColorStop(1, "rgba(251,191,36,0.55)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(colX, colY, colW, rows * ch);
+      ctx.restore();
+    }
+  }
+
+  function updateReelAnim(now) {
+    let allSettled = true;
+    for (let c = 0; c < CONFIG.cols; c++) {
+      const reel = reelAnim.cols[c];
+      if (!reel) { allSettled = false; continue; }
+      if (reel.settled) continue;
+      const elapsed = now - reel.startT;
+      if (elapsed >= reel.duration) {
+        reel.settled = true;
+        for (let r = 0; r < CONFIG.rows; r++) {
+          const cell = cellXY(c, r);
+          spawnParticles(cell.x + cell.w / 2, cell.y + cell.h / 2, 3,
+            ["#2dd4bf", "#fbbf24", "#fff"], { speed: 70, minSize: 1, sizeRange: 2 });
+          anim.cellSpawn[c + "," + r] = { t0: now, dur: 380 };
+        }
+        anim.shake = Math.min(6, anim.shake + 1.5);
+      } else {
+        allSettled = false;
+      }
+    }
+    if (allSettled) {
+      const cb = reelAnim.onComplete;
+      reelAnim.active = false;
+      reelAnim.cols = [];
+      reelAnim.onComplete = null;
+      if (cb) cb();
+    }
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const now = performance.now();
+    const dt = Math.min(50, now - anim.lastFrame);
+    anim.lastFrame = now;
+    anim.glowPhase += dt / 240;
+
+    ctx.save();
+    if (anim.shake > 0) {
+      anim.shake = Math.max(0, anim.shake - dt / 100);
+      const s = anim.shake;
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    ctx.clearRect(-20, -20, CW + 40, CH + 40);
+
+    const g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, "rgba(15,36,34,.5)");
+    g.addColorStop(1, "rgba(10,26,24,.75)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // decorative top/bottom bar
+    ctx.font = "900 13px Cinzel, Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = state.inFreeSpins ? "#f87171" : "#fbbf24";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 16;
+    ctx.fillText(
+      state.inFreeSpins ? "🐉 JADE CASCADE — FREE SPINS 🐉" : "🐉 MYSTIC TEMPLE 🐉",
+      CW / 2, 14
+    );
+    ctx.shadowBlur = 0;
+
+    // draw cells / reel strips
+    for (let c = 0; c < CONFIG.cols; c++) {
+      if (reelAnim.active && reelAnim.cols[c] && !reelAnim.cols[c].settled) {
+        drawReelStrip(c, now);
+      } else {
+        for (let r = 0; r < CONFIG.rows; r++)
+          drawCell(c, r, now, dt);
+      }
+    }
+    if (reelAnim.active) updateReelAnim(now);
+
+    drawShockwaves(dt);
+    drawParticles(dt);
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+
+  function drawCell(c, r, now, dt) {
+    const cell = cellXY(c, r);
+    const x = cell.x, y = cell.y, w = cell.w, h = cell.h;
+    const cellPad = Math.min(w, h) * 0.06;
+    const px = x + cellPad, py = y + cellPad;
+    const pw = w - cellPad * 2, ph = h - cellPad * 2;
+    const key = c + "," + r;
+    const isWin = anim.winCells[key] === true;
+    const symId = state.board[c][r];
+    const sym = SYMBOLS[symId];
+    if (!sym) return;
+
+    let dy = 0;
+    const fall = anim.cellFall[key];
+    if (fall) {
+      const p = Math.min(1, (now - fall.t0) / fall.dur);
+      dy = fall.y0 * (1 - easeOutBack(p));
+      if (p >= 1) delete anim.cellFall[key];
+    }
+
+    let popScale = 1, popAlpha = 1;
+    const pop = anim.cellPop[key];
+    if (pop) {
+      const p = Math.min(1, (now - pop.t0) / pop.dur);
+      popScale = 1 + p * 0.5;
+      popAlpha = 1 - p;
+      if (p >= 1) delete anim.cellPop[key];
+    }
+
+    let spawnGlow = 0;
+    const sp = anim.cellSpawn[key];
+    if (sp) {
+      const p = Math.min(1, (now - sp.t0) / sp.dur);
+      spawnGlow = 1 - p;
+      if (p >= 1) delete anim.cellSpawn[key];
+    }
+
+    let idleY = 0;
+    if (anim.phase === "idle" && !isWin) {
+      idleY = Math.sin(anim.glowPhase * 1.4 + c * 0.8 + r * 0.6) * 2;
+    }
+
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2 + dy + idleY);
+    ctx.scale(popScale, popScale);
+    ctx.globalAlpha = popAlpha;
+
+    ctx.beginPath();
+    roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.22);
+    if (isWin) {
+      const pulse = 0.55 + Math.sin(anim.glowPhase * 3) * 0.35;
+      ctx.fillStyle = "rgba(45,212,191," + (0.15 + pulse * 0.15) + ")";
+      ctx.shadowColor = "#2dd4bf";
+      ctx.shadowBlur = 16 + pulse * 14;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(251,191,36,0.95)";
+    } else {
+      ctx.fillStyle = "rgba(4,47,46,0.68)";
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(251,191,36,0.28)";
+    }
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // inner jade trim for non-winning cells too
+    if (!isWin) {
+      ctx.beginPath();
+      roundRect(ctx, -pw / 2 + 3, -ph / 2 + 3, pw - 6, ph - 6, Math.min(pw, ph) * 0.18);
+      ctx.strokeStyle = "rgba(45,212,191,0.22)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    if (spawnGlow > 0) {
+      ctx.globalAlpha = popAlpha * spawnGlow * 0.6;
+      ctx.fillStyle = "#2dd4bf";
+      ctx.beginPath();
+      roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.22);
+      ctx.fill();
+      ctx.globalAlpha = popAlpha;
+    }
+
+    SpriteLoader.drawTo(ctx, sym.sprite, -pw / 2 + 4, -ph / 2 + 4, pw - 8, ph - 8, 1);
+
+    if (sym.special) {
+      ctx.fillStyle = sym.special === "wild"
+        ? "rgba(45,212,191,.95)" : "rgba(220,38,38,.95)";
+      ctx.fillRect(-pw / 2, ph / 2 - 14, pw, 14);
+      ctx.fillStyle = sym.special === "wild" ? "#042f2e" : "#fff";
+      ctx.font = "900 9px Cinzel, Arial";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(sym.special === "wild" ? "DRAGON" : "TEMPLE",
+        0, ph / 2 - 7);
+    }
+    ctx.restore();
+
+    if (sym.special === "scatter" && anim.phase === "idle") {
+      const p = 0.5 + Math.sin(anim.glowPhase * 3.5 + c + r) * 0.5;
+      ctx.save();
+      ctx.globalAlpha = p * 0.4;
+      ctx.strokeStyle = "#dc2626";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "#dc2626";
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      roundRect(ctx, px + 3, py + 3 + dy, pw - 6, ph - 6, Math.min(pw, ph) * 0.2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawShockwaves(dt) {
+    anim.shockwaves = anim.shockwaves.filter(s => s.life > 0);
+    anim.shockwaves.forEach(s => {
+      s.r += (s.maxR - s.r) * 0.14;
+      s.life -= dt / 550;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, s.life) * 0.85;
+      ctx.strokeStyle = s.col;
+      ctx.lineWidth = 4 * s.life + 1;
+      ctx.shadowColor = s.col;
+      ctx.shadowBlur = 22;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawParticles(dt) {
+    anim.particles = anim.particles.filter(p => p.life > 0);
+    anim.particles.forEach(p => {
+      p.x += p.vx * dt * 0.06;
+      p.y += p.vy * dt * 0.06;
+      p.vy += 0.06 * dt * 0.06;
+      p.rot += p.vr * dt * 0.06;
+      p.life -= dt / p.maxLife;
+      const a = Math.max(0, p.life);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.shadowColor = p.col;
+      ctx.shadowBlur = 10;
+      const size = p.size * Math.max(0.15, p.life);
+      if (p.square) ctx.fillRect(-size, -size, size * 2, size * 2);
+      else { ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    });
+  }
+
+  /* ---------- Explode / Drop ---------- */
+  function animateExplode(clusters, duration) {
+    return new Promise(resolve => {
+      const colors = ["#2dd4bf", "#fbbf24", "#dc2626", "#34d399", "#fff"];
+      clusters.forEach(cl => {
+        cl.cells.forEach(([c, r]) => {
+          const cell = cellXY(c, r);
+          const cx = cell.x + cell.w / 2, cy = cell.y + cell.h / 2;
+          anim.cellPop[c + "," + r] = { t0: performance.now(), dur: duration * 0.7 };
+          spawnParticles(cx, cy, 10, colors, { speed: 100, sizeRange: 4 });
+          const col = (SYMBOLS[cl.symbol] && SYMBOLS[cl.symbol].color) || "#2dd4bf";
+          spawnShockwave(cx, cy, Math.max(cell.w, cell.h) * 0.8, col);
+        });
+      });
+      anim.shake = Math.min(14, anim.shake + clusters.length * 2.5);
+      setTimeout(resolve, duration);
+    });
+  }
+
+  function animateDrop(moveList, spawnList, duration) {
+    return new Promise(resolve => {
+      const s = cellSize();
+      const ch = s.ch;
+      const t0 = performance.now();
+      moveList.forEach(m => {
+        anim.cellFall[m.c + "," + m.r] = { y0: (m.fromRow - m.r) * ch, t0: t0, dur: duration };
+      });
+      spawnList.forEach(sp => {
+        anim.cellFall[sp.c + "," + sp.r] = { y0: -(sp.above + 1) * ch, t0: t0, dur: duration };
+        anim.cellSpawn[sp.c + "," + sp.r] = { t0: t0 + duration * 0.6, dur: 400 };
+      });
+      setTimeout(resolve, duration);
+    });
+  }
+
+  function applyGravityAndRefill(clusters) {
+    const cols = CONFIG.cols, rows = CONFIG.rows;
+    const removeSet = {};
+    clusters.forEach(cl => cl.cells.forEach(([c, r]) => {
+      removeSet[c + "," + r] = true;
+    }));
+
+    const moveList = [], spawnList = [];
+    for (let c = 0; c < cols; c++) {
+      let writeRow = rows - 1;
+      for (let readRow = rows - 1; readRow >= 0; readRow--) {
+        const key = c + "," + readRow;
+        if (!removeSet[key]) {
+          if (writeRow !== readRow) {
+            state.board[c][writeRow] = state.board[c][readRow];
+            moveList.push({ c: c, r: writeRow, fromRow: readRow });
+          }
+          writeRow--;
+        }
+      }
+      for (let r = writeRow; r >= 0; r--) {
+        state.board[c][r] = randomSymbolId();
+        spawnList.push({ c: c, r: r, above: writeRow - r });
+      }
+    }
+    return { moveList, spawnList };
+  }
+
+  /* ---------- SPIN ---------- */
+  function doSpin() {
+    if (!canSpin()) {
+      if (!state.inFreeSpins && state.balance < totalBet())
+        toast("Not enough credits — lower your bet or reset.");
+      return;
+    }
+    if (state.phase === "spinning" || state.phase === "cascading") return;
+
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+    if (!isFree) state.balance -= totalBet();
+    else state.freeSpinsLeft--;
+    state.phase = "spinning";
+    state.lastWin = 0;
+    state.spinWin = 0;
+    state.chainLevel = 0;
+    anim.winCells = {};
+    updateUI(true);
+    Sound.spin();
+
+    // generate final board
+    state.board = generateBoard();
+    const finalBoard = state.board;
+
+    // build vertical reel strips — all scroll TOP → BOTTOM
+    const speed = parseFloat(ui.speed.value) || 1;
+    const baseDur = 950 / speed;
+    const stagger = 130 / speed;
+    const now = performance.now();
+    reelAnim.active = true;
+    reelAnim.cols = [];
+
+    for (let c = 0; c < CONFIG.cols; c++) {
+      const finals = [];
+      for (let r = 0; r < CONFIG.rows; r++) finals.push(finalBoard[c][r]);
+      const randCount = 16 + RNG.int(8);
+      const randoms = [];
+      for (let i = 0; i < randCount; i++) randoms.push(randomSymbolId());
+
+      // For TOP → BOTTOM scroll: finals at the START of the strip.
+      // During scroll we start by showing content ABOVE the finals (i.e. the
+      // strip positioned lower down so the finals are below the window), then
+      // the strip moves UP to settle the finals at the bottom of the window.
+      // Implementation: strip list = finals.concat(randoms); we start with
+      // stripY = +randCount * ch (finals off-screen below), settling to 0.
+      const list = finals.concat(randoms);
+      reelAnim.cols.push({
+        list: list,
+        startT: now + c * stagger,
+        duration: baseDur,
+        settled: false,
+        tail: randCount    // how many random entries are below the finals
+      });
+    }
+
+    // Roll mult reel to ×1 while spinning
+    rollMultTo(1, baseDur * 0.9, true);
+
+    reelAnim.onComplete = function() {
+      state.phase = "cascading";
+      startCascade();
+    };
+  }
+
+  /* ---------- CASCADE ---------- */
+  function startCascade() {
+    const speed = parseFloat(ui.speed.value) || 1;
+    let step = 0;
+
+    function stepOnce() {
+      const clusters = ClusterEngine.findClusters(state.board);
+      const scatters = ClusterEngine.countScatters(state.board);
+
+      if (clusters.length === 0) {
+        endCascade(scatters);
+        return;
+      }
+
+      const stepBet = lineBet();
+      let stepWin = 0;
+      clusters.forEach(cl => { stepWin += ClusterEngine.clusterPayout(cl, stepBet); });
+
+      const tumbleIdx = Math.min(step, CONFIG.tumbleMult.length - 1);
+      const tumble = CONFIG.tumbleMult[tumbleIdx];
+      const boostedWin = stepWin * tumble;
+
+      state.balance += boostedWin;
+      state.spinWin += boostedWin;
+      state.chainLevel = step + 1;
+
+      clusters.forEach(cl => cl.cells.forEach(([c, r]) => {
+        anim.winCells[c + "," + r] = true;
+      }));
+      updateUI(true);
+
+      ui.chainBadge.classList.add("on");
+      ui.chainVal.textContent = tumble;
+      rollMultTo(tumble, 400 / speed, step > 0);
+
+      if (boostedWin > 0) {
+        Sound.cascade(step);
+        if (step >= 1) anim.shake = Math.min(18, Math.max(anim.shake, 6));
+      }
+
+      const explodeDur = Math.max(340, 500 / speed);
+      animateExplode(clusters, explodeDur).then(() => {
+        const refill = applyGravityAndRefill(clusters);
+        anim.winCells = {};
+        const dropDur = Math.max(320, 480 / speed);
+        animateDrop(refill.moveList, refill.spawnList, dropDur).then(() => {
+          step++;
+          if (step >= CONFIG.maxCascadeSteps) {
+            endCascade(ClusterEngine.countScatters(state.board));
+          } else {
+            setTimeout(stepOnce, 60 / speed);
+          }
+        });
+      });
+    }
+    stepOnce();
+  }
+
+  function endCascade(scatters) {
+    const isFree = state.inFreeSpins;
+    const speed = parseFloat(ui.speed.value) || 1;
+
+    let triggeredSpins = 0;
+    if (scatters >= 3) {
+      if (scatters >= 5) triggeredSpins = CONFIG.freeSpins.fivePlus;
+      else if (scatters === 4) triggeredSpins = CONFIG.freeSpins.four;
+      else triggeredSpins = CONFIG.freeSpins.three;
+
+      if (isFree && CONFIG.freeSpins.retrigger) triggeredSpins = CONFIG.freeSpins.retriggerAdd;
+      else if (isFree) triggeredSpins = 0;
+    }
+
+    if (triggeredSpins > 0) {
+      Sound.scatter();
+      if (!isFree) {
+        state.inFreeSpins = true;
+        state.freeSpinsLeft = triggeredSpins;
+        toast("🐉 " + triggeredSpins + " FREE SPINS!");
+        setBg("free");
+      } else {
+        state.freeSpinsLeft += triggeredSpins;
+        toast("🐉 RETRIGGER +" + triggeredSpins + " SPINS!");
+      }
+      updateUI();
+    }
+
+    const spinWin = state.spinWin;
+    state.lastWin = spinWin;
+    state.lastNet = spinWin - (isFree ? 0 : totalBet());
+
+    if (spinWin > 0) {
+      Sound.win(spinWin >= lineBet() * 20);
+      showWinOverlay(spinWin, lineBet());
+    }
+
+    ui.history.unshift({
+      ts: new Date(),
+      bet: isFree ? 0 : totalBet(),
+      win: spinWin,
+      free: isFree,
+      chain: state.chainLevel,
+      scatters: scatters
+    });
+    if (ui.history.length > 50) ui.history.pop();
+
+    if (state.inFreeSpins && state.freeSpinsLeft <= 0) {
+      state.inFreeSpins = false;
+      setBg("normal");
+      toast("Free spins complete.");
+    }
+
+    state.phase = "idle";
+    ui.chainBadge.classList.remove("on");
+    ui.chainVal.textContent = "1";
+    updateUI();
+
+    const wait = (spinWin > 0 ? 800 : 250) / speed;
+    setTimeout(() => {
+      if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden) {
+        if (canSpin()) {
+          state.autoSpinsLeft--;
+          updateUI();
+          doSpin();
+        } else stopAuto("Auto-spin stopped — insufficient credits.");
+      } else if (state.autoActive && state.autoSpinsLeft <= 0) {
+        stopAuto("Auto-spin complete.");
+      }
+    }, wait);
+  }
+
+  /* ---------- WIN OVERLAY ---------- */
+  function showWinOverlay(totalWin, bet) {
+    const ratio = totalWin / Math.max(1, bet);
+    let tier = null, cls = "";
+    if (ratio >= 60) { tier = "MEGA WIN"; cls = "mega"; }
+    else if (ratio >= 25) { tier = "BIG WIN"; cls = "big"; }
+    else if (ratio >= 10) { tier = "GREAT WIN"; cls = "great"; }
+    else if (totalWin > 0) { tier = "WIN"; cls = "small"; }
+    if (!tier) return;
+
+    ui.winTier.textContent = tier;
+    ui.winAmt.textContent = "+" + totalWin.toLocaleString();
+    ui.winSub.textContent = state.inFreeSpins
+      ? "FREE SPIN · ×" + CONFIG.freeSpins.multiplier
+      : "JADE CASCADE";
+    ui.winOv.classList.add("on");
+
+    if (cls === "big" || cls === "mega") setBg("big");
+
+    const dur = Math.max(1400, 2400 / (parseFloat(ui.speed.value) || 1));
+    setTimeout(() => {
+      ui.winOv.classList.remove("on");
+      if ((cls === "big" || cls === "mega") && !state.inFreeSpins) setBg("normal");
+    }, dur);
+  }
+
+  /* ---------- UI UPDATE ---------- */
+  function updateUI(pop) {
+    ui.balance.textContent = state.balance.toLocaleString();
+    ui.win.textContent = state.lastWin.toLocaleString();
+    ui.bet.textContent = lineBet().toLocaleString();
+
+    if (pop) {
+      ui.balance.classList.remove("pop");
+      ui.win.classList.remove("pop");
+      void ui.balance.offsetWidth;
+      ui.balance.classList.add("pop");
+      ui.win.classList.add("pop");
+    }
+
+    ui.spin.disabled = state.autoActive || !canSpin();
+    ui.autoCnt.textContent = state.autoActive ? "AUTO: " + state.autoSpinsLeft : "";
+    ui.auto.classList.toggle("on", state.autoActive);
+    ui.fsBanner.classList.toggle("on", state.inFreeSpins);
+    ui.fsCount.textContent = state.freeSpinsLeft;
+  }
+
+  /* ---------- SOUND ---------- */
+  const Sound = (function() {
+    let ctxA = null, enabled = true;
+    function ensure() {
+      if (!ctxA) {
+        try { ctxA = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { ctxA = null; }
+      }
+      if (ctxA && ctxA.state === "suspended") ctxA.resume();
+      return ctxA;
+    }
+    function tone(freq, dur, type, vol, when) {
+      if (type === undefined) type = "sine";
+      if (vol === undefined) vol = 0.06;
+      if (when === undefined) when = 0;
+      if (!enabled) return;
+      const c = ensure(); if (!c) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    return {
+      spin() { tone(180, 0.1, "sine", 0.05); tone(140, 0.14, "triangle", 0.045, 0.05); },
+      cascade(step) {
+        const base = 320 + step * 70;
+        [0, 1.25, 1.5].forEach((m, i) => tone(base * m, 0.16, "sine", 0.07, i * 0.05));
+      },
+      win(small) {
+        const notes = small ? [523, 659, 784] : [523, 659, 784, 1047, 1319, 1568, 2093];
+        notes.forEach((f, i) => tone(f, 0.2, "sine", 0.08, i * 0.07));
+      },
+      scatter() {
+        [440, 554, 659, 880, 1108].forEach((f, i) => tone(f, 0.22, "sine", 0.09, i * 0.08));
+      },
+      click() { tone(880, 0.04, "triangle", 0.03); },
+      toggle() { enabled = !enabled; return enabled; }
+    };
+  })();
+
+  /* ---------- Auto ---------- */
+  function startAuto() {
+    if (state.autoActive) { stopAuto(); return; }
+    if (!canSpin()) { toast("Not enough credits to auto-spin."); return; }
+    state.autoActive = true;
+    state.autoSpinsLeft = CONFIG.autoSpinMax;
+    Sound.click(); updateUI(); doSpin();
+  }
+  function stopAuto(msg) {
+    state.autoActive = false;
+    state.autoSpinsLeft = 0;
+    if (msg) toast(msg);
+    updateUI();
+  }
+
+  /* ---------- Toast ---------- */
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    el("toasts").appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  /* ---------- Modals ---------- */
+  function openModal(id) { el(id).classList.add("on"); }
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove("on");
+    });
+  });
+
+  function buildPaytable() {
+    const grid = el("paytableGrid");
+    grid.innerHTML = "";
+    const order = ["wild","scatter","jade","lotus","fan","lantern","coin","bamboo"];
+    order.forEach(id => {
+      const sym = SYMBOLS[id];
+      if (!sym) return;
+      const card = document.createElement("div");
+      card.className = "sym-card" + (sym.special ? " " + sym.special : "");
+      const ic = document.createElement("div"); ic.className = "ic";
+      const img = document.createElement("img");
+      img.src = SpriteLoader.dataUrl(sym.sprite, 96, 96);
+      img.alt = sym.name;
+      ic.appendChild(img); card.appendChild(ic);
+      const nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = sym.name;
+      card.appendChild(nm);
+      const py = document.createElement("div"); py.className = "py";
+      if (sym.special === "scatter") py.innerHTML = "3 → 8 · 4 → 12<small>5+ → 15 FREE SPINS</small>";
+      else if (sym.special === "wild") py.innerHTML = "×" + sym.base.toFixed(2) + " base<small>Substitutes any</small>";
+      else py.innerHTML = "×" + sym.base.toFixed(2) + " base";
+      card.appendChild(py);
+      grid.appendChild(card);
+    });
+  }
+  function buildHistory() {
+    const list = el("historyList");
+    if (!ui.history.length) {
+      list.innerHTML = '<li style="color:var(--dim)">No spins yet.</li>';
+      return;
+    }
+    list.innerHTML = ui.history.map(h => {
+      const cls = h.win > 0 ? "" : "loss";
+      const tag = h.free ? " [FREE]" : "";
+      return '<li class="' + cls + '"><span>' + h.ts.toLocaleTimeString() + tag +
+        ' · Bet ' + h.bet + ' · Chain ' + h.chain + ' · 🏮' + h.scatters +
+        '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+    }).join("");
+  }
+
+  /* ---------- Events ---------- */
+  ui.spin.addEventListener("click", () => { Sound.click(); doSpin(); });
+  ui.auto.addEventListener("click", startAuto);
+  ui.stop.addEventListener("click", () => stopAuto("Auto-spin stopped."));
+
+  el("betDown").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    state.betIndex = Math.max(0, state.betIndex - 1);
+    Sound.click(); updateUI();
+  });
+  el("betUp").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    state.betIndex = Math.min(CONFIG.betSteps.length - 1, state.betIndex + 1);
+    Sound.click(); updateUI();
+  });
+
+  el("paytableBtn").addEventListener("click", () => { buildPaytable(); openModal("paytableModal"); });
+  el("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  el("historyBtn").addEventListener("click", () => { buildHistory(); openModal("historyModal"); });
+
+  ui.sound.addEventListener("click", () => {
+    const on = Sound.toggle();
+    ui.sound.textContent = on ? "🔊" : "🔇";
+    ui.sound.classList.toggle("on", on);
+    if (on) Sound.click();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset the demo? Balance will return to " + CONFIG.startingBalance + ".")) return;
+    stopAuto();
+    state.balance = CONFIG.startingBalance;
+    state.betIndex = CONFIG.defaultBetIndex;
+    state.inFreeSpins = false;
+    state.freeSpinsLeft = 0;
+    state.lastWin = 0;
+    state.lastNet = 0;
+    state.spinWin = 0;
+    state.chainLevel = 0;
+    ui.history = [];
+    anim.winCells = {};
+    anim.particles = [];
+    anim.shockwaves = [];
+    anim.cellFall = {};
+    anim.cellPop = {};
+    anim.cellSpawn = {};
+    reelAnim.active = false;
+    reelAnim.cols = [];
+    state.board = generateBoard();
+    setBg("normal");
+    ui.chainBadge.classList.remove("on");
+    ui.multStrip.style.transition = "none";
+    ui.multStrip.style.transform = "translateY(0px)";
+    multAbsIdx = 0;
+    updateUI(true);
+    toast("Demo reset.");
+  });
+
+  document.addEventListener("keydown", e => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (!ui.spin.disabled) doSpin();
+    }
+    if (e.code === "Escape")
+      document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on"));
+    if (e.key === "a" || e.key === "A") startAuto();
+    if (e.key === "s" || e.key === "S") stopAuto();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.autoActive) stopAuto("Auto-spin paused (tab inactive).");
+  });
+
+  /* ---------- BOOT ---------- */
+  async function boot() {
+    setBg("normal");
+    buildMultStrip();
+    await SpriteLoader.load();
+    resize();
+    updateUI();
+    requestAnimationFrame(render);
+    setTimeout(() => toast("Welcome to Mystic Temple — press SPIN."), 400);
+  }
+  boot();
+})();
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pirate Fortune — Slot Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-deep:#050810;
+  --bg-panel:rgba(14,20,36,0.72);
+  --gold:#f6c945;
+  --gold-2:#ffdf7a;
+  --gold-dark:#8a5b13;
+  --teal:#22d3ee;
+  --teal-2:#67e8f9;
+  --crimson:#e11d48;
+  --emerald:#10b981;
+  --violet:#a855f7;
+  --text:#f1f5f9;
+  --text-dim:#94a3b8;
+  --radius:14px;
+  --radius-lg:22px;
+  --shadow-deep:0 24px 60px rgba(0,0,0,.75);
+  --speed:1;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Rajdhani',system-ui,sans-serif;
+  background:var(--bg-deep);
+  color:var(--text);
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  user-select:none;
+}
+/* ---------- full-page sea backdrop ---------- */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;
+  background:#000 center/cover no-repeat url('../../assets/ultimate_multi_slot_sprite.jpg');
+  background-size:cover;background-position:center;
+  filter:brightness(.55) saturate(1.1);
+  opacity:.9;
+}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(34,211,238,.18),transparent 60%),
+    radial-gradient(ellipse at 50% 100%,rgba(246,201,69,.12),transparent 60%),
+    linear-gradient(180deg,rgba(5,8,16,.55),rgba(5,8,16,.85));
+}
+/* ---------- game shell ---------- */
+#game{
+  position:relative;z-index:5;
+  width:min(1200px,97vw);
+  height:min(760px,96vh);
+  background:linear-gradient(155deg,rgba(20,28,48,.75),rgba(6,10,22,.85));
+  backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(246,201,69,.35);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-deep),inset 0 0 60px rgba(34,211,238,.08),0 0 80px rgba(246,201,69,.12);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:
+    linear-gradient(120deg,transparent 40%,rgba(255,255,255,.05) 50%,transparent 60%);
+  animation:shine 9s ease-in-out infinite;
+}
+@keyframes shine{0%,60%{transform:translateX(-120%)}85%,100%{transform:translateX(120%)}}
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 20px;
+  background:linear-gradient(180deg,rgba(0,0,0,.55),transparent);
+  border-bottom:1px solid rgba(246,201,69,.18);
+  gap:12px;flex-wrap:wrap;
+}
+.brand{
+  font-family:'Pirata One',serif;
+  font-size:1.9rem;letter-spacing:2px;
+  color:var(--gold);
+  text-shadow:0 0 20px rgba(246,201,69,.65),0 2px 0 var(--gold-dark);
+  display:flex;align-items:center;gap:10px;
+}
+.brand .skull{font-size:1.4rem;filter:drop-shadow(0 0 8px var(--gold))}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 12px;border-radius:20px;
+  background:rgba(0,0,0,.45);border:1px solid rgba(34,211,238,.4);
+  color:var(--teal-2);font-size:.72rem;font-weight:700;letter-spacing:1px;
+  cursor:pointer;transition:.2s;font-family:'Orbitron',sans-serif;
+}
+.pill:hover{background:rgba(34,211,238,.18);color:#fff;transform:translateY(-1px)}
+.pill.on{background:rgba(246,201,69,.2);border-color:var(--gold);color:var(--gold)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:24px;background-image:linear-gradient(45deg,transparent 50%,var(--teal-2) 50%),linear-gradient(135deg,var(--teal-2) 50%,transparent 50%);background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+
+/* ---------- main ---------- */
+.main{
+  flex:1;display:grid;
+  grid-template-columns:1fr 260px;
+  gap:14px;padding:14px;min-height:0;
+}
+.reel-wrap{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(10,16,30,.55),rgba(4,8,18,.85));
+  border:1px solid rgba(246,201,69,.28);
+  box-shadow:inset 0 0 50px rgba(0,0,0,.7),0 0 30px rgba(34,211,238,.15);
+  overflow:hidden;min-height:0;
+}
+canvas#reels{display:block;width:100%;height:100%}
+/* free-spins banner */
+#fsBanner{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  padding:8px 22px;border-radius:30px;
+  background:linear-gradient(160deg,rgba(168,85,247,.85),rgba(80,20,140,.9));
+  border:2px solid var(--violet);
+  box-shadow:0 0 30px rgba(168,85,247,.7);
+  font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:.9rem;
+  color:#fff;text-shadow:0 0 10px #fff;
+  display:none;z-index:20;
+  animation:pulse 1.4s ease-in-out infinite;
+}
+#fsBanner.on{display:block}
+@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+
+/* ---------- dashboard ---------- */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0}
+.stat{
+  background:linear-gradient(160deg,rgba(20,28,48,.7),rgba(8,12,24,.85));
+  border:1px solid rgba(246,201,69,.25);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  position:relative;overflow:hidden;
+}
+.stat .lbl{font-size:.65rem;letter-spacing:2px;color:var(--text-dim);font-weight:700;text-transform:uppercase}
+.stat .val{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.5rem;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat.balance .val{color:var(--gold);text-shadow:0 0 16px rgba(246,201,69,.55)}
+.stat.win .val{color:var(--emerald);text-shadow:0 0 16px rgba(16,185,129,.55)}
+.stat .val.pop{animation:pop .5s cubic-bezier(.2,.7,.3,1.4)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25);filter:brightness(1.6)}100%{transform:scale(1)}}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.4);border:1px solid rgba(34,211,238,.3);
+  border-radius:12px;padding:6px;
+}
+.bet-row .btn{
+  width:38px;height:38px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--teal-2),var(--teal));
+  border:none;border-radius:8px;color:#041018;font-weight:900;font-size:1.2rem;
+  cursor:pointer;transition:.15s;
+  box-shadow:0 2px 0 rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.15)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.6)}
+.bet-row .amt{
+  flex:1;text-align:center;
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.05rem;
+  color:#fff;font-variant-numeric:tabular-nums;
+}
+.bet-row .amt small{display:block;font-size:.55rem;color:var(--text-dim);letter-spacing:1.5px;font-weight:600}
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:8px 6px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(34,211,238,.12),rgba(34,211,238,.04));
+  border:1px solid rgba(34,211,238,.35);
+  color:var(--teal-2);font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:.15s;
+}
+.mini:hover{background:rgba(34,211,238,.22);color:#fff}
+.mini.on{background:linear-gradient(160deg,var(--gold),var(--gold-2));color:#2a1a00;border-color:var(--gold-2);box-shadow:0 0 18px rgba(246,201,69,.55)}
+.spin{
+  padding:20px 10px;border-radius:16px;border:none;cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.35rem;letter-spacing:3px;
+  color:#2a1a00;
+  background:radial-gradient(circle at 32% 28%,#fff6c8 0%,var(--gold) 42%,var(--gold-dark) 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.45),0 0 40px rgba(246,201,69,.55),inset 0 2px 0 rgba(255,255,255,.6);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 0 rgba(0,0,0,.45),0 0 60px rgba(246,201,69,.85),inset 0 2px 0 rgba(255,255,255,.6)}
+.spin:active:not(:disabled){transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px rgba(246,201,69,.6)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.35)}
+.spin .autocnt{
+  display:block;font-size:.6rem;letter-spacing:1.5px;
+  color:rgba(0,0,0,.55);margin-top:2px;font-weight:700;
+}
+
+/* ---------- modals ---------- */
+.modal{
+  position:fixed;inset:0;z-index:900;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(8px);
+  padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex}
+.modal-card{
+  width:min(760px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(24,32,54,.98),rgba(8,12,24,.98));
+  border:2px solid rgba(246,201,69,.55);
+  border-radius:20px;padding:22px 26px;
+  box-shadow:0 0 60px rgba(246,201,69,.35);
+}
+.modal-card h2{
+  font-family:'Pirata One',serif;font-size:2rem;letter-spacing:2px;color:var(--gold);
+  margin-bottom:10px;text-shadow:0 0 20px rgba(246,201,69,.4);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.modal-card h2 button{
+  background:rgba(246,201,69,.15);border:1px solid var(--gold);color:var(--gold);
+  padding:6px 14px;border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;
+  font-size:.7rem;font-weight:700;letter-spacing:1px;
+}
+.modal-card h2 button:hover{background:rgba(246,201,69,.3);color:#fff}
+.modal-card p{line-height:1.65;color:#d8dde8;font-size:.9rem;margin:8px 0}
+.modal-card .rules{color:#c9d2e0;font-size:.88rem}
+.modal-card .rules b{color:var(--gold-2)}
+.modal-card .grid-sym{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;margin:14px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.4);border:1px solid rgba(34,211,238,.28);border-radius:12px;
+  padding:10px;text-align:center;
+}
+.sym-card .ic{
+  width:70px;height:70px;margin:0 auto 6px;
+  border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.5);border:1px solid rgba(246,201,69,.2);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.sym-card .nm{font-size:.65rem;color:#aab4c5;letter-spacing:1px;text-transform:uppercase;font-weight:700}
+.sym-card .py{font-family:'Orbitron',sans-serif;font-size:.72rem;color:var(--gold);font-weight:700;margin-top:2px}
+.sym-card.wild .ic{border-color:var(--emerald);box-shadow:0 0 12px rgba(16,185,129,.5)}
+.sym-card.wild .py{color:var(--emerald)}
+.sym-card.scatter .ic{border-color:var(--violet);box-shadow:0 0 12px rgba(168,85,247,.5)}
+.sym-card.scatter .py{color:var(--violet)}
+.history{list-style:none;font-size:.78rem}
+.history li{
+  display:flex;justify-content:space-between;gap:10px;padding:6px 8px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.history li b{color:var(--emerald);font-family:'Orbitron',sans-serif}
+.history li.loss b{color:#f87171}
+
+/* ---------- win overlay ---------- */
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.85));
+  backdrop-filter:blur(6px);pointer-events:none;
+}
+#winOv.on{display:flex}
+#winOv .box{
+  text-align:center;padding:28px 44px;border-radius:24px;
+  background:linear-gradient(160deg,rgba(30,20,8,.95),rgba(6,10,20,.95));
+  border:3px solid var(--gold);
+  box-shadow:0 0 80px rgba(246,201,69,.7),inset 0 0 40px rgba(246,201,69,.15);
+  animation:winPop .55s cubic-bezier(.2,.7,.3,1.5);
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-6deg);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Pirata One',serif;font-size:2.6rem;letter-spacing:4px;
+  color:#fff;text-shadow:0 0 30px var(--gold),0 0 60px var(--crimson);
+}
+#winOv .amt{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:2.4rem;
+  color:var(--gold);text-shadow:0 0 26px var(--gold);margin-top:8px;
+  font-variant-numeric:tabular-nums;
+}
+#winOv .sub{font-size:.75rem;color:#aab4c5;letter-spacing:2px;margin-top:8px;font-weight:700}
+
+/* ---------- toast ---------- */
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  z-index:950;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(20,28,48,.95),rgba(8,12,24,.95));
+  border:1px solid var(--teal);color:var(--teal-2);
+  font-size:.8rem;font-weight:700;letter-spacing:1px;
+  box-shadow:0 8px 30px rgba(0,0,0,.6),0 0 20px rgba(34,211,238,.35);
+  animation:toastIn .3s ease,toastOut .3s ease 2.5s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .dash .stat{flex:1;min-width:120px;padding:8px 10px}
+  .dash .stat .val{font-size:1.1rem}
+  .controls{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .bet-row{flex:1 1 100%}
+  .mini-row{flex:1 1 45%}
+  .spin{flex:1 1 100%;padding:14px;font-size:1.1rem}
+  .brand{font-size:1.4rem}
+  .topbar{padding:8px 12px}
+  .pill{padding:5px 10px;font-size:.65rem}
+}
+@media (max-width:480px){
+  .stat .lbl{font-size:.55rem}
+  .stat .val{font-size:1rem}
+  .mini{font-size:.6rem;padding:6px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  #game::before{display:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+
+<div id="game">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand"><span class="skull">☠️</span><span>Pirate Fortune</span></div>
+    <div class="topbar-right">
+      <select id="speedSel" class="pill" title="Spin speed">
+        <option value="0.7">🐢 Slow</option>
+        <option value="1" selected>⚡ Normal</option>
+        <option value="1.6">🚀 Fast</option>
+        <option value="2.4">💨 Turbo</option>
+      </select>
+      <button class="pill" id="paytableBtn">📜 Paytable</button>
+      <button class="pill" id="helpBtn">❓ Help</button>
+      <button class="pill" id="historyBtn">🕘 History</button>
+      <button class="pill" id="soundBtn" title="Sound on/off">🔊 Sound</button>
+      <button class="pill" id="resetBtn" title="Reset demo">♻ Reset</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="reel-wrap">
+      <div id="fsBanner">🎰 FREE SPINS: <span id="fsCount">0</span></div>
+      <canvas id="reels"></canvas>
+    </div>
+
+    <div class="dash">
+      <div class="stat balance">
+        <div class="lbl">Balance</div>
+        <div class="val" id="balanceVal">1,000</div>
+      </div>
+      <div class="stat win">
+        <div class="lbl">Last Win</div>
+        <div class="val" id="winVal">0</div>
+      </div>
+
+      <div class="controls">
+        <div class="bet-row">
+          <button class="btn" id="betDown">−</button>
+          <div class="amt">
+            <span id="betVal">10</span>
+            <small>BET / LINE</small>
+          </div>
+          <button class="btn" id="betUp">+</button>
+        </div>
+        <div class="bet-row" style="padding:8px 12px">
+          <div class="amt" style="text-align:left">
+            <span id="totalBetVal">150</span>
+            <small>TOTAL BET · <span id="linesOn">15</span> LINES</small>
+          </div>
+          <button class="btn" id="linesAll" style="width:auto;padding:0 12px;font-size:.7rem;letter-spacing:1px">ALL</button>
+        </div>
+
+        <div class="mini-row">
+          <button class="mini" id="autoBtn">🔁 AUTO</button>
+          <button class="mini" id="stopBtn">⏹ STOP</button>
+        </div>
+
+        <button class="spin" id="spinBtn">
+          SPIN
+          <span class="autocnt" id="autoCnt"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYTABLE MODAL -->
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>📜 Paytable <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Match <b>3+ identical symbols from left to right</b> on an active payline. Payouts shown are multiples of your <b>line bet</b>.</p>
+    <div class="grid-sym" id="paytableGrid"></div>
+    <p class="rules"><b>WILD</b> substitutes for any regular symbol and pays on its own. <b>SCATTER</b> pays anywhere on the reels and triggers <b>Free Spins</b>.</p>
+    <p class="rules" style="margin-top:14px"><b>Free Spins:</b> 3 Scatters → 8 spins · 4 Scatters → 12 spins · 5+ Scatters → 20 spins. Free spins use a ×2 multiplier on all wins.</p>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>❓ How To Play <button data-close>✕ CLOSE</button></h2>
+    <p>1. Choose your <b>bet per line</b> using the + / − buttons.</p>
+    <p>2. Toggle <b>active paylines</b> or press <b>ALL</b> to activate every line.</p>
+    <p>3. Press <b>SPIN</b> or the <b>SPACE</b> key to play. Total bet = line bet × active paylines.</p>
+    <p>4. Use <b>AUTO</b> to spin automatically (up to 25 spins). Press <b>STOP</b> to cancel.</p>
+    <p><b>Wilds</b> substitute for regular symbols. <b>Scatters</b> pay anywhere and trigger Free Spins. During Free Spins all wins are multiplied ×2 and no bet is deducted.</p>
+    <p style="color:#94a3b8;font-size:.8rem;margin-top:14px">🎮 Virtual-credit demo — for entertainment only. Not for real-money wagering.</p>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>🕘 Session History <button data-close>✕ CLOSE</button></h2>
+    <ul class="history" id="historyList"><li style="color:#94a3b8">No spins yet.</li></ul>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">BIG WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   PIRATE FORTUNE — Slot Game Template
+   Architecture:
+     CONFIG ............ tunable game parameters
+     RNG ............... crypto-based unbiased integer selection
+     SpriteLoader ...... loads the shared sprite sheet
+     PaylineEngine ..... evaluates payline wins (deterministic)
+     BonusEngine ....... scatter / free-spin logic
+     GameEngine ........ state machine + settlement
+     UI ................ rendering, animation, controls
+   ===================================================================== */
+
+/* ------------------------------------------------------------------ */
+/*  CONFIG — all tunable parameters                                    */
+/* ------------------------------------------------------------------ */
+const CONFIG = {
+  title: "Pirate Fortune",
+  cols: 5,
+  rows: 3,
+
+  // balance / bet
+  startingBalance: 1000,
+  betSteps: [1, 2, 5, 10, 20, 50, 100, 250],
+  defaultBetIndex: 3,   // 10
+
+  // auto spin
+  autoSpinMax: 25,
+  autoSpinDelay: 550,   // ms between autospins (before speed divisor)
+
+  // free spins
+  freeSpins: {
+    three: 8,
+    four: 12,
+    fivePlus: 20,
+    multiplier: 2,          // applied to every line win during free spins
+    retrigger: true,        // can scatters retrigger free spins?
+    retriggerAdd: 5         // extra spins added on retrigger
+  },
+
+  // scatter payout (credits per line bet, awarded once per spin)
+  scatterPay: { 3: 2, 4: 10, 5: 50 },
+
+  // paylines (row index per column, 5 columns)
+  paylines: [
+    [1,1,1,1,1],          // 1  middle
+    [0,0,0,0,0],          // 2  top
+    [2,2,2,2,2],          // 3  bottom
+    [0,1,2,1,0],          // 4  V
+    [2,1,0,1,2],          // 5  ^ (inverted V)
+    [0,0,1,2,2],          // 6  top→bottom diag
+    [2,2,1,0,0],          // 7  bottom→top diag
+    [1,0,1,2,1],          // 8  zigzag
+    [1,2,1,0,1],          // 9  zigzag inv
+    [0,1,0,1,0],          // 10 up-down
+    [2,1,2,1,2],          // 11 down-up
+    [1,0,0,0,1],          // 12 top arch
+    [1,2,2,2,1],          // 13 bottom arch
+    [0,1,2,2,2],          // 14 slope right
+    [2,1,0,0,0]           // 15 slope left
+  ]
+};
+
+/* ------------------------------------------------------------------ */
+/*  SYMBOLS — mapped to sprite-sheet index (0..24 of the usable coords) */
+/*  Each symbol: { id, name, sprite, weight, pay: [3,4,5], special? }  */
+/* ------------------------------------------------------------------ */
+const SYMBOLS = [
+  // Wild — special
+  { id:"wild",    name:"Wild",    sprite:0,  weight:3,  pay:[10,50,200], special:"wild" },
+  // Scatter — special
+  { id:"scatter", name:"Scatter", sprite:1,  weight:3,  pay:[0,0,0],     special:"scatter" },
+  // High value
+  { id:"shark",   name:"Shark",   sprite:2,  weight:6,  pay:[10,30,120] },
+  { id:"anchor",  name:"Anchor",  sprite:3,  weight:8,  pay:[8, 20,80] },
+  { id:"cannon",  name:"Cannon",  sprite:4,  weight:10, pay:[6, 15,60] },
+  { id:"rum",     name:"Rum",     sprite:5,  weight:12, pay:[4, 12,50] },
+  // Mid value
+  { id:"map",     name:"Map",     sprite:6,  weight:14, pay:[3, 10,40] },
+  { id:"compass", name:"Compass", sprite:7,  weight:16, pay:[3, 8, 30] },
+  // Low value
+  { id:"coin",    name:"Coin",    sprite:8,  weight:20, pay:[2, 5, 20] },
+  { id:"flag",    name:"Flag",    sprite:9,  weight:20, pay:[2, 5, 20] }
+];
+
+/* ------------------------------------------------------------------ */
+/*  RNG — crypto-based unbiased integer selection                      */
+/* ------------------------------------------------------------------ */
+const RNG = (() => {
+  const buf = new Uint32Array(1);
+  const cryptoObj = (typeof crypto !== "undefined" && crypto.getRandomValues) ? crypto : null;
+
+  function uint32() {
+    if (cryptoObj) { cryptoObj.getRandomValues(buf); return buf[0] >>> 0; }
+    // Fallback: only used if crypto is completely unavailable
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  // Unbiased integer in [0, n)
+  function int(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error("RNG.int: invalid range " + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;   // rejection threshold
+    let r;
+    do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  // Weighted pick from a list of {weight} items
+  function weighted(items) {
+    const total = items.reduce((s, x) => s + x.weight, 0);
+    if (total <= 0) throw new Error("RNG.weighted: total weight is 0");
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++) {
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted, uint32 };
+})();
+
+/* ------------------------------------------------------------------ */
+/*  SPRITE LOADER — pulls cropping rects from symbols.json layout      */
+/*  Uses ALL coordinates except the LAST 8 (UI text elements).         */
+/* ------------------------------------------------------------------ */
+const SPRITE_COORDS = [
+  // coordinate list from symbols.json -> "ultimate_multi_slot_sprite.jpg"
+  // (first 25 coords, last 8 are text/UI elements that are excluded)
+  {x:25,  y:402, w:82, h:64},
+  {x:115, y:401, w:78, h:67},
+  {x:199, y:403, w:78, h:61},
+  {x:287, y:402, w:75, h:66},
+  {x:376, y:401, w:73, h:69},
+  {x:25,  y:477, w:79, h:58},
+  {x:116, y:474, w:77, h:60},
+  {x:202, y:474, w:75, h:60},
+  {x:289, y:481, w:66, h:46},
+  {x:372, y:477, w:79, h:60},
+  {x:27,  y:569, w:69, h:84},
+  {x:112, y:568, w:66, h:85},
+  {x:197, y:569, w:65, h:84},
+  {x:280, y:569, w:65, h:84},
+  {x:479, y:125, w:67, h:68},
+  {x:562, y:207, w:66, h:67},
+  {x:716, y:205, w:68, h:66},
+  {x:799, y:207, w:63, h:62},
+  {x:881, y:204, w:58, h:70},
+  {x:973, y:125, w:76, h:69},
+  {x:1058,y:126, w:71, h:71},
+  {x:1141,y:126, w:71, h:69},
+  {x:1224,y:130, w:71, h:64},
+  {x:1304,y:126, w:76, h:68},
+  {x:976, y:606, w:128,h:49}
+];
+
+const SpriteLoader = (() => {
+  const img = new Image();
+  let ready = false;
+  const spriteUrl = "../../assets/ultimate_multi_slot_sprite.jpg";
+
+  function load() {
+    return new Promise((resolve) => {
+      img.onload  = () => { ready = true; resolve(true); };
+      img.onerror = () => {
+        console.warn("[sprite] failed to load " + spriteUrl + " — using fallback glyphs");
+        ready = false; resolve(false);
+      };
+      img.src = spriteUrl;
+      // safety timeout
+      setTimeout(() => { if (!ready) resolve(false); }, 8000);
+    });
+  }
+
+  function drawTo(ctx, spriteIdx, dx, dy, dw, dh, alpha = 1) {
+    const c = SPRITE_COORDS[spriteIdx];
+    if (!c) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (ready) {
+      try { ctx.drawImage(img, c.x, c.y, c.w, c.h, dx, dy, dw, dh); }
+      catch (e) { drawFallback(ctx, spriteIdx, dx, dy, dw, dh); }
+    } else {
+      drawFallback(ctx, spriteIdx, dx, dy, dw, dh);
+    }
+    ctx.restore();
+  }
+
+  function drawFallback(ctx, idx, x, y, w, h) {
+    const palette = ["#f6c945","#22d3ee","#e11d48","#10b981","#a855f7","#f97316","#eab308","#ef4444","#3b82f6","#84cc16"];
+    ctx.fillStyle = palette[idx % palette.length];
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = "#000";
+    ctx.font = "bold " + Math.floor(h * 0.4) + "px Orbitron, Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(String(idx + 1), x + w / 2, y + h / 2);
+  }
+
+  function dataUrl(idx, w = 64, h = 64) {
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    const cx = c.getContext("2d");
+    drawTo(cx, idx, 0, 0, w, h);
+    return c.toDataURL();
+  }
+
+  return { load, drawTo, dataUrl, isReady: () => ready };
+})();
+
+/* ------------------------------------------------------------------ */
+/*  PAYLINE ENGINE — deterministic evaluation with wild substitution   */
+/* ------------------------------------------------------------------ */
+const PaylineEngine = (() => {
+  const byId = Object.fromEntries(SYMBOLS.map(s => [s.id, s]));
+
+  /* Determine the effective matching symbol for a line's symbols.
+     Returns { symbolId, count } or null. */
+  function matchLine(symbolIds) {
+    // Count from the first position; wilds fill in. Wilds may also be
+    // the anchor if the first symbol is wild.
+    const n = symbolIds.length;
+    if (n < 3) return null;
+
+    // Case 1: leading symbol is a regular paying symbol
+    const first = symbolIds[0];
+    if (first !== "scatter") {
+      let target = first === "wild" ? null : first;
+      let count = 0;
+      for (let i = 0; i < n; i++) {
+        const s = symbolIds[i];
+        if (s === "scatter") break;
+        if (s === "wild") { count++; continue; }
+        if (target === null) { target = s; count++; continue; }
+        if (s === target) { count++; continue; }
+        break;
+      }
+      if (count < 3) return null;
+
+      // If we matched pure wilds, the payout uses the wild symbol itself
+      const finalId = target === null ? "wild" : target;
+      // Make sure the chosen symbol actually pays for this length
+      const def = byId[finalId];
+      if (!def) return null;
+      if (!def.pay[count - 3] || def.pay[count - 3] <= 0) return null;
+      return { symbolId: finalId, count };
+    }
+    return null;
+  }
+
+  /* Evaluate a full board for one active payline */
+  function evaluateLine(board, lineIdx, lineBet, lineMask, cfg) {
+    const line = cfg.paylines[lineIdx];
+    if (!line || !lineMask[lineIdx]) return null;
+
+    const symbols = line.map((row, col) => board[col][row]);
+    const m = matchLine(symbols);
+    if (!m) return null;
+
+    const def = byId[m.symbolId];
+    const multiplier = def.pay[m.count - 3] || 0;
+    if (multiplier <= 0) return null;
+
+    // winning cells
+    const cells = [];
+    for (let c = 0; c < m.count; c++) cells.push([c, line[c]]);
+
+    return {
+      line: lineIdx,
+      symbolId: m.symbolId,
+      count: m.count,
+      cells,
+      multiplier,
+      payout: lineBet * multiplier
+    };
+  }
+
+  /* Evaluate all active paylines — returns { wins:[], total } */
+  function evaluateAll(board, lineBet, lineMask, cfg) {
+    const wins = [];
+    let total = 0;
+    for (let i = 0; i < cfg.paylines.length; i++) {
+      const w = evaluateLine(board, i, lineBet, lineMask, cfg);
+      if (w) { wins.push(w); total += w.payout; }
+    }
+    return { wins, total };
+  }
+
+  return { matchLine, evaluateLine, evaluateAll };
+})();
+
+/* ------------------------------------------------------------------ */
+/*  BONUS ENGINE — scatter & free spins                                */
+/* ------------------------------------------------------------------ */
+const BonusEngine = (() => {
+  function countScatters(board, cfg) {
+    let n = 0;
+    for (let c = 0; c < cfg.cols; c++)
+      for (let r = 0; r < cfg.rows; r++)
+        if (board[c][r] === "scatter") n++;
+    return n;
+  }
+
+  function scatterPrize(count, lineBet, cfg) {
+    const pay = cfg.scatterPay[Math.min(count, 5)] || 0;
+    return pay > 0 ? pay * lineBet : 0;
+  }
+
+  function freeSpinsFor(count, cfg) {
+    if (count >= 5) return cfg.freeSpins.fivePlus;
+    if (count === 4) return cfg.freeSpins.four;
+    if (count === 3) return cfg.freeSpins.three;
+    return 0;
+  }
+
+  return { countScatters, scatterPrize, freeSpinsFor };
+})();
+
+/* ------------------------------------------------------------------ */
+/*  GAME ENGINE — state machine + settlement                           */
+/* ------------------------------------------------------------------ */
+const GameEngine = (() => {
+  const state = {
+    phase: "idle",              // idle | spinning | evaluating | bonus | settled
+    balance: CONFIG.startingBalance,
+    betIndex: CONFIG.defaultBetIndex,
+    lineMask: CONFIG.paylines.map(() => true),
+    board: [],
+    lastWin: 0,
+    lastNet: 0,
+    freeSpinsLeft: 0,
+    inFreeSpins: false,
+    autoSpinsLeft: 0,
+    autoActive: false,
+    totalBet: 0
+  };
+
+  function lineBet()  { return CONFIG.betSteps[state.betIndex]; }
+  function activeLines() { return state.lineMask.filter(Boolean).length; }
+  function totalBet() { return lineBet() * activeLines(); }
+
+  /* Build a random board using weighted selection */
+  function generateBoard() {
+    const pool = SYMBOLS.filter(s => s.weight > 0);
+    const board = [];
+    for (let c = 0; c < CONFIG.cols; c++) {
+      const col = [];
+      for (let r = 0; r < CONFIG.rows; r++) {
+        col.push(RNG.weighted(pool).id);
+      }
+      board.push(col);
+    }
+    return board;
+  }
+
+  /* Validate that a spin can proceed */
+  function canSpin() {
+    if (state.phase === "spinning" || state.phase === "evaluating") return false;
+    if (state.inFreeSpins && state.freeSpinsLeft > 0) return true;
+    return state.balance >= totalBet() && activeLines() > 0;
+  }
+
+  /* Settle a completed board — evaluates, pays out, updates free spins.
+     Returns a settlement result object. */
+  function settle(board) {
+    const lb = lineBet();
+    const lines = PaylineEngine.evaluateAll(board, lb, state.lineMask, CONFIG);
+    const scatters = BonusEngine.countScatters(board, CONFIG);
+    const scatterWin = BonusEngine.scatterPrize(scatters, lb, CONFIG);
+
+    let total = lines.total + scatterWin;
+    let multiplierApplied = 1;
+    if (state.inFreeSpins) {
+      multiplierApplied = CONFIG.freeSpins.multiplier;
+      total = total * multiplierApplied;
+    }
+
+    // free spin trigger / retrigger
+    let triggeredSpins = 0;
+    if (scatters >= 3) {
+      triggeredSpins = BonusEngine.freeSpinsFor(scatters, CONFIG);
+      if (state.inFreeSpins) {
+        if (CONFIG.freeSpins.retrigger) {
+          triggeredSpins = CONFIG.freeSpins.retriggerAdd;
+        } else {
+          triggeredSpins = 0;
+        }
+      }
+    }
+
+    return {
+      board,
+      wins: lines.wins,
+      lineWin: lines.total,
+      scatters,
+      scatterWin,
+      triggeredSpins,
+      multiplierApplied,
+      totalWin: total
+    };
+  }
+
+  return {
+    state, lineBet, activeLines, totalBet,
+    generateBoard, canSpin, settle,
+    setBetIndex(i) {
+      state.betIndex = Math.max(0, Math.min(CONFIG.betSteps.length - 1, i));
+    },
+    toggleLine(i) {
+      state.lineMask[i] = !state.lineMask[i];
+      if (state.lineMask.every(v => !v)) state.lineMask[0] = true;
+    },
+    setAllLines(v) { state.lineMask = state.lineMask.map(() => v); }
+  };
+})();
+
+/* ====================================================================
+   UI LAYER — rendering, animation, controls
+   ==================================================================== */
+(() => {
+  const canvas = document.getElementById("reels");
+  const ctx = canvas.getContext("2d");
+  const state = GameEngine.state;
+
+  const el = id => document.getElementById(id);
+  const ui = {
+    balance: el("balanceVal"),
+    win: el("winVal"),
+    bet: el("betVal"),
+    totalBet: el("totalBetVal"),
+    linesOn: el("linesOn"),
+    spin: el("spinBtn"),
+    auto: el("autoBtn"),
+    stop: el("stopBtn"),
+    autoCnt: el("autoCnt"),
+    fsBanner: el("fsBanner"),
+    fsCount: el("fsCount"),
+    winOv: el("winOv"),
+    winTier: el("winTier"),
+    winAmt: el("winAmt"),
+    winSub: el("winSub"),
+    speed: el("speedSel"),
+    sound: el("soundBtn"),
+    history: []
+  };
+
+  /* ---------- CANVAS SIZE ---------- */
+  let CW = 1, CH = 1, DPR = Math.min(2, window.devicePixelRatio || 1);
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    CW = Math.max(1, Math.floor(r.width));
+    CH = Math.max(1, Math.floor(r.height));
+    canvas.width  = CW * DPR;
+    canvas.height = CH * DPR;
+    canvas.style.width  = CW + "px";
+    canvas.style.height = CH + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  /* ---------- LAYOUT ---------- */
+  function cellRect(c, r) {
+    const padX = 14, padY = 46, padB = 26;
+    const cw = (CW - padX * 2) / CONFIG.cols;
+    const ch = (CH - padY - padB) / CONFIG.rows;
+    return { x: padX + c * cw, y: padY + r * ch, w: cw, h: ch };
+  }
+
+  /* ---------- ANIMATION STATE ---------- */
+  const anim = {
+    phase: "idle",
+    startT: 0,
+    colDone: [],
+    winCells: new Set(),
+    winLines: [],
+    particles: [],
+    glowPhase: 0,
+    revealT: [],
+    lastFrame: performance.now()
+  };
+
+  /* ---------- INITIAL BOARD ---------- */
+  state.board = GameEngine.generateBoard();
+
+  /* ---------- RENDER ---------- */
+  function render() {
+    const now = performance.now();
+    const dt = Math.min(50, now - anim.lastFrame);
+    anim.lastFrame = now;
+    anim.glowPhase += dt / 260;
+
+    ctx.clearRect(0, 0, CW, CH);
+
+    // reel cabinet backdrop
+    const g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, "rgba(4,10,24,0.5)");
+    g.addColorStop(1, "rgba(2,4,12,0.75)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // title strip
+    ctx.font = "900 13px Orbitron, Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = state.inFreeSpins ? "#a855f7" : "#f6c945";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 16;
+    ctx.fillText(state.inFreeSpins ? "★ FREE SPINS ★" : "★ PIRATE FORTUNE ★", CW / 2, 22);
+    ctx.shadowBlur = 0;
+
+    // draw cells
+    for (let c = 0; c < CONFIG.cols; c++) {
+      for (let r = 0; r < CONFIG.rows; r++) {
+        drawCell(c, r, now);
+      }
+    }
+
+    // draw winning payline overlays
+    drawPaylines(now);
+
+    // particles
+    drawParticles(dt);
+
+    requestAnimationFrame(render);
+  }
+
+  function drawCell(c, r, now) {
+    const { x, y, w, h } = cellRect(c, r);
+    const pad = Math.max(4, Math.min(w, h) * 0.06);
+    const px = x + pad, py = y + pad, pw = w - pad * 2, ph = h - pad * 2;
+    const key = c + "," + r;
+    const isWin = anim.winCells.has(key);
+    const symId = state.board[c][r];
+
+    // plate
+    ctx.save();
+    ctx.beginPath();
+    roundRect(ctx, px, py, pw, ph, Math.min(pw, ph) * 0.16);
+    ctx.fillStyle = isWin
+      ? "rgba(246,201,69,0.20)"
+      : "rgba(0,0,0,0.45)";
+    ctx.fill();
+    ctx.lineWidth = isWin ? 2 : 1;
+    ctx.strokeStyle = isWin ? "rgba(246,201,69,0.9)" : "rgba(34,211,238,0.14)";
+    if (isWin) {
+      const pulse = 0.55 + Math.sin(anim.glowPhase * 3) * 0.35;
+      ctx.shadowColor = "#f6c945";
+      ctx.shadowBlur = 14 + pulse * 12;
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // reveal animation
+    let scale = 1, alpha = 1, dy = 0;
+    const reveal = anim.revealT[c];
+    if (reveal && reveal > 0) {
+      const t = 1 - reveal;
+      scale = 0.55 + 0.45 * easeOutBack(t);
+      dy = -ph * 1.15 * (1 - t);
+      alpha = 0.4 + 0.6 * t;
+    }
+
+    // idle bob
+    if (anim.phase === "idle" && !anim.winCells.size) {
+      const bob = Math.sin(anim.glowPhase * 1.8 + c * 0.9 + r * 0.7) * 0.5 + 0.5;
+      scale *= 1 + bob * 0.012;
+      dy += bob * 2;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(px + pw / 2, py + ph / 2 + dy);
+    ctx.scale(scale, scale);
+
+    // symbol sprite
+    const sym = SYMBOLS.find(s => s.id === symId);
+    const spriteIdx = sym ? sym.sprite : 0;
+    SpriteLoader.drawTo(ctx, spriteIdx, -pw / 2, -ph / 2, pw, ph, 1);
+
+    // symbol name tag
+    if (sym && (sym.special === "wild" || sym.special === "scatter")) {
+      ctx.fillStyle = sym.special === "wild" ? "rgba(16,185,129,0.85)" : "rgba(168,85,247,0.9)";
+      ctx.fillRect(-pw / 2, ph / 2 - 14, pw, 14);
+      ctx.fillStyle = "#fff";
+      ctx.font = "900 9px Orbitron, Arial";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(sym.special.toUpperCase(), 0, ph / 2 - 7);
+    }
+
+    ctx.restore();
+
+    // sparkle for scatter
+    if (sym && sym.special === "scatter" && anim.phase === "idle") {
+      const p = 0.5 + Math.sin(anim.glowPhase * 4 + c + r) * 0.5;
+      ctx.save();
+      ctx.globalAlpha = p * 0.35;
+      ctx.strokeStyle = "#a855f7";
+      ctx.lineWidth = 3;
+      ctx.shadowColor = "#a855f7";
+      ctx.shadowBlur = 18;
+      roundRect(ctx, px, py, pw, ph, Math.min(pw, ph) * 0.16);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawPaylines(now) {
+    anim.winLines.forEach(win => {
+      const pts = win.cells.map(([c, r]) => {
+        const { x, y, w, h } = cellRect(c, r);
+        return [x + w / 2, y + h / 2];
+      });
+      const colors = ["#f6c945","#22d3ee","#e11d48","#10b981","#a855f7","#f97316"];
+      const col = colors[win.line % colors.length];
+      ctx.save();
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = "round";
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 18;
+      ctx.globalAlpha = 0.7 + Math.sin(now / 150) * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawParticles(dt) {
+    anim.particles = anim.particles.filter(p => p.life > 0);
+    anim.particles.forEach(p => {
+      p.x += p.vx * dt * 0.06;
+      p.y += p.vy * dt * 0.06;
+      p.vy += 0.04 * dt * 0.06;
+      p.life -= dt / p.maxLife;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.col;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * Math.max(0.1, p.life), 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function burstParticles(cx, cy, count, colors) {
+    for (let i = 0; i < count; i++) {
+      const a = RNG.int(360) * Math.PI / 180;
+      const sp = 60 + RNG.int(180);
+      anim.particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp * 0.1,
+        vy: Math.sin(a) * sp * 0.1 - 2,
+        size: 2 + RNG.int(4),
+        col: colors[RNG.int(colors.length)],
+        life: 1, maxLife: 900 + RNG.int(700)
+      });
+    }
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  function spinAnimation(callback) {
+    anim.phase = "spinning";
+    anim.winCells.clear();
+    anim.winLines = [];
+
+    const speed  = parseFloat(ui.speed.value) || 1;
+    const baseDuration = 620 / speed;
+    const stagger      = 110 / speed;
+
+    // Pre-generate the final board so animation settles onto it
+    const finalBoard = GameEngine.generateBoard();
+    const POOL = SYMBOLS.filter(s => s.weight > 0);
+
+    // Per-column tracking
+    const colSettled = new Array(CONFIG.cols).fill(false);
+    anim.revealT = new Array(CONFIG.cols).fill(0);
+
+    const start = performance.now();
+
+    // Guard so callback can only ever fire once
+    let finished = false;
+    function finish(board) {
+        if (finished) return;
+        finished = true;
+        anim.phase = "evaluating";
+        callback(board);
+    }
+
+    // Safety net: if for any reason the animation stalls, force-finish it
+    const safetyTimer = setTimeout(() => {
+        for (let c = 0; c < CONFIG.cols; c++) {
+            for (let r = 0; r < CONFIG.rows; r++) {
+                state.board[c][r] = finalBoard[c][r];
+            }
+            anim.revealT[c] = 0;
+        }
+        finish(finalBoard);
+    }, 8000);
+
+    function step() {
+        if (finished) { clearTimeout(safetyTimer); return; }
+
+        const now = performance.now();
+        let allDone = true;
+
+        for (let c = 0; c < CONFIG.cols; c++) {
+            const colStart = start + c * stagger;
+            const p = Math.min(1, (now - colStart) / baseDuration);
+
+            if (p < 1) {
+                // Column is still spinning — flash random symbols
+                for (let r = 0; r < CONFIG.rows; r++) {
+                    state.board[c][r] = POOL[RNG.int(POOL.length)].id;
+                }
+                allDone = false;
+            } else if (!colSettled[c]) {
+                // Lock this column to the final board and start its reveal
+                for (let r = 0; r < CONFIG.rows; r++) {
+                    state.board[c][r] = finalBoard[c][r];
+                }
+                colSettled[c] = true;
+                anim.revealT[c] = 1;
+                const { x, y, w, h } = cellRect(c, 1);
+                burstParticles(x + w / 2, y + h / 2, 8, ["#22d3ee", "#f6c945", "#fff"]);
+                allDone = false;
+            } else if (anim.revealT[c] > 0) {
+                // Reveal animation still running for this column
+                anim.revealT[c] = Math.max(0, anim.revealT[c] - 0.05 * speed);
+                if (anim.revealT[c] > 0) allDone = false;
+            }
+            // else: column is fully settled AND reveal finished → no cost, stays allDone
+        }
+
+        if (allDone) {
+            clearTimeout(safetyTimer);
+            finish(finalBoard);
+        } else {
+            requestAnimationFrame(step);
+        }
+    }
+    step();
+}
+
+  /* ---------- WIN OVERLAY ---------- */
+  function showWinOverlay(totalWin, bet) {
+    let tier = null;
+    const ratio = totalWin / Math.max(1, bet);
+    if (ratio >= 50) tier = "🏆 MEGA WIN!";
+    else if (ratio >= 20) tier = "💥 BIG WIN!";
+    else if (ratio >= 8) tier = "✨ GREAT WIN!";
+    else if (totalWin > 0) tier = "💰 WIN!";
+
+    if (!tier) return;
+
+    ui.winTier.textContent = tier;
+    ui.winAmt.textContent = "+" + totalWin.toLocaleString();
+    ui.winSub.textContent = state.inFreeSpins ? "FREE SPIN WIN · ×" + CONFIG.freeSpins.multiplier : "";
+    ui.winOv.classList.add("on");
+
+    const dur = Math.max(1400, 2400 / (parseFloat(ui.speed.value) || 1));
+    setTimeout(() => ui.winOv.classList.remove("on"), dur);
+
+    // celebration burst
+    const colors = ["#f6c945","#22d3ee","#e11d48","#10b981","#a855f7"];
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        burstParticles(CW * (0.2 + Math.random() * 0.6), CH * 0.5, 40, colors);
+      }, i * 180);
+    }
+  }
+
+  /* ---------- UI UPDATE ---------- */
+  function updateUI(pop) {
+    ui.balance.textContent = state.balance.toLocaleString();
+    ui.win.textContent = state.lastWin.toLocaleString();
+    ui.bet.textContent = GameEngine.lineBet().toLocaleString();
+    ui.totalBet.textContent = GameEngine.totalBet().toLocaleString();
+    ui.linesOn.textContent = GameEngine.activeLines();
+
+    if (pop) {
+      ui.balance.classList.remove("pop");
+      ui.win.classList.remove("pop");
+      void ui.balance.offsetWidth;
+      ui.balance.classList.add("pop");
+      ui.win.classList.add("pop");
+    }
+
+    // spin button state
+    const canPlay = GameEngine.canSpin() && !state.autoActive;
+    ui.spin.disabled = !canPlay && !state.autoActive;
+    if (state.autoActive) {
+      ui.autoCnt.textContent = "AUTO: " + state.autoSpinsLeft;
+    } else {
+      ui.autoCnt.textContent = "";
+    }
+    ui.auto.classList.toggle("on", state.autoActive);
+    ui.fsBanner.classList.toggle("on", state.inFreeSpins);
+    ui.fsCount.textContent = state.freeSpinsLeft;
+  }
+
+  /* ---------- SOUND (Web Audio, no assets) ---------- */
+  const Sound = (() => {
+    let ctxAudio = null;
+    let enabled = true;
+    function ensure() {
+      if (!ctxAudio) {
+        try { ctxAudio = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { ctxAudio = null; }
+      }
+      if (ctxAudio && ctxAudio.state === "suspended") ctxAudio.resume();
+      return ctxAudio;
+    }
+    function tone(freq, dur, type = "sine", vol = 0.08, when = 0) {
+      if (!enabled) return;
+      const c = ensure(); if (!c) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    return {
+      spin() { tone(220, 0.08, "square", 0.05); tone(180, 0.1, "square", 0.04, 0.06); },
+      stop() { tone(400, 0.06, "triangle", 0.05); },
+      win(small) {
+        const notes = small ? [523, 659, 784] : [523, 659, 784, 1047, 1319];
+        notes.forEach((f, i) => tone(f, 0.18, "triangle", 0.08, i * 0.08));
+      },
+      scatter() {
+        [440, 554, 659, 880].forEach((f, i) => tone(f, 0.22, "sine", 0.09, i * 0.1));
+      },
+      click() { tone(880, 0.04, "square", 0.03); },
+      toggle() { enabled = !enabled; return enabled; },
+      isEnabled() { return enabled; }
+    };
+  })();
+
+  /* ---------- SPIN FLOW ---------- */
+  function doSpin() {
+    if (!GameEngine.canSpin()) {
+      if (!state.inFreeSpins && state.balance < GameEngine.totalBet()) {
+        toast("Not enough credits — lower your bet or reset the demo.");
+      }
+      return;
+    }
+    if (state.phase === "spinning" || state.phase === "evaluating") return;
+
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+
+    // ---- DEDUCT BET (only for normal spins) ----
+    if (!isFree) {
+      state.balance -= GameEngine.totalBet();
+      state.phase = "spinning";
+    } else {
+      state.freeSpinsLeft--;
+      state.phase = "spinning";
+    }
+    state.lastWin = 0;
+    state.lastNet = 0;
+    state.autoSpinsLeft = state.autoActive ? state.autoSpinsLeft : 0;
+    updateUI(true);
+    Sound.spin();
+
+    spinAnimation((finalBoard) => {
+      // ---- EVALUATE ----
+      const result = GameEngine.settle(finalBoard);
+      state.phase = "evaluating";
+
+      // apply free-spin trigger/retrigger
+      if (result.triggeredSpins > 0) {
+        if (!state.inFreeSpins) {
+          state.inFreeSpins = true;
+          state.freeSpinsLeft = result.triggeredSpins;
+          Sound.scatter();
+          toast("🎰 " + result.triggeredSpins + " FREE SPINS TRIGGERED!");
+        } else {
+          state.freeSpinsLeft += result.triggeredSpins;
+          Sound.scatter();
+          toast("🎰 RETRIGGER +" + result.triggeredSpins + " SPINS!");
+        }
+      }
+
+      // ---- CREDIT WINNINGS (exactly once) ----
+      const totalWin = result.totalWin;
+      if (totalWin > 0) {
+        state.balance += totalWin;
+        state.lastWin = totalWin;
+      }
+      state.lastNet = totalWin - (isFree ? 0 : GameEngine.totalBet());
+
+      // highlight winning cells
+      anim.winCells = new Set();
+      result.wins.forEach(w => w.cells.forEach(([c, r]) => anim.winCells.add(c + "," + r)));
+      anim.winLines = result.wins;
+
+      // burst particles at each winning cell
+      anim.winCells.forEach(k => {
+        const [c, r] = k.split(",").map(Number);
+        const { x, y, w, h } = cellRect(c, r);
+        burstParticles(x + w / 2, y + h / 2, 6, ["#f6c945","#22d3ee","#fff","#a855f7"]);
+      });
+
+      // history entry
+      ui.history.unshift({
+        ts: new Date(),
+        bet: isFree ? 0 : GameEngine.totalBet(),
+        win: totalWin,
+        free: isFree,
+        scatters: result.scatters
+      });
+      if (ui.history.length > 50) ui.history.pop();
+
+      // ---- WIN OVERLAY ----
+      if (totalWin > 0) {
+        Sound.win(totalWin >= GameEngine.lineBet() * 20);
+        showWinOverlay(totalWin, GameEngine.lineBet());
+      }
+
+      updateUI(true);
+
+      // ---- FREE SPIN EXIT CHECK ----
+      if (state.inFreeSpins && state.freeSpinsLeft <= 0) {
+        state.inFreeSpins = false;
+        toast("Free spins ended — back to normal play.");
+      }
+
+      // ---- CONTINUE / FINISH ----
+      state.phase = "idle";
+
+      const delay = 700 / (parseFloat(ui.speed.value) || 1);
+      const wait = (anim.winLines.length ? 900 : 300) / (parseFloat(ui.speed.value) || 1);
+
+      setTimeout(() => {
+        if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden) {
+          if (GameEngine.canSpin()) {
+            state.autoSpinsLeft--;
+            updateUI();
+            doSpin();
+          } else {
+            stopAuto("Auto-spin stopped — insufficient credits.");
+          }
+        } else if (state.autoActive && state.autoSpinsLeft <= 0) {
+          stopAuto("Auto-spin complete.");
+        } else {
+          updateUI();
+        }
+      }, Math.max(delay, wait));
+    });
+  }
+
+  /* ---------- AUTO SPIN ---------- */
+  function startAuto() {
+    if (state.autoActive) { stopAuto(); return; }
+    if (!GameEngine.canSpin()) {
+      toast("Not enough credits to start auto-spin.");
+      return;
+    }
+    state.autoActive = true;
+    state.autoSpinsLeft = CONFIG.autoSpinMax;
+    Sound.click();
+    updateUI();
+    doSpin();
+  }
+  function stopAuto(msg) {
+    state.autoActive = false;
+    state.autoSpinsLeft = 0;
+    if (msg) toast(msg);
+    updateUI();
+  }
+
+  /* ---------- TOASTS ---------- */
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    el("toasts").appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  /* ---------- PAYTABLE / HELP / HISTORY MODALS ---------- */
+  function openModal(id) { el(id).classList.add("on"); }
+  function closeModal(id) { el(id).classList.remove("on"); }
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove("on");
+    });
+  });
+
+  function buildPaytable() {
+    const grid = el("paytableGrid");
+    grid.innerHTML = "";
+    SYMBOLS.forEach(sym => {
+      const card = document.createElement("div");
+      card.className = "sym-card" + (sym.special ? " " + sym.special : "");
+      const ic = document.createElement("div"); ic.className = "ic";
+      const img = document.createElement("img");
+      img.src = SpriteLoader.dataUrl(sym.sprite, 96, 96);
+      img.alt = sym.name;
+      ic.appendChild(img);
+      card.appendChild(ic);
+      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = sym.name;
+      card.appendChild(nm);
+      const py = document.createElement("div"); py.className = "py";
+      if (sym.special === "scatter") py.textContent = "3+: FREE SPINS";
+      else if (sym.special === "wild") py.textContent = "3:"+sym.pay[0]+" · 4:"+sym.pay[1]+" · 5:"+sym.pay[2];
+      else py.textContent = "3:"+sym.pay[0]+" · 4:"+sym.pay[1]+" · 5:"+sym.pay[2];
+      card.appendChild(py);
+      grid.appendChild(card);
+    });
+  }
+
+  function buildHistory() {
+    const list = el("historyList");
+    if (!ui.history.length) {
+      list.innerHTML = '<li style="color:#94a3b8">No spins yet.</li>';
+      return;
+    }
+    list.innerHTML = ui.history.map(h => {
+      const cls = h.win > 0 ? "" : "loss";
+      const tag = h.free ? " [FREE]" : "";
+      return '<li class="' + cls + '"><span>' +
+        h.ts.toLocaleTimeString() + tag +
+        ' · Bet ' + h.bet + ' · Scatters ' + h.scatters +
+        '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+    }).join("");
+  }
+
+  /* ---------- EVENT LISTENERS ---------- */
+  ui.spin.addEventListener("click", () => { Sound.click(); doSpin(); });
+  ui.auto.addEventListener("click", startAuto);
+  ui.stop.addEventListener("click", () => stopAuto("Auto-spin stopped."));
+
+  el("betDown").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setBetIndex(state.betIndex - 1);
+    Sound.click(); updateUI();
+  });
+  el("betUp").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setBetIndex(state.betIndex + 1);
+    Sound.click(); updateUI();
+  });
+  el("linesAll").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setAllLines(true);
+    Sound.click(); updateUI();
+  });
+
+  el("paytableBtn").addEventListener("click", () => { buildPaytable(); openModal("paytableModal"); });
+  el("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  el("historyBtn").addEventListener("click", () => { buildHistory(); openModal("historyModal"); });
+
+  ui.sound.addEventListener("click", () => {
+    const on = Sound.toggle();
+    ui.sound.textContent = on ? "🔊 Sound" : "🔇 Muted";
+    ui.sound.classList.toggle("on", on);
+    if (on) Sound.click();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset the demo? Your current balance will be restored to " + CONFIG.startingBalance + ".")) return;
+    stopAuto();
+    state.balance = CONFIG.startingBalance;
+    state.betIndex = CONFIG.defaultBetIndex;
+    state.lineMask = CONFIG.paylines.map(() => true);
+    state.inFreeSpins = false;
+    state.freeSpinsLeft = 0;
+    state.lastWin = 0;
+    state.lastNet = 0;
+    ui.history = [];
+    anim.winCells.clear();
+    anim.winLines = [];
+    state.board = GameEngine.generateBoard();
+    updateUI(true);
+    toast("Demo reset.");
+  });
+
+  // speed control
+  ui.speed.addEventListener("change", () => Sound.click());
+
+  // keyboard
+  document.addEventListener("keydown", (e) => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (!ui.spin.disabled) doSpin();
+    }
+    if (e.code === "Escape") {
+      document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on"));
+    }
+    if (e.key === "a" || e.key === "A") { startAuto(); }
+    if (e.key === "s" || e.key === "S") { stopAuto(); }
+  });
+
+  // pause auto when tab hidden
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.autoActive) {
+      stopAuto("Auto-spin paused (tab inactive).");
+    }
+  });
+
+  /* ---------- BOOT ---------- */
+  async function boot() {
+    await SpriteLoader.load();
+    resize();
+    updateUI();
+    requestAnimationFrame(render);
+    // intro toast
+    setTimeout(() => toast("Welcome aboard! Press SPIN to play."), 400);
+  }
+  boot();
+})();
+
+/* =====================================================================
+   End of file — Pirate Fortune slot template.
+   ===================================================================== */
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

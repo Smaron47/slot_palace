@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dragon's Forge — Molten Wilds · Forge Heat · Dragon's Breath</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="../../static/js/shared/icons.js"></script>
+<script src="../../static/js/shared/slot-engine.js"></script>
+<script src="../../static/js/shared/engine.js"></script>
+<script src="../../static/js/shared/theme-kit.js"></script>
+<script src="../../static/js/shared/init.js"></script>
+<script>
+window.startGame = function () {
+    const { ICON_LIB, SlotEngine, GameEngine } = window;
+    const { drawSvgSym, Easing, glow } = ICON_LIB;
+    const SE = SlotEngine;
+
+    const game = GameEngine.buildGameUI(document.getElementById('app'), {
+        title: "🐉 DRAGON'S FORGE",
+        theme: 'pharaoh',
+        bg: 'bg4', bgFree: 'bg5', bgBigWin: 'bg6',
+        balance: 10000, bet: 20,
+        howToWin: "5x5 FORGE GRID. Match 3+ identical symbols on a payline (left to right), as a cluster or as ways. WILD substitutes for every regular symbol and adds +50% to any win it touches. SCATTER pays anywhere and triggers FREE SPINS: 3 = 8 spins, 4 = 12 spins (multiplier x2!), 5+ = 18 spins. FORGE CHAIN: every winning combo crashes and the board refills — winners can MOLTEN-FORGE into sticky Wilds that keep burning through the whole chain. Every chain step stokes the FORGE HEAT meter, which multiplies ALL wins from x1 up to x6. Fill the meter to 100% to unleash DRAGON'S BREATH: 6 free spins at x3 with guaranteed Mega tiles. A SCATTER IS GUARANTEED every 17 spins!"
+    });
+    const { canvas, ctx, state, confetti, toast } = game;
+
+    /* ================================================================
+     *  ASSETS / FULL-PAGE GIF BACKGROUND
+     * ================================================================ */
+    const gc = document.getElementById('gameContainer');
+    const gifLayer = gc.querySelector('#gifLayer');
+    const ASSETS = {
+        bg1: '../../assets/bg4_piret1.gif', bg2: '../../assets/bg5_piret2.gif', bg3: '../../assets/bg6_magic1.gif',
+        bg4: '../../assets/bg4_piret1.gif', bg5: '../../assets/bg5_piret2.gif', bg6: '../../assets/bg6_magic1.gif',
+        transaction: '../../assets/transaction.gif', win: '../../assets/win.gif'
+    };
+
+    window.GAME_PREFS = window.GAME_PREFS || {};
+    const SPEEDS = { slow: 1, mid: 1.8, fast: 3 };
+    window.GAME_PREFS.speed = SPEEDS.mid;
+    const speed = () => window.GAME_PREFS.speed || 1;
+
+    let bodyBg = document.getElementById('gpBodyBg');
+    if (!bodyBg) {
+        bodyBg = document.createElement('div');
+        bodyBg.id = 'gpBodyBg';
+        bodyBg.style.cssText = `position:fixed;inset:0;z-index:0;background:#000 center/cover no-repeat url('${ASSETS.bg3}');opacity:0.96;pointer-events:none;filter:brightness(1.05) saturate(1.15)`;
+        document.body.appendChild(bodyBg);
+    }
+    gifLayer.style.cssText = `position:absolute;inset:0;z-index:0;background:#000 center/cover no-repeat url('${ASSETS.bg3}');opacity:0;pointer-events:none`;
+    setTimeout(() => { gifLayer.style.opacity = '0'; }, 1600);
+
+    function setBg(name) {
+        bodyBg.style.backgroundImage = `url('${ASSETS[name]}')`;
+        bodyBg.style.opacity = '0.96';
+    }
+    ICON_LIB.getSprite && ICON_LIB.getSprite();
+
+    /* ================================================================
+     *  SESSION STATE
+     * ================================================================ */
+    let spinCount = 0;
+    let forceScatterSpin = false;
+    let multiplier = 1;          // scatter session multiplier
+    let spinWin = 0;
+    let sessionWin = 0;
+    let scatterBounceT = 0;
+
+    let forgeHeat = 0;           // 0..100 persistent heat meter
+    let chainStep = 0;           // current forge-chain step
+    let molten = new Set();      // sticky molten wild cells (this chain)
+
+    function forgeMult() { return 1 + Math.floor(forgeHeat / 20); }   // 1..6
+
+    /* ---------------- FORGE HEAT BOX (top-right) ---------------- */
+    const forgeBox = document.createElement('div');
+    forgeBox.id = 'forgeBox';
+    forgeBox.style.cssText = `position:absolute;top:70px;right:14px;z-index:300;width:138px;text-align:center;pointer-events:none;padding:7px 12px;border-radius:12px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,106,0,0.6);box-shadow:0 0 20px rgba(255,106,0,0.4);backdrop-filter:blur(4px)`;
+    forgeBox.innerHTML = `
+        <div style="font-size:.52rem;color:#FFB347;letter-spacing:2px;font-weight:700">FORGE HEAT</div>
+        <div id="forgeVal" style="font-size:1.55rem;font-weight:900;color:#fff;text-shadow:0 0 16px #FF6A00;line-height:1.05">×1</div>
+        <div style="height:6px;border-radius:4px;background:rgba(255,255,255,.13);overflow:hidden;margin-top:3px">
+            <div id="heatBar" style="height:100%;width:0%;background:linear-gradient(90deg,#FFD24A,#FF6A00,#FF0044);transition:width .35s"></div>
+        </div>
+        <div id="scatLine" style="font-size:.5rem;color:#FFD24A;letter-spacing:1px;margin-top:3px;opacity:.85">SCATTER ×1</div>`;
+    gc.appendChild(forgeBox);
+    const forgeVal = forgeBox.querySelector('#forgeVal');
+    const heatBar = forgeBox.querySelector('#heatBar');
+    const scatLine = forgeBox.querySelector('#scatLine');
+
+    function updateForge(pop) {
+        forgeVal.textContent = '×' + forgeMult();
+        heatBar.style.width = Math.min(100, forgeHeat) + '%';
+        scatLine.textContent = 'SCATTER ×' + multiplier;
+        if (pop) {
+            forgeVal.style.animation = 'none'; forgeVal.offsetHeight;
+            forgeVal.style.animation = 'multDrop .9s cubic-bezier(0.2,0.7,0.3,1)';
+            forgeBox.style.boxShadow = '0 0 34px rgba(255,106,0,0.95)';
+            forgeBox.style.background = 'radial-gradient(circle, rgba(255,106,0,.5), rgba(0,0,0,.6) 70%)';
+            setTimeout(() => {
+                forgeBox.style.boxShadow = '0 0 20px rgba(255,106,0,0.4)';
+                forgeBox.style.background = 'rgba(0,0,0,0.6)';
+            }, 700);
+        }
+    }
+    updateForge(false);
+
+    function rollMultiplier() {
+        const pool = (inFreeSpins && freeSpins > 0) ? [2,2,3,3,5,5,8,10] : [1,1,1,2,2,3,3,5,5,8];
+        multiplier = pool[Math.floor(Math.random() * pool.length)];
+        updateForge(false);
+    }
+
+    /* ================================================================
+     *  TRANSACTION / WIN / FEATURE OVERLAYS
+     * ================================================================ */
+    const txOv = document.createElement('div');
+    txOv.style.cssText = `position:fixed;inset:0;z-index:5800;display:flex;align-items:center;justify-content:center;background:#000 center/cover no-repeat url('${ASSETS.transaction}');opacity:0;transition:opacity .35s;pointer-events:none`;
+    gc.appendChild(txOv);
+
+    const winOv = document.createElement('div');
+    winOv.style.cssText = `position:absolute;z-index:650;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);opacity:0;transition:opacity .35s;pointer-events:none;overflow:hidden`;
+    winOv.innerHTML = `
+        <div id="winBox" data-tier="big" style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#0a0502 center/contain no-repeat url('${ASSETS.win}');border-radius:18px;border:3px solid rgba(255,106,0,0.85);box-shadow:0 0 80px rgba(255,106,0,0.5),0 24px 60px rgba(0,0,0,0.75),inset 0 0 46px rgba(255,106,0,0.12);overflow:hidden;animation:winPop .45s cubic-bezier(0.175,0.885,0.32,1.4)">
+            <div id="winTint" data-tier="big" style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:linear-gradient(160deg,rgba(255,106,0,.55),rgba(120,10,0,.25));transition:background .35s"></div>
+            <div id="winTier" class="big" style="position:relative;z-index:2;font-size:clamp(2.2rem,5.6vw,4rem);font-weight:900;letter-spacing:6px;color:#fff;text-shadow:0 0 30px #FF6A00,0 0 60px #FF0044;background:rgba(0,0,0,0.45);padding:4px 34px;border-radius:16px;margin-top:6%;animation:winTextZoom .7s cubic-bezier(0.175,0.885,0.32,1.4)">WIN!</div>
+            <div id="winNum" style="position:relative;z-index:2;font-size:clamp(2.4rem,5.6vw,3.8rem);font-weight:900;color:#FFB347;letter-spacing:2px;text-shadow:0 0 26px #FF6A00,0 4px 12px rgba(0,0,0,0.9);background:rgba(0,0,0,0.55);padding:10px 38px;border-radius:14px;border:2px solid rgba(255,106,0,0.75);font-variant-numeric:tabular-nums;margin-top:10px">+0</div>
+        </div>`;
+    gc.appendChild(winOv);
+    const winBox = winOv.querySelector('#winBox');
+    const winTint = winOv.querySelector('#winTint');
+    const winTier = winOv.querySelector('#winTier');
+    const winNum = winOv.querySelector('#winNum');
+
+    const fsOv = document.createElement('div');
+    fsOv.style.cssText = `position:absolute;inset:0;z-index:655;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);opacity:0;transition:opacity .3s;pointer-events:none`;
+    fsOv.innerHTML = `
+        <div id="fsBox" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(600px,86vw);padding:34px 44px;border-radius:26px;background:linear-gradient(160deg,rgba(150,25,0,.7),rgba(50,6,0,.88));border:3px solid #FF6A00;box-shadow:0 0 80px rgba(255,106,0,.7);text-align:center">
+            <div id="fsTitle" style="font-size:.9rem;letter-spacing:4px;color:#FFC98A;font-weight:700">🔥 FREE SPINS TRIGGERED 🔥</div>
+            <div id="fsNum" style="font-size:5rem;font-weight:900;color:#fff;text-shadow:0 0 40px #FF6A00,0 0 90px #FF0044;margin:6px 0">10</div>
+            <div style="font-size:1.4rem;font-weight:900;color:#FFE9A0;letter-spacing:2px">FREE SPINS</div>
+            <div id="fsSub" style="font-size:.8rem;color:#ffd;margin-top:8px;letter-spacing:1px">+ MULTIPLIER ×2 · MOLTEN REELS</div>
+        </div>`;
+    gc.appendChild(fsOv);
+    const fsBox = fsOv.querySelector('#fsBox');
+    const fsNum = fsOv.querySelector('#fsNum');
+    const fsTitle = fsOv.querySelector('#fsTitle');
+    const fsSub = fsOv.querySelector('#fsSub');
+
+    function showFreeSpinPopup(count, cb, title, sub) {
+        fsNum.textContent = count || freeSpins;
+        if (title) fsTitle.textContent = title;
+        if (sub) fsSub.textContent = sub;
+        fsBox.style.animation = 'none'; fsBox.offsetHeight;
+        fsBox.style.animation = 'fsPop .6s cubic-bezier(0.175,0.885,0.32,1.4)';
+        fsOv.style.opacity = '1';
+        game.playBonusSound();
+        confetti.spawn(90);
+        setTimeout(() => { fsOv.style.opacity = '0'; if (cb) cb(); }, 2200 / speed());
+    }
+
+    function tierFor(am) {
+        const b = state.bet;
+        if (am >= b * 100) return { tier: 'SUPER WIN', cls: 'super' };
+        if (am >= b * 50)  return { tier: 'MEGA WIN',  cls: 'mega' };
+        if (am >= b * 20)  return { tier: 'BIG WIN',   cls: 'big' };
+        return null;
+    }
+    function splashTx(ms, cb) {
+        txOv.style.opacity = '1';
+        setTimeout(() => { txOv.style.opacity = '0'; if (cb) cb(); }, ms / speed());
+    }
+    function showTx(cb) { splashTx(1600, cb); }
+
+    function showWinGif(amount, cb) {
+        const t = tierFor(amount) || { tier: 'WIN!', cls: 'big' };
+        winTier.textContent = t.tier;
+        winBox.dataset.tier = t.cls;
+        winTint.dataset.tier = t.cls;
+        winTier.className = t.cls;
+        winBox.style.animation = 'none'; winBox.offsetHeight;
+        winBox.style.animation = 'winPop .5s cubic-bezier(0.175,0.885,0.32,1.4)';
+        const _ra = gc.querySelector('.reel-area');
+        if (_ra) {
+            const rr = _ra.getBoundingClientRect();
+            const cr = gc.getBoundingClientRect();
+            winOv.style.top = (rr.top - cr.top) + 'px';
+            winOv.style.left = (rr.left - cr.left) + 'px';
+            winOv.style.width = rr.width + 'px';
+            winOv.style.height = rr.height + 'px';
+        }
+        winTier.style.animation = 'none'; winTier.offsetHeight;
+        winTier.style.animation = 'winTextZoom .7s cubic-bezier(0.175,0.885,0.32,1.4)';
+        winOv.style.opacity = '1';
+        winNum.textContent = '0';
+        const dur = 2600 / speed(), t0 = performance.now();
+        function count(now) {
+            const p = Math.min(1, (now - t0) / dur);
+            const e = 1 - Math.pow(1 - p, 3);
+            winNum.textContent = '+' + Math.round(amount * e).toLocaleString();
+            if (p < 1) requestAnimationFrame(count);
+        }
+        requestAnimationFrame(count);
+        game.playWinSound(amount);
+        confetti.spawn(90);
+        game.shake();
+        setTimeout(() => { winOv.style.opacity = '0'; if (cb) cb(); }, 3300 / speed());
+    }
+
+    /* ================================================================
+     *  SPEED + MANUAL UI
+     * ================================================================ */
+    const topBar = gc.querySelector('.top-bar');
+    const speedSel = document.createElement('select');
+    speedSel.id = 'speedSel';
+    speedSel.style.cssText = `padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.6);border:1px solid #FF6A00;color:#FFB347;font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:1px;cursor:pointer;font-weight:700`;
+    speedSel.innerHTML = `<option value="slow">🐢 SLOW</option><option value="mid" selected>⚡ MID</option><option value="fast">🚀 FAST</option>`;
+    speedSel.addEventListener('change', () => {
+        window.GAME_PREFS.speed = SPEEDS[speedSel.value] || 1;
+        toast.show('Speed', `${speedSel.value.toUpperCase()} — ${window.GAME_PREFS.speed}×`);
+    });
+    topBar.appendChild(speedSel);
+
+    const manualBtn = document.createElement('button');
+    manualBtn.id = 'manualBtn';
+    manualBtn.className = 'top-btn';
+    manualBtn.style.cssText = `background:rgba(255,106,0,0.12);border:1px solid rgba(255,106,0,0.4);color:#FFB347;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:1px;transition:all 0.3s`;
+    manualBtn.innerHTML = '📖 MANUAL';
+    topBar.appendChild(manualBtn);
+    manualBtn.addEventListener('click', openManual);
+
+    /* ================================================================
+     *  STYLES — FORGE CHROME
+     * ================================================================ */
+    if (!document.getElementById('dfStyle')) {
+        const st = document.createElement('style');
+        st.id = 'dfStyle';
+        st.textContent = `
+            @keyframes multDrop{0%{transform:translateY(-140px) scale(.6);opacity:0;filter:brightness(2.4)}25%{opacity:1}55%{transform:translateY(14px) scale(1.35);filter:brightness(1.7)}70%{transform:translateY(-4px) scale(1.12)}100%{transform:translateY(0) scale(1);opacity:1;filter:brightness(1)}}
+            @keyframes winPop{0%{transform:scale(.25) rotate(-8deg);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+            @keyframes winTextZoom{0%{transform:scale(2.6);opacity:0;filter:blur(6px)}60%{transform:scale(.92);opacity:1}100%{transform:scale(1);filter:blur(0)}}
+            @keyframes fsPop{0%{transform:scale(.2) rotate(-10deg);opacity:0}55%{transform:scale(1.1) rotate(3deg);opacity:1}75%{transform:scale(.96)}100%{transform:scale(1) rotate(0)}}
+            @keyframes gpFade{from{opacity:0}to{opacity:1}}
+            @keyframes dfShine{0%,58%{transform:translateX(-130%) skewX(-14deg)}80%,100%{transform:translateX(130%) skewX(-14deg)}}
+            @keyframes dfPanelShine{0%,55%{transform:translateX(-170%)}85%,100%{transform:translateX(170%)}}
+            @keyframes dfNumPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(255,106,0,.35))}50%{filter:drop-shadow(0 0 14px rgba(255,140,0,.95));transform:scale(1.02)}}
+            @keyframes dfSpinGlow{to{transform:rotate(360deg)}}
+            @keyframes dfEmberGlow{0%,100%{opacity:.35}50%{opacity:.9}}
+            @keyframes dfReelGlass{0%,100%{opacity:.4}50%{opacity:.8}}
+
+            #gameContainer{background:linear-gradient(150deg,rgba(64,18,2,.16),rgba(12,3,0,.3))!important;backdrop-filter:blur(9px)!important;-webkit-backdrop-filter:blur(9px)!important;border-top:1px solid rgba(255,200,140,.42)!important;border-left:1px solid rgba(255,150,60,.2)!important;border-bottom:1px solid rgba(255,106,0,.12)!important;border-right:1px solid rgba(255,106,0,.12)!important;box-shadow:0 30px 70px rgba(0,0,0,.85),inset 6px 6px 18px rgba(255,170,90,.1),inset -8px -8px 24px rgba(0,0,0,.6),0 0 120px rgba(255,80,0,.3)!important;z-index:2!important;}
+            #gameContainer::after{content:"";position:absolute;inset:0;z-index:46;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,0) 42%,rgba(255,190,110,.18) 50%,rgba(255,255,255,0) 58%);transform:translateX(-130%) skewX(-14deg);animation:dfShine 7s ease-in-out infinite;}
+            .main-area{backdrop-filter:blur(3px);}
+            .reel-area{background:linear-gradient(158deg,rgba(255,150,50,.07),rgba(60,16,2,.14) 38%,rgba(6,1,0,.36) 80%)!important;border:1px solid rgba(255,106,0,.5)!important;box-shadow:inset 0 0 70px rgba(0,0,0,.4),0 0 40px rgba(255,106,0,.2)!important;backdrop-filter:blur(12px)!important;background-clip:padding-box;}
+            .reel-area::before{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;mix-blend-mode:overlay;opacity:.6;
+                background:
+                  repeating-linear-gradient(45deg,rgba(255,150,60,.06) 0 12px,transparent 12px 26px),
+                  linear-gradient(135deg,rgba(255,255,255,.05) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.05) 50%,rgba(255,255,255,.05) 75%,transparent 75%);
+                background-size:auto,46px 46px;animation:dfReelGlass 9s ease-in-out infinite;}
+            .right-panel .panel{background:linear-gradient(165deg,rgba(80,30,6,.28),rgba(18,6,1,.36))!important;border:1px solid rgba(255,106,0,.3)!important;backdrop-filter:blur(11px)!important;box-shadow:inset 0 0 26px rgba(0,0,0,.5),0 0 18px rgba(255,106,0,.1)!important;}
+            .right-panel .panel::before{background:linear-gradient(120deg,rgba(255,106,0,0) 40%,rgba(255,200,120,.25) 50%,rgba(255,106,0,0) 60%);animation:dfPanelShine 6s ease-in-out infinite;}
+            .top-bar{background:linear-gradient(180deg,rgba(14,4,0,.55),rgba(10,3,0,.16) 75%,transparent)!important;backdrop-filter:blur(6px);}
+            .spin-btn{right:10px!important;background:radial-gradient(circle at 32% 28%,#fff0b0 0%,#FF6A00 46%,#8C1A00 100%)!important;box-shadow:0 0 46px rgba(255,106,0,.75),0 6px 18px rgba(0,0,0,.6),inset 0 0 18px rgba(255,255,255,.35)!important;border:3px solid rgba(255,210,150,.9)!important;}
+            .spin-btn:hover{transform:translateY(-50%) scale(1.07)!important;box-shadow:0 0 70px rgba(255,120,0,.95),0 8px 22px rgba(0,0,0,.6)!important;}
+            .spin-btn::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(#FF6A00 0deg,#FFE9A0 90deg,#FF0044 220deg,#FF6A00 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));animation:dfSpinGlow 3s linear infinite;z-index:-1;}
+            .top-btn,.bet-btn,.action-btn{background:linear-gradient(180deg,rgba(255,190,110,.3),rgba(255,106,0,.16) 38%,rgba(120,40,0,.2) 70%,rgba(255,106,0,.05))!important;border:1px solid rgba(255,130,40,.55)!important;color:#FFD9A0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -6px 12px rgba(90,25,0,.3),0 3px 10px rgba(0,0,0,.45)!important;backdrop-filter:blur(6px)!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;position:relative;overflow:hidden;}
+            .top-btn::after,.bet-btn::after,.action-btn::after{content:"";position:absolute;top:-60%;left:-80%;width:60%;height:220%;background:linear-gradient(105deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.45) 50%,rgba(255,255,255,0) 70%);transform:skewX(-24deg);pointer-events:none;transition:left .55s ease;}
+            .top-btn:hover::after,.bet-btn:hover::after,.action-btn:hover::after{left:140%;}
+            .top-btn:hover,.bet-btn:hover,.action-btn:hover{transform:translateY(-2px) scale(1.03)!important;filter:brightness(1.14);background:linear-gradient(180deg,rgba(255,210,140,.5),rgba(255,120,20,.32) 38%,rgba(170,60,0,.32) 70%,rgba(255,106,0,.12))!important;box-shadow:0 0 26px rgba(255,110,0,.65),inset 0 1px 0 rgba(255,255,255,.4)!important;}
+            #speedSel{background:linear-gradient(160deg,rgba(255,106,0,.24),rgba(90,30,0,.32))!important;border:1px solid rgba(255,130,40,.5)!important;color:#FFD9A0!important;backdrop-filter:blur(6px);}
+            #manualBtn{background:linear-gradient(160deg,rgba(255,200,80,.2),rgba(160,70,0,.12))!important;border:1px solid rgba(255,190,80,.55)!important;color:#FFE9B0!important;}
+            .manual-modal{position:fixed;inset:0;z-index:3200;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.86);backdrop-filter:blur(7px)}
+            #winBox[data-tier="big"]{border-color:#FF6A00!important;box-shadow:0 0 80px rgba(255,106,0,.65),0 30px 70px rgba(0,0,0,.8)!important;}
+            #winBox[data-tier="mega"]{border-color:#FFC300!important;box-shadow:0 0 95px rgba(255,195,0,.8),0 30px 70px rgba(0,0,0,.8)!important;}
+            #winBox[data-tier="super"]{border-color:#FF0044!important;box-shadow:0 0 110px rgba(255,0,68,.85),0 30px 70px rgba(0,0,0,.8)!important;}
+            #winTint[data-tier="mega"]{background:linear-gradient(160deg,rgba(255,195,0,.6),rgba(200,60,0,.3))!important;}
+            #winTint[data-tier="super"]{background:linear-gradient(160deg,rgba(255,0,68,.62),rgba(120,0,0,.3))!important;}
+            #winTier.big{color:#FFB347!important;}
+            #winTier.mega{color:#FFD24A!important;text-shadow:0 0 34px #FFC300,0 0 70px #FF6A00!important;}
+            #winTier.super{color:#FF8A8A!important;text-shadow:0 0 36px #FF0044,0 0 80px #FF6A00!important;}
+            .glass-facets{opacity:.5;background:linear-gradient(135deg,transparent 49.6%,rgba(255,106,0,.22) 50%,transparent 50.4%),linear-gradient(225deg,transparent 49.6%,rgba(255,180,60,.16) 50%,transparent 50.4%),linear-gradient(45deg,transparent 49.7%,rgba(255,255,255,.14) 50%,transparent 50.3%)!important;}
+            .right-panel .panel,.main-area,.top-bar{backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;}
+            #balanceDisplay,#winDisplay{animation:dfNumPulse 3.4s ease-in-out infinite;}
+            #gameCanvas{opacity:.82!important;filter:drop-shadow(0 0 12px rgba(255,106,0,.15));}
+            @media (max-width:860px){
+                #gpBodyBg{opacity:1!important;filter:brightness(1.08)!important;}
+                #gameContainer{background:linear-gradient(150deg,rgba(64,18,2,.05),rgba(10,3,0,.14))!important;backdrop-filter:blur(4px)!important;}
+                .main-area{background:transparent!important;margin-top:2px!important;}
+                #gameCanvas{opacity:1!important;}
+                .reel-area{margin:6px 0 8px!important;box-shadow:inset 0 0 20px rgba(0,0,0,.25)!important;}
+                .right-panel .panel{background:linear-gradient(165deg,rgba(80,30,6,.16),rgba(16,5,1,.24))!important;padding:8px!important;}
+                .top-bar{background:linear-gradient(180deg,rgba(14,4,0,.28),transparent)!important;backdrop-filter:blur(3px)!important;}
+                #balanceDisplay{font-size:1.25rem!important;}
+                #winDisplay{font-size:1rem!important;}
+                #infoDisplay{font-size:.9rem!important;}
+                #betValue{font-size:1rem!important;}
+                .bet-btn{width:32px!important;height:32px!important;}
+                #forgeBox{top:52px!important;right:8px!important;width:96px!important;padding:4px 8px!important;border-radius:9px!important;}
+                #forgeVal{font-size:1.05rem!important;}
+                #forgeBox div:first-child{font-size:.42rem!important;letter-spacing:1px!important;}
+                #scatLine{font-size:.4rem!important;}
+            }
+        `;
+        document.head.appendChild(st);
+    }
+
+    /* ================================================================
+     *  ICON MANUAL
+     * ================================================================ */
+    function openManual() {
+        let m = document.getElementById('dfManual');
+        if (m) { m.style.display = 'flex'; return; }
+        m = document.createElement('div');
+        m.id = 'dfManual';
+        m.className = 'manual-modal';
+        m.style.animation = 'gpFade .2s ease';
+        const rowT = (keys2) => keys2.map(k => {
+            const data = T[k] ? (T[k].pay || []) : [];
+            const pays = k === 'wild' ? 'SUB WILD · +50%' :
+                        k === 'scatter' ? '3+ = BONUS · ×2 MULT' :
+                        '3/4/5: ' + (data[2] ? data[2]+'/'+data[3]+'/'+data[4] : '0');
+            const col = k === 'wild' ? '#FF6A00' : k === 'scatter' ? '#FFD24A' : '#FFD9A0';
+            const icon = ICON_LIB.drawSpriteToCanvas(k, 72);
+            return '<div style="background:rgba(0,0,0,.42);border:1px solid ' + col + '55;border-radius:14px;padding:10px;text-align:center;min-width:86px">'
+                + (icon ? '<img src="' + icon + '" style="width:58px;height:58px;object-fit:contain">' : '<div style="width:58px;height:58px"></div>')
+                + '<div style="font-size:.62rem;color:#ccc;margin-top:4px;text-transform:uppercase">' + (k==='wild'?'WILD':k==='scatter'?'SCATTER':k.replace('fruit_','').replace('suit_','')) + '</div>'
+                + '<div style="font-size:.7rem;font-weight:700;color:' + col + '">' + pays + '</div></div>';
+        }).join('');
+        m.innerHTML = '<div style="width:min(900px,94vw);max-height:86vh;overflow:auto;background:linear-gradient(165deg,rgba(46,18,4,.97),rgba(12,4,1,.97));border:2px solid #FF6A0066;border-radius:20px;padding:22px 26px;font-family:Orbitron,sans-serif;color:#fff;box-shadow:0 0 70px rgba(255,106,0,.3)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #FF6A0044;padding-bottom:12px">'
+            + '<div><div style="font-size:1.5rem;font-weight:900;color:#FF6A00;letter-spacing:2px">🐉 DRAGON\'S FORGE — MANUAL</div>'
+            + '<div style="font-size:.72rem;color:#ccb;margin-top:4px">Icon power · how to win · forge rules</div></div>'
+            + '<button id="dfManualClose" style="padding:8px 18px;border-radius:8px;background:#FF6A0022;border:1px solid #FF6A00;color:#FFB347;font-family:Orbitron;cursor:pointer;font-weight:700">✕ CLOSE</button></div>'
+            + '<div style="margin-top:16px;font-size:.8rem;line-height:1.75;color:#f0ead0">'
+            + '<b style="color:#FF6A00">HOW TO WIN:</b> 5×5 forge grid. Match 3+ identical symbols on a payline (left→right), as a cluster, or as ways. '
+            + '<b style="color:#FF6A00">WILD</b> substitutes for any symbol and adds <b style="color:#FFD24A">+50%</b> to its win. '
+            + '<b style="color:#FF6A00">SCATTER</b> pays anywhere — 3 = 8 free spins · 4 = 12 free spins &amp; <b>×2 multiplier</b> · 5+ = 18 spins. '
+            + '<b style="color:#FFD24A">FORGE CHAIN:</b> every winning combo crashes and refills — winners can <b>MOLTEN-FORGE</b> into sticky Wilds that keep burning through the chain. '
+            + 'Each chain step stokes the <b style="color:#FF6A00">FORGE HEAT</b> meter which multiplies every win from <b>×1 to ×6</b>. '
+            + 'Fill heat to 100% → <b style="color:#FF0044">DRAGON\'S BREATH</b>: 6 free spins at ×3 with guaranteed Mega tiles. '
+            + '<b style="color:#FFC300">MEGA tiles</b> (2×1, 1×2, 2×2…) pay a bonus when hit. '
+            + '<b style="color:#FF8C00">GUARANTEED SCATTER every 17 spins!</b></div>'
+            + '<div style="margin-top:16px;font-size:.72rem;color:#FF6A00;letter-spacing:2px;font-weight:700;text-transform:uppercase">Symbol Payments</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin-top:10px">' + rowT(RANGE.slice(2).filter(k=>k!=='wild'&&k!=='scatter')) + rowT(['scatter','wild']) + '</div>'
+            + '</div>';
+        document.body.appendChild(m);
+        m.querySelector('#dfManualClose').addEventListener('click', () => m.style.display = 'none');
+        m.addEventListener('click', (e) => { if (e.target === m) m.style.display = 'none'; });
+        ICON_LIB.getSprite();
+    }
+
+    /* ================================================================
+     *  BOARD / SYMBOLS  —  5 x 5 FORGE
+     * ================================================================ */
+    const RANGE = ['wild','scatter',
+        'fruit_grapes','fruit_strawberry','fruit_apple','fruit_cherry',
+        'fruit_plum','fruit_pear','fruit_orange','fruit_lemon',
+        'fruit_pineapple','suit_diamond','suit_spade2','suit_club2'];
+    const T = SE.buildRangeTable(RANGE, { wild: 0, scatter: 1 });
+    // different paytable — forge values are ~1.25x hotter than a standard set
+    Object.keys(T).forEach(k => {
+        if (T[k] && Array.isArray(T[k].pay)) T[k].pay = T[k].pay.map(v => Math.round(v * 1.25 * 100) / 100);
+    });
+    T.scatter.freeSpins = {3: 8, 4: 12, 5: 18};
+    const POOL = RANGE.slice(2);
+    const WILD_ID = RANGE[0];
+
+    const COLS = 5, ROWS = 5;
+    const LINES = [];
+    for (let r = 0; r < ROWS; r++) LINES.push(Array.from({ length: COLS }, (_, c) => [c, r]));
+    LINES.push([[0,0],[1,1],[2,2],[3,3],[4,4]], [[0,4],[1,3],[2,2],[3,1],[4,0]]);
+
+    const grid = new SE.Grid(COLS, ROWS);
+
+    const MEGA_SHAPES = [[1,2],[2,1],[2,2],[1,3],[3,1],[2,3]];
+    let megas = [];
+
+    function buildBoard() {
+        grid.fillFrom(POOL);
+        megas = [];
+        molten = new Set();
+        const count = Math.random() < 0.6 ? 1 + Math.floor(Math.random() * 2) : 0;
+        const used = new Set();
+        for (let i = 0; i < count; i++) {
+            for (let tries = 0; tries < 25; tries++) {
+                const [mw, mh] = MEGA_SHAPES[Math.floor(Math.random() * MEGA_SHAPES.length)];
+                const c = Math.floor(Math.random() * (COLS - mw + 1));
+                const r = Math.floor(Math.random() * (ROWS - mh + 1));
+                let free = true;
+                for (let cc = c; cc < c + mw && free; cc++)
+                    for (let rr = r; rr < r + mh && free; rr++)
+                        if (used.has(cc + ',' + rr)) free = false;
+                if (!free) continue;
+                const mega = SE.placeMega(grid, POOL, c, r, mw, mh);
+                if (mega) {
+                    mega.cells.forEach(([cc, rr]) => { grid.set(cc, rr, mega.id); used.add(cc + ',' + rr); });
+                    megas.push(mega);
+                }
+                break;
+            }
+        }
+        // SCATTER INJECTION — guaranteed every 17th paid spin
+        let target = 0;
+        if (forceScatterSpin) target = 4;
+        else if (Math.random() < 0.5) target = 2;
+        for (let i = 0; i < target; i++) {
+            const free = grid.all().filter(x => POOL.includes(x.id));
+            if (free.length) {
+                const pick = free[Math.floor(Math.random() * free.length)];
+                grid.set(pick.c, pick.r, RANGE[1]);
+            }
+        }
+        forceScatterSpin = false;
+        // Dragon's Breath spins always carry an extra mega tile
+        if (inFreeSpins && breathSpins > 0) {
+            for (let tries = 0; tries < 30; tries++) {
+                const [mw, mh] = [2,2];
+                const c = Math.floor(Math.random() * (COLS - mw + 1));
+                const r = Math.floor(Math.random() * (ROWS - mh + 1));
+                let free = true;
+                for (let cc = c; cc < c + mw && free; cc++)
+                    for (let rr = r; rr < r + mh && free; rr++)
+                        if (!POOL.includes(grid.get(cc, rr))) free = false;
+                if (!free) continue;
+                const mega = SE.placeMega(grid, POOL, c, r, mw, mh);
+                if (mega) {
+                    mega.cells.forEach(([cc, rr]) => grid.set(cc, rr, mega.id));
+                    megas.push(mega);
+                }
+                break;
+            }
+        }
+    }
+    /* ================================================================
+     *  STATE
+     * ================================================================ */
+    const cellAnim = {};
+    let winCells = new Set();
+    let freeSpins = 0, inFreeSpins = false, breathSpins = 0;
+    let busy = false;
+    let crashFx = [];
+    let embers = [];
+    const toDropWild = new Map();
+    let reelSpin = null;
+    let reelSymbols = [];
+    let fsReelGlow = false;
+    let settleSparkles = [];
+
+    buildBoard();
+    game.setInfoTitle('Forge');
+    game.setInfo('×1');
+    grid.all().forEach(x => cellAnim[x.c + ',' + x.r] = { type: 'reveal', t: 0 });
+
+    function cellRect(c, r, W, H) {
+        const pad = 18, top = 46, bottom = 30;
+        const cw = (W - pad * 2) / COLS, ch = (H - top - bottom) / ROWS;
+        return { x: pad + c * cw, y: top + r * ch, w: cw, h: ch };
+    }
+
+    /* ================================================================
+     *  RENDER — animated molten forge
+     * ================================================================ */
+    let last = performance.now();
+    let glowPhase = 0;
+
+    function render() {
+        const W = canvas.width, H = canvas.height;
+        const now = performance.now();
+        const dt = Math.min(50, now - last); last = now;
+        glowPhase += dt / 300;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(14,3,0,0.5)';
+        ctx.fillRect(0, 0, W, H);
+
+        glow(ctx, inFreeSpins ? `DRAGON'S BREATH: ${freeSpins}` : "DRAGON'S FORGE", W/2, 22, '#FF6A00', 15, 14);
+        glow(ctx,
+            `FORGE ×${forgeMult()} · CHAIN ${chainStep} · ${inFreeSpins ? 'MOLTEN REELS' : 'MEGA TILES'}`,
+            W/2, H - 14, '#FFB347', 11, 8);
+
+        // forge floor glow
+        const fg = ctx.createLinearGradient(0, H - 90, 0, H);
+        fg.addColorStop(0, 'rgba(255,106,0,0)');
+        fg.addColorStop(1, `rgba(255,80,0,${0.1 + 0.06 * Math.sin(glowPhase * 2)})`);
+        ctx.fillStyle = fg;
+        ctx.fillRect(0, H - 90, W, 90);
+
+        ctx.strokeStyle = 'rgba(255,106,0,0.32)'; ctx.lineWidth = 2;
+        ctx.strokeRect(16, 40, W - 32, H - 70);
+
+        /* ---- cell plates ---- */
+        for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+            const { x, y, w, h } = cellRect(c, r, W, H);
+            const isWin = winCells.has(c + ',' + r);
+            const isMolten = molten.has(c + ',' + r);
+            ctx.fillStyle = isMolten ? 'rgba(255,60,0,0.28)'
+                          : isWin ? 'rgba(255,106,0,0.2)'
+                          : 'rgba(0,0,0,0.42)';
+            ctx.strokeStyle = isMolten ? 'rgba(255,180,60,0.55)' : 'rgba(255,106,0,0.14)';
+            ctx.lineWidth = isMolten ? 2 : 1;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(x + 2, y + 2, w - 4, h - 4, Math.min(w,h) * 0.18);
+            else ctx.rect(x + 2, y + 2, w - 4, h - 4);
+            ctx.fill(); ctx.stroke();
+        }
+
+        /* ---- mega tiles ---- */
+        if (!reelSpin) megas.forEach(m => {
+            const a = cellRect(m.cells[0][0], m.cells[0][1], W, H);
+            const b = cellRect(m.cells[m.cells.length - 1][0], m.cells[m.cells.length - 1][1], W, H);
+            const x = a.x, y = a.y, w = b.x + b.w - a.x, h = b.y + b.h - a.y;
+            const anyWin = m.cells.some(([c, r]) => winCells.has(c + ',' + r));
+            if (anyWin) {
+                ctx.save();
+                const pulse = 0.6 + Math.sin(glowPhase * 2.4) * 0.4;
+                ctx.strokeStyle = `rgba(255,190,90,${pulse})`;
+                ctx.lineWidth = 4;
+                ctx.shadowColor = '#FF6A00';
+                ctx.shadowBlur = 20 + pulse * 16;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x + 3, y + 3, w - 6, h - 6, Math.min(w,h) * 0.22);
+                else ctx.rect(x + 3, y + 3, w - 6, h - 6);
+                ctx.stroke();
+                ctx.restore();
+            }
+            ctx.fillStyle = anyWin ? 'rgba(255,106,0,0.24)' : 'rgba(0,0,0,0.44)';
+            ctx.strokeStyle = 'rgba(255,130,40,0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(x + 2, y + 2, w - 4, h - 4, Math.min(w,h) * 0.22);
+            else ctx.rect(x + 2, y + 2, w - 4, h - 4);
+            ctx.fill(); ctx.stroke();
+            drawSvgSym(ctx, m.id, x + 6, y + 6, w - 12, h - 12, 1, 0.30);
+        });
+
+        if (reelSpin) {
+            for (let c = 0; c < COLS; c++) if (!reelColumnDone(c)) renderReelStrip(c, W, H, now);
+            tickReel(now);
+        }
+
+        let liveScatter = 0;
+        if (!inFreeSpins) for (let c0 = 0; c0 < COLS; c0++) for (let r0 = 0; r0 < ROWS; r0++) {
+            const _id = grid.get(c0, r0);
+            if (T[_id] && T[_id].scatter) liveScatter++;
+        }
+
+        /* ---- symbols ---- */
+        for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+            const key = c + ',' + r;
+            if (megas.some(m => m.cells.some(([mc, mr]) => mc === c && mr === r))) continue;
+            if (reelSpin && !reelColumnDone(c)) continue;
+
+            const { x, y, w, h } = cellRect(c, r, W, H);
+            const isWin = winCells.has(key);
+            const isMolten = molten.has(key);
+            const id = grid.get(c, r);
+            const s = T[id] || {};
+
+            let scale = 1, alpha = 0.95, dy = 0, rot = 0, sway = 0;
+            const a = cellAnim[key];
+            if (a) {
+                a.t = Math.min(1, a.t + dt / (a.type === 'crash' ? 340 : 600) * (window.GAME_PREFS ? window.GAME_PREFS.speed : 1));
+                const t = a.t;
+                if (a.type === 'reveal' || a.type === 'drop') {
+                    const bp = Easing.outBack(Math.max(0, t));
+                    scale = 0.62 + 0.38 * bp;
+                    dy = (1 - bp) * h * 1.15;      // forge drop from ABOVE
+                    rot = (1 - bp) * 0.25;
+                } else if (a.type === 'crash') {
+                    // burn-out: swells, spins and chars away
+                    scale = 1 + 0.62 * t; alpha = 1 - t; rot = t * 0.9;
+                }
+                if (t >= 1) delete cellAnim[key];
+            } else if (!reelSpin) {
+                // forge idle: slow molten breathing + horizontal sway
+                const br = Math.sin(glowPhase * 2.4 + c * 1.15 + r * 0.75);
+                scale = 1 + br * 0.028;
+                dy = br * h * 0.018;
+                sway = Math.sin(glowPhase * 1.6 + c * 0.6) * w * 0.012;
+            }
+
+            if (s.scatter && scatterBounceT) {
+                const bdt = (performance.now() - scatterBounceT) / 1000;
+                if (bdt < 1.3) {
+                    const bi = 1 - bdt / 1.3;
+                    scale *= 1 + 0.45 * bi * Math.abs(Math.sin(bdt * speed() * 4));
+                    alpha = Math.min(1, 0.72 + 0.28 * Math.sin(bdt * speed() * 6));
+                }
+            }
+
+            ctx.save();
+            ctx.translate(x + w / 2 + sway, y + h / 2 + dy);
+            ctx.rotate(rot);
+            ctx.scale(scale, scale);
+
+            /* molten wild fire aura */
+            if (isMolten) {
+                const p = 0.55 + Math.abs(Math.sin(glowPhase * 4 + c * 1.7 + r)) * 0.45;
+                ctx.shadowColor = '#FF6A00';
+                ctx.shadowBlur = 26 + p * 22;
+                ctx.fillStyle = `rgba(255,90,0,${0.12 + p * 0.22})`;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(-w/2 + 3, -h/2 + 3, w - 6, h - 6, Math.min(w,h) * 0.2);
+                else ctx.rect(-w/2 + 3, -h/2 + 3, w - 6, h - 6);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            if (s.scatter) {
+                const pulse = 0.5 + Math.sin(glowPhase * 3 + c) * 0.35;
+                const hot = liveScatter >= 2 && !scatterBounceT && !inFreeSpins;
+                const p = hot ? (0.4 + Math.abs(Math.sin(glowPhase * 6 + c * 1.4 + r * 1.1))) : pulse;
+                ctx.fillStyle = `rgba(255,140,20,${0.04 + p * 0.18})`;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(-w/2 + 5, -h/2 + 5, w - 10, h - 10, Math.min(w,h) * 0.18);
+                else ctx.rect(-w/2 + 5, -h/2 + 5, w - 10, h - 10);
+                ctx.fill();
+                ctx.strokeStyle = `rgba(255,150,30,${hot ? 0.45 + p * 0.55 : 0.2 + pulse * 0.4})`;
+                ctx.lineWidth = hot ? 4 : 3;
+                ctx.shadowColor = '#FF6A00';
+                ctx.shadowBlur = hot ? 24 : 12;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(-w/2 + 5, -h/2 + 5, w - 10, h - 10, Math.min(w,h) * 0.18);
+                else ctx.rect(-w/2 + 5, -h/2 + 5, w - 10, h - 10);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            /* burning win frame */
+            if (isWin) {
+                const pulse = 0.55 + Math.sin(glowPhase * 3.2 + c) * 0.45;
+                ctx.save();
+                ctx.shadowColor = '#FF6A00';
+                ctx.shadowBlur = 18 + pulse * 18;
+                ctx.strokeStyle = `rgba(255,220,140,${pulse})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(-w/2 + 4, -h/2 + 4, w - 8, h - 8, Math.min(w,h) * 0.18);
+                else ctx.rect(-w/2 + 4, -h/2 + 4, w - 8, h - 8);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                // flicker ring
+                ctx.setLineDash([7, 9]);
+                ctx.lineDashOffset = -glowPhase * 14;
+                ctx.strokeStyle = `rgba(255,90,0,${0.35 + pulse * 0.5})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(-w/2 + 9, -h/2 + 9, w - 18, h - 18, Math.min(w,h) * 0.16);
+                else ctx.rect(-w/2 + 9, -h/2 + 9, w - 18, h - 18);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
+            drawSvgSym(ctx, id, -w/2 + 5, -h/2 + 5, w - 10, h - 10, alpha, 0.30);
+            ctx.restore();
+        }
+
+        /* ---- ambient embers rising through the forge ---- */
+        if (Math.random() < 0.9) {
+            embers.push({
+                x: Math.random() * W,
+                y: H - 20 - Math.random() * 30,
+                vx: (Math.random() - 0.5) * 0.55,
+                vy: -0.7 - Math.random() * 1.8,
+                s: 1 + Math.random() * 2.6,
+                life: 1,
+                col: ['#FFD24A', '#FF6A00', '#FF0044'][Math.floor(Math.random() * 3)]
+            });
+        }
+        embers = embers.filter(p => p.life > 0 && p.y > 30);
+        embers.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.vy -= 0.004; p.life -= 0.008;
+            ctx.globalAlpha = Math.max(0, p.life) * 0.9;
+            ctx.fillStyle = p.col;
+            ctx.shadowColor = p.col; ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+        ctx.globalAlpha = 1;
+
+        drawSparkles();
+        crashFx = crashFx.filter(p => p.life > 0);
+        crashFx.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.025;
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.fillStyle = p.col;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+        });
+
+        requestAnimationFrame(render);
+    }
+
+    function crashBurst(c, r) {
+        const { x, y, w, h } = cellRect(c, r, canvas.width, canvas.height);
+        for (let i = 0; i < 14; i++) {
+            const a = Math.random() * Math.PI * 2, sp = 1.6 + Math.random() * 3.4;
+            crashFx.push({
+                x: x + w / 2, y: y + h / 2,
+                vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.9,
+                s: 2 + Math.random() * 3, life: 1,
+                col: ['#FFD24A', '#FF6A00', '#FF0044'][i % 3]
+            });
+        }
+    }
+
+    /* ================================================================
+     *  REELS — scroll UP, settle centre-out
+     * ================================================================ */
+    function colOrder(c) { return Math.abs(c - (COLS - 1) / 2); }
+
+    function startReelSpin() {
+        const now = performance.now();
+        const per = Math.max(360, Math.min(1500, 920 / speed()));
+        const stag = Math.max(90, Math.min(520, 250 / speed()));
+        const settle = Math.max(140, 300 / speed());
+        fsReelGlow = !!inFreeSpins;
+        reelSymbols = [];
+        for (let c = 0; c < COLS; c++) {
+            const col = [];
+            for (let i = 0; i < 18 + Math.floor(Math.random() * 4); i++) col.push(POOL[Math.floor(Math.random() * POOL.length)]);
+            for (let r = 0; r < ROWS; r++) col.push(grid.get(c, r));
+            reelSymbols[c] = col;
+        }
+        reelSpin = { t0: now, per, stag, settle, done: false, doneAt: 0, settled: 0, flashCol: new Map() };
+        settleSparkles = [];
+    }
+
+    function sparkleBurst(c, strong) {
+        const a = cellRect(c, 0, canvas.width, canvas.height);
+        const b = cellRect(c, ROWS - 1, canvas.width, canvas.height);
+        const stripH = (b.y + b.h) - a.y;
+        const n = strong ? 24 : 11;
+        const cols = strong ? ['#FF6A00', '#FFD24A', '#FF0044', '#FFFFFF'] : ['#FFD24A', '#FF8C00', '#FFE9B0'];
+        for (let i = 0; i < n; i++) {
+            settleSparkles.push({
+                x: a.x + a.w / 2 + (Math.random() - 0.5) * a.w,
+                y: a.y + Math.random() * stripH,
+                vx: (Math.random() - 0.5) * 2.1, vy: -Math.random() * 2.6 - 0.6,
+                life: 1, s: 1.5 + Math.random() * 2.6, col: cols[i % cols.length]
+            });
+        }
+    }
+
+    function reelColumnDone(c) {
+        const rs = reelSpin; if (!rs) return true;
+        const start = rs.t0 + colOrder(c) * rs.stag;
+        return (performance.now() - start) / rs.per >= 1;
+    }
+
+    function renderReelStrip(c, W, H, now) {
+        const rs = reelSpin; if (!rs) return;
+        const start = rs.t0 + colOrder(c) * rs.stag;
+        const pc = Math.max(0, Math.min(1, (now - start) / rs.per));
+        const a = cellRect(c, 0, W, H);
+        const b = cellRect(c, ROWS - 1, W, H);
+        const colX = a.x, colW = a.w, stripH = (b.y + b.h) - a.y;
+        const cellH = stripH / ROWS;
+
+        if (pc >= 1) {
+            if (!rs.flashCol.has(c)) {
+                rs.flashCol.set(c, now);
+                sparkleBurst(c, fsReelGlow);
+                for (let r = 0; r < ROWS; r++)
+                    cellAnim[c + ',' + r] = { type: 'reveal', t: -r * 0.07 };
+            }
+            const ft = Math.max(0, 1 - (now - rs.flashCol.get(c)) / rs.settle);
+            if (ft > 0) {
+                const g = ctx.createLinearGradient(0, a.y + stripH, 0, a.y);
+                g.addColorStop(0, 'rgba(255,106,0,0)');
+                g.addColorStop(0.5, (fsReelGlow ? 'rgba(255,60,120,' : 'rgba(255,140,0,') + (0.36 * ft) + ')');
+                g.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = g;
+                ctx.fillRect(colX, a.y, colW, stripH);
+            }
+            return;
+        }
+
+        const list = reelSymbols[c] || [];
+        if (!list.length) return;
+        const speedKm = Math.min(6, 2.6 + pc * 1.5) * speed();
+        const travel = (now * 0.05 * speedKm);
+        const scrollPix = -(travel % cellH);          // NEGATIVE => scrolls UP
+        const idxBase = Math.floor(travel / cellH);
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(colX + 1, a.y - 1, colW - 2, stripH + 2, Math.min(colW, cellH) * 0.2);
+        else ctx.rect(colX + 1, a.y - 1, colW - 2, stripH + 2);
+        ctx.clip();
+        for (let i = 0; i < ROWS + 2; i++) {
+            const sy = a.y - cellH + scrollPix + i * cellH;
+            if (sy > b.y + b.h) break;
+            const sym = list[(idxBase + i) % list.length] || POOL[0];
+            let al = 1;
+            if (i === 0) al = 0.32;
+            if (sy + cellH > b.y + b.h) al = 0.28;
+            if (fsReelGlow) al = Math.min(1, al + 0.18);
+            drawSvgSym(ctx, sym, colX, sy, colW, cellH, al, 0.30);
+        }
+        if (fsReelGlow) {
+            const g = ctx.createLinearGradient(a.y, 0, b.y + b.h, 0);
+            g.addColorStop(0, 'rgba(255,60,120,0.2)');
+            g.addColorStop(0.5, 'rgba(255,140,0,0.12)');
+            g.addColorStop(1, 'rgba(255,210,70,0.2)');
+            ctx.fillStyle = g;
+            ctx.fillRect(colX, a.y, colW, stripH);
+        }
+        ctx.restore();
+    }
+
+    function tickReel(now) {
+        const rs = reelSpin; if (!rs) return;
+        rs.settled = 0;
+        for (let c = 0; c < COLS; c++) if (reelColumnDone(c)) rs.settled++;
+        if (rs.settled >= COLS) {
+            if (!rs.done) { rs.done = true; rs.doneAt = now; }
+            if (now - rs.doneAt > rs.settle + 120 / speed()) {
+                reelSpin = null;
+                if (busy) setTimeout(cascadeChain, 60 / speed());
+            }
+        }
+    }
+
+    function drawSparkles() {
+        settleSparkles = settleSparkles.filter(p => p.life > 0);
+        settleSparkles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life -= 0.035;
+            const tw = Math.abs(Math.sin(p.life * 20));
+            ctx.globalAlpha = Math.max(0, p.life) * (0.4 + 0.6 * tw);
+            ctx.fillStyle = p.col;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.s * (0.6 + 0.6 * (1 - p.life)), 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+    }
+
+    /* ================================================================
+     *  FORGE CHAIN (cascade with molten wilds + persistent heat)
+     * ================================================================ */
+    function cascadeChain() {
+        let guard = 0;
+        const step = () => {
+            if (guard++ > SE.MAX_CASCADE) { endChain(); return; }
+
+            const res = SE.evalAll(grid, T, state.bet, { lines: LINES, megas });
+            let extra = 1;
+            grid.all().forEach(x => { if (T[x.id] && T[x.id].wild) extra += 0.5; });
+
+            const fm = forgeMult();
+            res.final = res.total > 0 ? Math.round(res.total * fm * multiplier * extra) : 0;
+
+            if (res.final > 0) {
+                const paid = res.final;
+                chainStep++;
+                forgeHeat = Math.min(100, forgeHeat + 14);
+                updateForge(true);
+                game.setInfo('×' + fm);
+
+                state.balance += paid;
+                game.updateBalance();
+                spinWin += paid;
+                sessionWin += paid;
+                game.animateWinDisplay(paid);
+                game.playWinSound(paid);
+
+                if (!tierFor(spinWin)) {
+                    game.showWinOverlay(paid,
+                        chainStep >= 4 ? 'FORGE FRENZY!' : chainStep >= 2 ? 'CHAIN WIN!' : 'FORGE WIN!',
+                        `×${fm} forge · chain ${chainStep}`);
+                }
+                if (paid >= state.bet * 15) { confetti.spawn(70); game.shake(); }
+
+                winCells = new Set();
+                res.all.forEach(w => (w.positions || []).forEach(([c, r]) => {
+                    const id = grid.get(c, r);
+                    if (T[id] && !T[id].scatter) winCells.add(c + ',' + r);
+                }));
+
+                winCells.forEach(k => {
+                    const [c, r] = k.split(',').map(Number);
+                    crashBurst(c, r);
+                    cellAnim[k] = { type: 'crash', t: 0 };
+                });
+                game.playBonusSound();
+
+                // MOLTEN FORGE — 22% of winners turn into sticky molten wilds
+                let forged = 0;
+                winCells.forEach(k => {
+                    if (Math.random() < 0.22) { toDropWild.set(k, WILD_ID); molten.add(k); forged++; }
+                });
+                if (forged > 0) toast.show('Molten Forge', `${forged} wild${forged > 1 ? 's' : ''} burning through the chain!`);
+
+                setTimeout(() => {
+                    const pos = [...winCells].map(k => k.split(',').map(Number));
+                    toDropWild.forEach((wid, k) => {
+                        const [c, r] = k.split(',').map(Number);
+                        grid.set(c, r, wid);
+                        cellAnim[k] = { type: 'drop', t: 0 };
+                    });
+                    const remaining = pos.filter(([c, r]) => !toDropWild.has(c + ',' + r));
+                    toDropWild.clear();
+                    SE.replaceCrashed(grid, remaining, POOL);
+                    remaining.forEach(([c, r]) => cellAnim[c + ',' + r] = { type: 'drop', t: 0 });
+                    setTimeout(step, 500 / speed());
+                }, 340 / speed());
+            } else {
+                endChain();
+            }
+        };
+
+        const endChain = () => {
+            /* ---- DRAGON'S BREATH: heat maxed out ---- */
+            if (forgeHeat >= 100 && !inFreeSpins && breathSpins <= 0) {
+                forgeHeat = 0;
+                breathSpins = 6;
+                freeSpins = 6;
+                multiplier = Math.max(multiplier, 3);
+                updateForge(true);
+                game.showFeature("🔥 DRAGON'S BREATH! 6 FREE SPINS");
+                game.playBonusSound();
+                confetti.spawn(120);
+                scatterBounceT = performance.now();
+                showFreeSpinPopup(6, () => {
+                    setBg('bg5');
+                    inFreeSpins = true;
+                    busy = false;
+                    setTimeout(() => doSpin(), 250 / speed());
+                }, "🔥 DRAGON'S BREATH 🔥", "6 FREE SPINS · ×3 FORGE MULTIPLIER");
+                return;
+            }
+
+            if (!inFreeSpins) {
+                const sca = SE.evalScatter(grid, T, state.bet);
+                if (sca.freeSpins) {
+                    // remapped free-spin table
+                    const n = sca.freeSpins <= 8 ? 8 : sca.freeSpins <= 10 ? 12 : 18;
+                    freeSpins = n;
+                    const hadWin = spinWin > 0;
+                    scatterBounceT = performance.now();
+                    game.showFeature(`SCATTER! ${n} FREE SPINS`);
+                    game.playBonusSound();
+                    const startFree = () => {
+                        busy = false;
+                        setTimeout(() => doSpin(), 250 / speed());
+                    };
+                    if (hadWin) {
+                        showWinGif(spinWin, () =>
+                            showFreeSpinPopup(n, () =>
+                                showTx(() => {
+                                    multiplier = Math.min(128, multiplier * 2);
+                                    updateForge(true);
+                                    setBg('bg5');
+                                    inFreeSpins = true;
+                                    startFree();
+                                })
+                            )
+                        );
+                    } else {
+                        multiplier = Math.min(128, multiplier * 2);
+                        updateForge(true);
+                        setBg('bg5');
+                        inFreeSpins = true;
+                        showFreeSpinPopup(n, startFree);
+                    }
+                    return;
+                }
+            }
+
+            if (inFreeSpins && freeSpins > 0) {
+                busy = false;
+                setTimeout(() => doSpin(), 900 / speed());
+            } else {
+                if (inFreeSpins) { inFreeSpins = false; breathSpins = 0; setBg('bg6'); }
+                const tier = tierFor(spinWin);
+                if (tier) {
+                    game.setSpinning(true); busy = true;
+                    showTx(() => {
+                        showWinGif(spinWin, () => {
+                            setBg('bg6');
+                            chainStep = 0;
+                            game.setInfo('×' + forgeMult());
+                            busy = false;
+                            game.finishSpin();
+                        });
+                    });
+                    return;
+                }
+                chainStep = 0;
+                game.setInfo('×' + forgeMult());
+                busy = false;
+                game.finishSpin();
+            }
+        };
+
+        step();
+    }
+
+    /* ================================================================
+     *  SPIN
+     * ================================================================ */
+    function doSpin() {
+        if (busy) return;
+        const free = inFreeSpins && freeSpins > 0;
+        if (!free) {
+            if (state.balance < state.bet) { toast.show('Insufficient Balance', 'Lower bet or reset.'); return; }
+            state.balance -= state.bet;
+            setBg('bg4');
+            spinCount++;
+            if (spinCount % 17 === 0) forceScatterSpin = true;   // GUARANTEED scatter every 17
+            forgeHeat = Math.max(0, forgeHeat - 8);              // the forge cools between spins
+        } else {
+            freeSpins--;
+            if (breathSpins > 0) breathSpins--;
+        }
+        game.updateBalance();
+        game.playSpinSound();
+        game.setSpinning(true);
+        busy = true;
+        winCells = new Set();
+        spinWin = 0;
+        chainStep = 0;
+        molten = new Set();
+
+        rollMultiplier();
+        buildBoard();
+        startReelSpin();
+    }
+
+    game.setOnSpin(doSpin);
+    requestAnimationFrame(render);
+};
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

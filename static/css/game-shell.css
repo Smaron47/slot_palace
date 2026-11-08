@@ -1,0 +1,203 @@
+/* ============================================================
+   Spin Palace - Shared Game Shell CSS
+   ============================================================ */
+:root {
+  --gp-bg-deep: #050810;
+  --gp-panel: rgba(14, 20, 36, 0.72);
+  --gp-gold: #f6c945;
+  --gp-gold-2: #ffdf7a;
+  --gp-teal: #22d3ee;
+  --gp-crimson: #e11d48;
+  --gp-emerald: #10b981;
+  --gp-violet: #a855f7;
+  --gp-text: #f1f5f9;
+  --gp-text-dim: #94a3b8;
+  --gp-radius: 16px;
+  --gp-shadow: 0 24px 60px rgba(0,0,0,.75);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  background: var(--gp-bg-deep);
+  color: var(--gp-text);
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+#gp-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(.55) saturate(1.1);
+  opacity: .92;
+  animation: gp-bg-kenburns 20s ease-in-out infinite alternate;
+}
+#gp-bg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(34,211,238,.16), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(246,201,69,.10), transparent 55%),
+    linear-gradient(180deg, rgba(5,8,16,.55), rgba(5,8,16,.85));
+}
+@keyframes gp-bg-kenburns {
+  0% { transform: scale(1); filter: brightness(.55) saturate(1.1) hue-rotate(0deg); }
+  100% { transform: scale(1.04); filter: brightness(.62) saturate(1.25) hue-rotate(12deg); }
+}
+#gp-shine {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.04) 50%, transparent 60%);
+  background-size: 200% 200%;
+  animation: gp-shine 8s ease-in-out infinite;
+}
+@keyframes gp-shine {
+  0%, 60% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+
+/* Game container */
+#gp-game {
+  position: relative;
+  z-index: 10;
+  width: min(1200px, 97vw);
+  height: min(760px, 96vh);
+  background: linear-gradient(155deg, rgba(20,28,48,.75), rgba(6,10,22,.85));
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(246,201,69,.35);
+  border-radius: var(--gp-radius);
+  box-shadow: var(--gp-shadow), inset 0 0 60px rgba(34,211,238,.08), 0 0 80px rgba(246,201,69,.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.gp-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(0,0,0,.55), transparent);
+  border-bottom: 1px solid rgba(246,201,69,.18);
+  gap: 12px;
+  flex-wrap: wrap;
+  z-index: 20;
+}
+.gp-brand {
+  font-family: 'Pirata One', serif;
+  font-size: 1.9rem;
+  letter-spacing: 2px;
+  color: var(--gp-gold);
+  text-shadow: 0 0 20px rgba(246,201,69,.65), 0 2px 0 #8a5b13;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gp-topbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.gp-pill {
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(34,211,238,.4);
+  color: #67e8f9;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: .2s;
+  font-family: 'Orbitron', sans-serif;
+}
+.gp-pill:hover { background: rgba(34,211,238,.18); color: #fff; transform: translateY(-1px); }
+.gp-pill.on { background: rgba(246,201,69,.2); border-color: var(--gp-gold); color: var(--gp-gold); }
+.gp-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 14px;
+  padding: 14px;
+  min-height: 0;
+}
+.gp-reel-wrap {
+  position: relative;
+  border-radius: var(--gp-radius);
+  background: linear-gradient(160deg, rgba(10,16,30,.55), rgba(4,8,18,.85));
+  border: 1px solid rgba(246,201,69,.28);
+  box-shadow: inset 0 0 50px rgba(0,0,0,.7), 0 0 30px rgba(34,211,238,.15);
+  overflow: hidden;
+  min-height: 0;
+}
+canvas#gp-reels { display: block; width: 100%; height: 100%; }
+.gp-side { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+#gp-fs-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 22px;
+  border-radius: 30px;
+  background: linear-gradient(160deg, rgba(168,85,247,.85), rgba(80,20,140,.9));
+  border: 2px solid var(--gp-violet);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: .85rem;
+  z-index: 50;
+  display: none;
+  box-shadow: 0 0 30px rgba(168,85,247,.5);
+}
+
+/* ===== GIF Overlays: loading / win / transaction ===== */
+.gp-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  flex-direction: column;
+}
+.gp-overlay img {
+  max-width: 320px;
+  max-height: 320px;
+  animation: gp-overlay-pop .4s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes gp-overlay-pop {
+  0% { transform: scale(.6); opacity: 0; }
+  70% { transform: scale(1.15); opacity: .9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+#gp-overlay-loading { z-index: 1000; }
+#gp-overlay-win { z-index: 1001; }
+#gp-overlay-tx { z-index: 1002; }
+
+.gp-toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  z-index: 2000;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.8);
+  color: #fff;
+  font-size: .9rem;
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,.6);
+  animation: gp-toast-slide .3s ease;
+  pointer-events: none;
+}
+@keyframes gp-toast-slide {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  #gp-game { width: 98vw; height: 98vh; border-radius: 12px; }
+  .gp-main { grid-template-columns: 1fr; gap: 10px; padding: 10px; }
+  .gp-side { flex-direction: row; gap: 8px; overflow-x: auto; }
+}

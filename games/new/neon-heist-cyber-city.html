@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neon Heist — Cyber City Break-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#050508;
+  --steel:#0d0d14;
+  --chrome:#1a1a24;
+  --chrome-2:#242436;
+  --cyan:#00f0ff;
+  --cyan-2:#66f7ff;
+  --cyan-deep:#0891b2;
+  --magenta:#ff00e5;
+  --magenta-2:#ff66f0;
+  --magenta-deep:#a3008f;
+  --neon-green:#00ff88;
+  --amber:#ffb020;
+  --silver:#c0c8d8;
+  --text:#e8f6ff;
+  --text-dim:#7a8ca8;
+  --radius:12px;
+  --radius-lg:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Share Tech Mono',monospace;
+  background:var(--void);color:var(--text);
+  overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;user-select:none;
+}
+
+/* ---------- GIF background ---------- */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#050508 center/cover no-repeat url('../../assets/bg12.gif');
+  transition:filter .7s, opacity .7s;
+  filter:brightness(.55) saturate(1.4) hue-rotate(-15deg) contrast(1.1);
+  opacity:.9;
+}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 15% 20%,rgba(0,240,255,.22),transparent 55%),
+    radial-gradient(ellipse at 85% 80%,rgba(255,0,229,.20),transparent 55%),
+    linear-gradient(180deg,rgba(5,5,8,.5),rgba(5,5,8,.92));
+}
+#bgLayer.free{filter:brightness(.62) saturate(1.6) hue-rotate(20deg) contrast(1.1)}
+#bgLayer.big{filter:brightness(.72) saturate(1.7) hue-rotate(-40deg) contrast(1.1)}
+
+/* scanline overlay */
+body::after{
+  content:"";position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    rgba(0,240,255,.02) 0px,
+    rgba(0,240,255,.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity:.85;
+}
+
+/* data rain (CSS-only) */
+#rainLayer{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+#rainLayer span{
+  position:absolute;top:-30px;width:2px;height:20px;
+  background:linear-gradient(180deg,transparent,var(--cyan),transparent);
+  box-shadow:0 0 6px var(--cyan);
+  animation:dataRain linear infinite;
+  opacity:.7;
+}
+@keyframes dataRain{
+  0%{transform:translateY(0);opacity:0}
+  10%{opacity:.9}
+  90%{opacity:.5}
+  100%{transform:translateY(110vh);opacity:0}
+}
+
+/* ---------- Shell ---------- */
+#game{
+  position:relative;z-index:5;
+  width:min(1150px,97vw);height:min(780px,96vh);
+  background:linear-gradient(155deg,rgba(13,13,20,.92),rgba(5,5,8,.96));
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(0,240,255,.4);
+  border-radius:var(--radius-lg);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.9),
+    inset 0 0 80px rgba(0,240,255,.05),
+    0 0 100px rgba(0,240,255,.16),
+    0 0 40px rgba(255,0,229,.14);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(120deg,transparent 42%,rgba(0,240,255,.12) 50%,transparent 58%);
+  animation:shine 9s ease-in-out infinite;
+}
+@keyframes shine{0%,58%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+
+/* top data strip */
+#game::after{
+  content:"";position:absolute;left:14px;right:14px;top:6px;height:6px;pointer-events:none;z-index:58;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--cyan) 0 6px, transparent 6px 8px,
+    var(--magenta) 8px 14px, transparent 14px 16px
+  );
+  filter:drop-shadow(0 0 4px var(--cyan));
+  animation:crawl 3s linear infinite;
+}
+@keyframes crawl{to{background-position:16px 0}}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px 12px;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(5,5,8,.85),transparent);
+  border-bottom:1px solid rgba(0,240,255,.24);
+  position:relative;z-index:2;
+}
+.brand{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.35rem;letter-spacing:5px;
+  color:var(--cyan);
+  display:flex;align-items:center;gap:10px;
+  text-shadow:
+    0 0 6px var(--cyan),
+    0 0 18px var(--cyan),
+    2px 0 6px var(--magenta);
+}
+.brand .blip{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--magenta);
+  box-shadow:0 0 8px var(--magenta),0 0 16px var(--magenta);
+  animation:blip 1.4s ease-in-out infinite;
+}
+@keyframes blip{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 14px;border-radius:6px;background:rgba(0,0,0,.7);
+  border:1px solid rgba(0,240,255,.5);color:var(--cyan);
+  font-size:.68rem;font-weight:500;letter-spacing:2px;cursor:pointer;
+  transition:.15s;font-family:'Share Tech Mono',monospace;text-transform:uppercase;
+}
+.pill:hover{background:rgba(0,240,255,.18);color:#fff;transform:translateY(-1px);
+  box-shadow:0 0 14px rgba(0,240,255,.6)}
+.pill.on{background:rgba(255,0,229,.22);border-color:var(--magenta);color:#fff;
+  box-shadow:0 0 14px var(--magenta)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--cyan) 50%),
+    linear-gradient(135deg,var(--cyan) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+  background-size:5px 5px;background-repeat:no-repeat}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;display:grid;grid-template-columns:1fr 275px;gap:14px;padding:14px;
+  min-height:0;position:relative;z-index:2}
+
+/* Board wrap — same structure as working game */
+.board-wrap{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(13,13,20,.7),rgba(5,5,8,.92));
+  border:1px solid rgba(0,240,255,.42);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.8),
+    0 0 40px rgba(0,240,255,.22),
+    0 0 30px rgba(255,0,229,.12);
+  overflow:hidden;min-height:0;
+}
+.board-wrap::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(0deg,rgba(0,240,255,.03) 0 1px,transparent 1px 8px),
+    linear-gradient(90deg,rgba(0,240,255,.03) 0 1px,transparent 1px 8px);
+}
+canvas#board{display:block;width:100%;height:100%;position:relative;z-index:2}
+
+#fsBanner{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:22;
+  padding:8px 24px;border-radius:6px;
+  background:linear-gradient(160deg,rgba(255,0,229,.9),rgba(5,5,8,.9));
+  border:2px solid var(--cyan);color:#fff;
+  font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:3px;font-size:.85rem;
+  text-shadow:0 0 10px var(--cyan),0 0 20px #fff;
+  box-shadow:0 0 30px rgba(255,0,229,.8),0 0 50px rgba(0,240,255,.6);
+  display:none;
+}
+#fsBanner.on{display:block;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+
+/* ---------- DASHBOARD ---------- */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0}
+.stat{
+  background:linear-gradient(160deg,rgba(13,13,20,.85),rgba(5,5,8,.94));
+  border:1px solid rgba(0,240,255,.35);
+  border-radius:var(--radius);padding:12px 14px;position:relative;overflow:hidden;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(0,240,255,.12) 50%,transparent 60%);
+  animation:shine 6s ease-in-out infinite;
+}
+.stat .lbl{font-size:.58rem;letter-spacing:2.5px;color:var(--text-dim);
+  font-weight:500;text-transform:uppercase}
+.stat .val{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.5rem;
+  margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.stat.balance .val{color:var(--cyan);text-shadow:0 0 14px rgba(0,240,255,.8)}
+.stat.win .val{color:var(--magenta-2);text-shadow:0 0 14px rgba(255,102,240,.8)}
+.stat .val.pop{animation:pop .55s cubic-bezier(.2,.7,.3,1.6)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3);filter:brightness(1.8)}100%{transform:scale(1)}}
+
+/* ---------- Charge Meter ---------- */
+.charge-wrap{
+  background:linear-gradient(160deg,rgba(13,13,20,.85),rgba(5,5,8,.94));
+  border:1px solid rgba(255,0,229,.4);
+  border-radius:var(--radius);padding:10px 14px;position:relative;overflow:hidden;
+}
+.charge-wrap::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(255,0,229,.14) 50%,transparent 60%);
+  animation:shine 5s ease-in-out infinite;
+}
+.charge-wrap .lbl{
+  font-size:.55rem;letter-spacing:2.5px;color:var(--text-dim);
+  font-weight:500;text-transform:uppercase;margin-bottom:6px;
+  display:flex;justify-content:space-between;
+}
+.charge-wrap .lbl b{color:var(--magenta-2);text-shadow:0 0 8px var(--magenta)}
+.charge-bar{
+  height:12px;border-radius:6px;overflow:hidden;
+  background:rgba(0,0,0,.7);
+  border:1px solid rgba(255,0,229,.3);
+  position:relative;
+}
+.charge-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--cyan),var(--magenta));
+  box-shadow:0 0 14px var(--magenta),0 0 24px var(--cyan);
+  transition:width .5s ease,background .3s ease;
+  position:relative;
+}
+.charge-fill::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
+  animation:crawl 1.5s linear infinite;
+}
+.charge-wrap.full{
+  border-color:var(--cyan);
+  animation:chargeFullPulse .9s ease-in-out infinite;
+}
+@keyframes chargeFullPulse{
+  0%,100%{box-shadow:0 0 12px rgba(255,0,229,.5)}
+  50%{box-shadow:0 0 26px var(--magenta),0 0 40px var(--cyan)}
+}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.65);border:1px solid rgba(0,240,255,.4);
+  border-radius:10px;padding:6px;
+}
+.bet-row .btn{
+  width:38px;height:38px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--cyan-2),var(--cyan));
+  border:none;border-radius:6px;color:#04242e;font-weight:900;font-size:1.15rem;
+  cursor:pointer;transition:.15s;font-family:'Orbitron',sans-serif;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.6),
+    0 0 12px rgba(0,240,255,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 22px var(--cyan)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7);box-shadow:none}
+.bet-row .amt{
+  flex:1;text-align:center;font-family:'Orbitron',sans-serif;
+  font-weight:900;font-size:1.25rem;color:#fff;font-variant-numeric:tabular-nums;
+  letter-spacing:2px;
+}
+.bet-row .amt small{display:block;font-size:.52rem;color:var(--text-dim);
+  letter-spacing:2px;font-weight:500;margin-top:0;font-family:'Share Tech Mono',monospace}
+
+.preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.preset-row button{
+  padding:6px;border-radius:6px;
+  background:linear-gradient(160deg,rgba(0,240,255,.14),rgba(8,145,178,.06));
+  border:1px solid rgba(0,240,255,.42);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:.62rem;font-weight:500;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.preset-row button:hover{background:rgba(0,240,255,.24);color:#fff;box-shadow:0 0 12px rgba(0,240,255,.5)}
+
+.auto-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.auto-row button{
+  padding:6px 2px;border-radius:6px;
+  background:linear-gradient(160deg,rgba(255,0,229,.14),rgba(163,0,143,.06));
+  border:1px solid rgba(255,0,229,.42);color:var(--magenta-2);
+  font-family:'Share Tech Mono',monospace;font-size:.62rem;font-weight:500;
+  letter-spacing:1px;cursor:pointer;transition:.15s;
+}
+.auto-row button:hover{background:rgba(255,0,229,.28);color:#fff}
+.auto-row button.active{background:linear-gradient(160deg,var(--magenta),var(--magenta-2));
+  color:#fff;border-color:#fff;box-shadow:0 0 14px rgba(255,0,229,.7)}
+
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:10px 6px;border-radius:8px;
+  background:linear-gradient(160deg,rgba(0,240,255,.14),rgba(8,145,178,.06));
+  border:1px solid rgba(0,240,255,.42);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:.68rem;font-weight:500;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.mini:hover{background:rgba(0,240,255,.24);color:#fff;box-shadow:0 0 14px rgba(0,240,255,.6)}
+.mini.on{background:linear-gradient(160deg,var(--magenta),var(--magenta-2));
+  color:#fff;border-color:#fff;box-shadow:0 0 22px var(--magenta);
+  animation:pulse 1.3s ease-in-out infinite}
+
+.spin{
+  padding:22px 10px;border-radius:12px;border:none;cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.45rem;letter-spacing:6px;
+  color:#04242e;
+  background:radial-gradient(circle at 32% 28%,#cffcff 0%,var(--cyan) 42%,var(--cyan-deep) 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.5),0 0 45px rgba(0,240,255,.6),
+    inset 0 2px 0 rgba(255,255,255,.7);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(var(--cyan),#fff,var(--magenta),var(--cyan));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spinGlow 3.5s linear infinite;opacity:.78;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.spin:hover:not(:disabled){transform:translateY(-2px);
+  box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 70px var(--cyan),
+  0 0 110px rgba(255,0,229,.6),inset 0 2px 0 rgba(255,255,255,.7)}
+.spin:active:not(:disabled){transform:translateY(3px);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px var(--cyan)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+.spin .autocnt{display:block;font-size:.6rem;letter-spacing:2px;
+  color:rgba(0,0,0,.65);margin-top:2px;font-weight:700;font-family:'Share Tech Mono',monospace}
+
+/* ---------- MODALS ---------- */
+.modal{
+  position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(2,2,5,.95);backdrop-filter:blur(10px);
+  padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  width:min(820px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(13,13,20,.98),rgba(5,5,8,.98));
+  border:2px solid rgba(0,240,255,.6);
+  border-radius:14px;padding:24px 28px;
+  box-shadow:0 0 60px rgba(0,240,255,.4),0 0 90px rgba(255,0,229,.25);
+}
+.modal-card h2{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.35rem;
+  letter-spacing:3px;color:var(--cyan);margin-bottom:12px;
+  text-shadow:0 0 20px rgba(0,240,255,.7);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.modal-card h2 button{
+  background:rgba(0,240,255,.15);border:1px solid var(--cyan);
+  color:var(--cyan);padding:6px 14px;border-radius:6px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;font-weight:500;
+  letter-spacing:1px;
+}
+.modal-card h2 button:hover{background:rgba(0,240,255,.32);color:#fff}
+.modal-card p{line-height:1.7;color:#c9dff0;font-size:.85rem;margin:8px 0}
+.modal-card .rules{color:#a8c2d8;font-size:.82rem}
+.modal-card .rules b{color:var(--cyan)}
+.modal-card .grid-sym{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:12px;margin:16px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.55);border:1px solid rgba(0,240,255,.32);
+  border-radius:10px;padding:12px;text-align:center;
+}
+.sym-card .ic{
+  width:74px;height:74px;margin:0 auto 8px;
+  border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.7);border:1px solid rgba(0,240,255,.28);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.sym-card .nm{font-size:.66rem;color:#a8c2d8;letter-spacing:1.2px;
+  text-transform:uppercase;font-weight:500}
+.sym-card .py{font-family:'Orbitron',sans-serif;font-size:.75rem;
+  color:var(--cyan);font-weight:700;margin-top:4px;letter-spacing:1px}
+.sym-card.wild .ic{border-color:var(--magenta);box-shadow:0 0 16px rgba(255,0,229,.7)}
+.sym-card.wild .py{color:var(--magenta-2)}
+.sym-card.scatter .ic{border-color:var(--neon-green);box-shadow:0 0 16px rgba(0,255,136,.7)}
+.sym-card.scatter .py{color:var(--neon-green)}
+.history{list-style:none;font-size:.76rem}
+.history li{display:flex;justify-content:space-between;gap:10px;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.history li b{color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.85rem;letter-spacing:1px}
+.history li.loss b{color:#f87171}
+
+/* ---------- WIN OVERLAY ---------- */
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(5,5,8,.6),rgba(5,5,8,.94));
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+#winOv.on{display:flex;animation:fadeIn .25s ease}
+#winOv .box{
+  text-align:center;padding:32px 56px;border-radius:14px;
+  background:linear-gradient(160deg,rgba(13,13,20,.97),rgba(5,5,8,.97));
+  border:3px solid var(--cyan);
+  box-shadow:0 0 90px var(--cyan),0 0 130px rgba(255,0,229,.6),
+    inset 0 0 50px rgba(0,240,255,.2);
+  animation:winPop .6s cubic-bezier(.2,.7,.3,1.5);
+  position:relative;overflow:hidden;
+}
+#winOv .box::before{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(transparent 30%,rgba(0,240,255,.38) 50%,transparent 70%);
+  animation:spinGlow 3s linear infinite;
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:2rem;letter-spacing:6px;
+  color:#fff;text-shadow:0 0 30px var(--cyan),0 0 60px var(--magenta);
+  position:relative;z-index:2;
+}
+#winOv .amt{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:2.6rem;
+  color:var(--cyan);text-shadow:0 0 30px var(--cyan),0 0 60px #fff;
+  margin-top:6px;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+  letter-spacing:3px;
+}
+#winOv .sub{font-size:.72rem;color:var(--text-dim);letter-spacing:3px;
+  margin-top:12px;font-weight:500;text-transform:uppercase;position:relative;z-index:2;
+  font-family:'Share Tech Mono',monospace}
+
+/* ---------- TOASTS ---------- */
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:950;
+  display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:6px;
+  background:linear-gradient(160deg,rgba(13,13,20,.96),rgba(5,5,8,.96));
+  border:1px solid var(--cyan);color:var(--cyan);
+  font-size:.78rem;font-weight:500;letter-spacing:1.5px;
+  font-family:'Share Tech Mono',monospace;
+  box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(0,240,255,.6);
+  animation:toastIn .3s ease,toastOut .3s ease 2.6s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .dash .stat,.dash .charge-wrap{flex:1;min-width:120px;padding:8px 10px}
+  .dash .stat .val{font-size:1.1rem}
+  .controls{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .bet-row{flex:1 1 100%}
+  .preset-row{flex:1 1 100%}
+  .auto-row{flex:1 1 100%}
+  .mini-row{flex:1 1 45%}
+  .spin{flex:1 1 100%;padding:15px;font-size:1.2rem}
+  .brand{font-size:1rem;letter-spacing:3px}
+  .topbar{padding:10px 12px}
+  .pill{padding:5px 10px;font-size:.58rem}
+  #fsBanner{font-size:.7rem;padding:6px 14px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  #rainLayer{display:none}
+  body::after{display:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="rainLayer"></div>
+
+<div id="game">
+  <div class="topbar">
+    <div class="brand">
+      <span class="blip"></span>
+      <span>NEON HEIST</span>
+      <span class="blip"></span>
+    </div>
+    <div class="topbar-right">
+      <select id="speedSel" class="pill">
+        <option value="0.7">Slow</option>
+        <option value="1" selected>Normal</option>
+        <option value="1.6">Fast</option>
+        <option value="2.4">Turbo</option>
+      </select>
+      <button class="pill" id="paytableBtn">Paytable</button>
+      <button class="pill" id="helpBtn">Rules</button>
+      <button class="pill" id="historyBtn">History</button>
+      <button class="pill" id="soundBtn">🔊</button>
+      <button class="pill" id="resetBtn">♻</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="board-wrap">
+      <div id="fsBanner">▚ FREE SPINS: <span id="fsCount">0</span> ▞</div>
+      <canvas id="board"></canvas>
+    </div>
+
+    <div class="dash">
+      <div class="stat balance">
+        <div class="lbl">Credits</div>
+        <div class="val" id="balanceVal">1,000</div>
+      </div>
+      <div class="stat win">
+        <div class="lbl">Last Haul</div>
+        <div class="val" id="winVal">0</div>
+      </div>
+
+      <div class="charge-wrap" id="chargeWrap">
+        <div class="lbl"><span>OVERCLOCK CHARGE</span><b id="chargeVal">0%</b></div>
+        <div class="charge-bar"><div class="charge-fill" id="chargeFill"></div></div>
+      </div>
+
+      <div class="controls">
+        <div class="bet-row">
+          <button class="btn" id="betDown">−</button>
+          <div class="amt">
+            <span id="betVal">10</span>
+            <small>BET PER SPIN</small>
+          </div>
+          <button class="btn" id="betUp">+</button>
+        </div>
+        <div class="preset-row">
+          <button data-preset="min">MIN</button>
+          <button data-preset="std">STD</button>
+          <button data-preset="max">MAX</button>
+        </div>
+        <div class="auto-row" id="autoRow">
+          <button data-auto="10">10</button>
+          <button data-auto="25" class="active">25</button>
+          <button data-auto="50">50</button>
+          <button data-auto="100">100</button>
+        </div>
+        <div class="mini-row">
+          <button class="mini" id="autoBtn">▶ AUTO</button>
+          <button class="mini" id="stopBtn">■ STOP</button>
+        </div>
+        <button class="spin" id="spinBtn">
+          RUN
+          <span class="autocnt" id="autoCnt"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYTABLE -->
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>▚ Paytable <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Wins form on the two <b>diagonals</b>. Match 3 identical symbols (Glitch Wilds substitute) → payout × bet.</p>
+    <div class="grid-sym" id="paytableGrid"></div>
+    <p class="rules" style="margin-top:14px">
+      <b>◆ VAULT BONUS:</b> All five X positions [0,2,4,6,8] matching → pays both diagonals <b>PLUS</b> a <b>100× bet</b> bonus.<br>
+      <b>◆ CORNER BREACH:</b> All 4 corners [0,2,6,8] matching → <b>30× bet</b> bonus.<br>
+      <b>◆ GLITCH WILD:</b> Substitutes for any regular symbol. When a Wild participates in a win, that win gets a <b>×2</b> boost (once per line).<br>
+      <b>◆ VIRUS SCATTER:</b> 3 anywhere → 8 Free Spins · 4 → 12 FS · 5+ → 20 FS. FS wins are <b>×2</b>.<br>
+      <b>◆ OVERCLOCK METER:</b> Fills on every spin. When 100% is reached, the <b>next spin gets a ×3 multiplier</b> on all wins, then resets.
+    </p>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>▚ How To Play <button data-close>✕ CLOSE</button></h2>
+    <p>1. Set your <b>bet</b> with the + / − buttons or the MIN / STD / MAX presets.</p>
+    <p>2. Pick your <b>auto-spin count</b> (10 / 25 / 50 / 100), then press AUTO. Or just press RUN.</p>
+    <p>3. Wins form on either diagonal (top-left → bottom-right, or bottom-left → top-right).</p>
+    <p>4. <b>Vault Bonus</b> fires when all 5 cells of the X match — pays both diagonals + a big bonus.</p>
+    <p>5. <b>Corner Breach</b> fires when all 4 corners match — bonus payout.</p>
+    <p>6. <b>Glitch Wilds</b> substitute for any regular symbol and boost the win ×2 (once per line).</p>
+    <p>7. <b>Virus Scatters</b> trigger Free Spins — 3/4/5+ → 8/12/20 spins, ×2 multiplier, retriggers add +5.</p>
+    <p>8. <b>Overclock Meter</b> fills on every spin (more on wins). At 100% the next spin's wins get a <b>×3 OVERCLOCK</b> multiplier, then the meter resets.</p>
+    <p style="color:var(--text-dim);font-size:.8rem;margin-top:14px">🎮 Virtual-credit demo — for entertainment only. Not for real-money wagering.</p>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>▚ Access Log <button data-close>✕ CLOSE</button></h2>
+    <ul class="history" id="historyList"><li style="color:var(--text-dim)">No spins yet.</li></ul>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   NEON HEIST — Cyber City Break-In
+   Engine IDENTICAL to the working game.
+   New: scan-line sweep, circuit-boot reveal, RGB glitch,
+        digital-rain particles, Overclock Meter.
+   ===================================================================== */
+
+const GIF_ASSETS = {
+  normal:    "../../assets/bg12.gif",
+  freeSpins: "../../assets/bg10.gif",
+  bigWin:    "../../assets/bg11.gif"
+};
+
+const CONFIG = {
+  cols: 3, rows: 3,
+  startingBalance: 1000,
+  betSteps: [5, 10, 20, 50, 100, 200, 500],
+  defaultBetIndex: 1,
+
+  autoSpinMax: 25,
+
+  patterns: {
+    diagDown: [0, 4, 8],
+    diagUp:   [6, 4, 2],
+    fullX:    [0, 2, 4, 6, 8],
+    corners:  [0, 2, 6, 8]
+  },
+
+  fullXBonus:  { mode: "betMultiplier", value: 100 },
+  cornerBonus: { mode: "betMultiplier", value: 30 },
+
+  wildRules: {
+    enabled: true,
+    substitutesRegulars: true,
+    substitutesScatter: false,
+    ownPayout: true,
+    participatesInFullX: true,
+    participatesInCornerStrike: true,
+    multiplierEnabled: true,
+    multiplierValue: 2,
+    multiplierMode: "oncePerWin"
+  },
+
+  scatter: {
+    thresholds: [
+      { min: 5, freeSpins: 20 },
+      { min: 4, freeSpins: 12 },
+      { min: 3, freeSpins: 8 }
+    ]
+  },
+
+  freeSpins: {
+    multiplier: 2,
+    retrigger: true,
+    retriggerAdd: 5,
+    fullXDuringFS: true,
+    cornerStrikeDuringFS: true
+  },
+
+  // Overclock meter — new for this game
+  overclock: {
+    fillPerSpin: 12,      // % gained on a losing spin
+    fillPerWin: 24,       // % gained on a winning spin
+    max: 100,
+    multiplier: 3         // applied to next spin's wins when full
+  }
+};
+
+/* ---------- SYMBOLS ---------- */
+/* Fresh sprite indices (0, 4, 11, 12, 13, 21, 22, 23) — none of these
+   are the wide text strip index (24). */
+const SYMBOLS = {
+  wild:    { id:"wild",    name:"Glitch",  sprite:4,  weight:4,  pay:10, special:"wild" },
+  scatter: { id:"scatter", name:"Virus",   sprite:0,  weight:3,  pay:0,  special:"scatter" },
+  vault:   { id:"vault",   name:"Vault",   sprite:23, weight:7,  pay:25 },
+  drone:   { id:"drone",   name:"Drone",   sprite:22, weight:10, pay:15 },
+  server:  { id:"server",  name:"Server",  sprite:21, weight:14, pay:10 },
+  chip:    { id:"chip",    name:"Chip",    sprite:13, weight:18, pay:6 },
+  key:     { id:"key",     name:"Keycard", sprite:12, weight:22, pay:4 },
+  coin:    { id:"coin",    name:"Coin",    sprite:11, weight:22, pay:2 }
+};
+const ORDER = ["wild","scatter","vault","drone","server","chip","key","coin"];
+
+/* ---------- RNG ---------- */
+const RNG = (function() {
+  const buf = new Uint32Array(1);
+  const hasCrypto = (typeof crypto !== "undefined" && crypto.getRandomValues);
+  function uint32() {
+    if (hasCrypto) { crypto.getRandomValues(buf); return buf[0] >>> 0; }
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  function int(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error("RNG.int: " + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;
+    let r; do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  function weighted(items) {
+    const total = items.reduce((s, x) => s + x.weight, 0);
+    if (total <= 0) throw new Error("RNG.weighted: total 0");
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++) {
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted, uint32 };
+})();
+
+/* ---------- SPRITE LOADER ---------- */
+const SPRITE_COORDS = [
+  {x:25,y:402,w:82,h:64},{x:115,y:401,w:78,h:67},{x:199,y:403,w:78,h:61},
+  {x:287,y:402,w:75,h:66},{x:376,y:401,w:73,h:69},{x:25,y:477,w:79,h:58},
+  {x:116,y:474,w:77,h:60},{x:202,y:474,w:75,h:60},{x:289,y:481,w:66,h:46},
+  {x:372,y:477,w:79,h:60},{x:27,y:569,w:69,h:84},{x:112,y:568,w:66,h:85},
+  {x:197,y:569,w:65,h:84},{x:280,y:569,w:65,h:84},{x:479,y:125,w:67,h:68},
+  {x:562,y:207,w:66,h:67},{x:716,y:205,w:68,h:66},{x:799,y:207,w:63,h:62},
+  {x:881,y:204,w:58,h:70},{x:973,y:125,w:76,h:69},{x:1058,y:126,w:71,h:71},
+  {x:1141,y:126,w:71,h:69},{x:1224,y:130,w:71,h:64},{x:1304,y:126,w:76,h:68},
+  {x:976,y:606,w:128,h:49}
+];
+
+const SpriteLoader = (function() {
+  const img = new Image();
+  let ready = false;
+  const url = "../../assets/ultimate_multi_slot_sprite.jpg";
+  function load() {
+    return new Promise(resolve => {
+      img.onload = () => { ready = true; resolve(true); };
+      img.onerror = () => { console.warn("[sprite] missing " + url); resolve(false); };
+      img.src = url;
+      setTimeout(() => { if (!ready) resolve(false); }, 8000);
+    });
+  }
+  function drawTo(c, idx, dx, dy, dw, dh, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const s = SPRITE_COORDS[idx];
+    c.save(); c.globalAlpha = alpha;
+    if (ready && s) {
+      try { c.drawImage(img, s.x, s.y, s.w, s.h, dx, dy, dw, dh); }
+      catch (e) { fallback(c, idx, dx, dy, dw, dh); }
+    } else fallback(c, idx, dx, dy, dw, dh);
+    c.restore();
+  }
+  function fallback(c, idx, x, y, w, h) {
+    const p = ["#00f0ff","#ff00e5","#00ff88","#0891b2","#a3008f","#ffb020","#c0c8d8","#66f7ff"];
+    c.fillStyle = p[idx % p.length];
+    c.beginPath(); c.arc(x+w/2, y+h/2, Math.min(w,h)*0.4, 0, Math.PI*2); c.fill();
+    c.fillStyle = "#050508";
+    c.font = "bold " + Math.floor(h*0.32) + "px Orbitron,Arial";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(String(idx+1), x+w/2, y+h/2);
+  }
+  function dataUrl(idx, w, h) {
+    if (w === undefined) w = 64;
+    if (h === undefined) h = 64;
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    drawTo(c.getContext("2d"), idx, 0, 0, w, h, 1);
+    return c.toDataURL();
+  }
+  return { load, drawTo, dataUrl, isReady: () => ready };
+})();
+
+/* ---------- WILD ENGINE ---------- */
+const WildEngine = (function() {
+  function resolveSymbols(symbols) {
+    const cfg = CONFIG.wildRules;
+    let target = null;
+    let wildsUsed = 0;
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      if (s === "scatter") return null;
+      if (s === "wild") {
+        if (!cfg.enabled) return null;
+        wildsUsed++;
+        continue;
+      }
+      if (target === null) target = s;
+      else if (s !== target) return null;
+    }
+    if (wildsUsed === symbols.length) {
+      if (!cfg.ownPayout) return null;
+      return { symbol: "wild", wildsUsed };
+    }
+    return { symbol: target, wildsUsed };
+  }
+  function applyMultiplier(payout, wildsUsed) {
+    const cfg = CONFIG.wildRules;
+    if (!cfg.multiplierEnabled) return payout;
+    if (wildsUsed <= 0) return payout;
+    if (cfg.multiplierMode === "oncePerWin") return payout * cfg.multiplierValue;
+    return payout * Math.pow(cfg.multiplierValue, wildsUsed);
+  }
+  return { resolveSymbols, applyMultiplier };
+})();
+
+/* ---------- X-PATTERN ENGINE ---------- */
+const XEngine = (function() {
+  function evalDiagonal(board, positions) {
+    const syms = positions.map(i => board[i]);
+    const m = WildEngine.resolveSymbols(syms);
+    if (!m) return null;
+    const def = SYMBOLS[m.symbol];
+    if (!def) return null;
+    return { symbol: m.symbol, wildsUsed: m.wildsUsed, cells: positions, baseMultiplier: def.pay };
+  }
+  function evalFullX(board) {
+    const positions = CONFIG.patterns.fullX;
+    const syms = positions.map(i => board[i]);
+    const m = WildEngine.resolveSymbols(syms);
+    if (!m) return null;
+    if (m.symbol === "wild" && !CONFIG.wildRules.participatesInFullX) return null;
+    if (m.symbol !== "wild" && m.wildsUsed > 0 && !CONFIG.wildRules.participatesInFullX) return null;
+    return { symbol: m.symbol, wildsUsed: m.wildsUsed, cells: positions };
+  }
+  function evalCorners(board) {
+    const positions = CONFIG.patterns.corners;
+    const syms = positions.map(i => board[i]);
+    const m = WildEngine.resolveSymbols(syms);
+    if (!m) return null;
+    if (m.symbol === "wild" && !CONFIG.wildRules.participatesInCornerStrike) return null;
+    return { symbol: m.symbol, wildsUsed: m.wildsUsed, cells: positions };
+  }
+  return { evalDiagonal, evalFullX, evalCorners };
+})();
+
+/* ---------- BONUS ENGINE ---------- */
+const BonusEngine = (function() {
+  function countScatters(board) {
+    let n = 0;
+    for (let i = 0; i < board.length; i++) if (board[i] === "scatter") n++;
+    return n;
+  }
+  function freeSpinsFor(count) {
+    const th = CONFIG.scatter.thresholds;
+    for (let i = 0; i < th.length; i++) if (count >= th[i].min) return th[i].freeSpins;
+    return 0;
+  }
+  return { countScatters, freeSpinsFor };
+})();
+
+/* ---------- GAME ENGINE ---------- */
+const GameEngine = (function() {
+  const state = {
+    phase: "idle",
+    balance: CONFIG.startingBalance,
+    betIndex: CONFIG.defaultBetIndex,
+    board: new Array(9).fill("key"),
+    lastWin: 0,
+    lastNet: 0,
+    inFreeSpins: false,
+    freeSpinsLeft: 0,
+    autoActive: false,
+    autoSpinsLeft: 0,
+    autoSpinTarget: 25,
+    // Overclock meter
+    charge: 0,
+    overclockActive: false
+  };
+
+  const bet = () => CONFIG.betSteps[state.betIndex];
+
+  function generateBoard() {
+    const pool = ORDER.map(k => SYMBOLS[k]).filter(s => s.weight > 0);
+    const b = new Array(9);
+    for (let i = 0; i < 9; i++) b[i] = RNG.weighted(pool).id;
+    return b;
+  }
+
+  function canSpin() {
+    if (state.phase === "spinning" || state.phase === "evaluating") return false;
+    if (state.inFreeSpins && state.freeSpinsLeft > 0) return true;
+    return state.balance >= bet();
+  }
+
+  function evaluate(board, options) {
+    options = options || {};
+    const inFS = options.inFreeSpins || false;
+    const overclock = options.overclock || false;
+    const b = bet();
+
+    const dDown = XEngine.evalDiagonal(board, CONFIG.patterns.diagDown);
+    const dUp   = XEngine.evalDiagonal(board, CONFIG.patterns.diagUp);
+    const fullX = XEngine.evalFullX(board);
+    const corners = XEngine.evalCorners(board);
+    const scatters = BonusEngine.countScatters(board);
+
+    const results = {
+      board, bet: b,
+      diagDown: null, diagUp: null,
+      fullX: null, cornerStrike: null,
+      scatters, triggeredFS: 0, totalWin: 0, breakdown: [],
+      overclock: overclock
+    };
+
+    if (dDown) {
+      const rawPayout = b * dDown.baseMultiplier;
+      const finalPayout = WildEngine.applyMultiplier(rawPayout, dDown.wildsUsed);
+      results.diagDown = { symbol: dDown.symbol, cells: dDown.cells, payout: finalPayout, raw: rawPayout, wildsUsed: dDown.wildsUsed };
+      results.totalWin += finalPayout;
+    }
+    if (dUp) {
+      const rawPayout = b * dUp.baseMultiplier;
+      const finalPayout = WildEngine.applyMultiplier(rawPayout, dUp.wildsUsed);
+      results.diagUp = { symbol: dUp.symbol, cells: dUp.cells, payout: finalPayout, raw: rawPayout, wildsUsed: dUp.wildsUsed };
+      results.totalWin += finalPayout;
+    }
+    if (fullX && dDown && dUp && dDown.symbol === fullX.symbol && dUp.symbol === fullX.symbol) {
+      const cfg = CONFIG.fullXBonus;
+      const bonus = cfg.mode === "fixed" ? cfg.value : b * cfg.value;
+      results.fullX = { symbol: fullX.symbol, cells: fullX.cells, bonus };
+      results.totalWin += bonus;
+    }
+    if (corners && (!inFS || CONFIG.freeSpins.cornerStrikeDuringFS)) {
+      const cfg = CONFIG.cornerBonus;
+      const bonus = cfg.mode === "fixed" ? cfg.value : b * cfg.value;
+      results.cornerStrike = { symbol: corners.symbol, cells: corners.cells, bonus };
+      results.totalWin += bonus;
+    }
+    if (inFS && CONFIG.freeSpins.multiplier > 1) {
+      results.totalWin = results.totalWin * CONFIG.freeSpins.multiplier;
+    }
+    // Overclock multiplier (applied after FS multiplier, only when active)
+    if (overclock && CONFIG.overclock.multiplier > 1) {
+      results.totalWin = results.totalWin * CONFIG.overclock.multiplier;
+    }
+    if (scatters >= 3) {
+      let freespins = BonusEngine.freeSpinsFor(scatters);
+      if (inFS) results.triggeredFS = CONFIG.freeSpins.retrigger ? CONFIG.freeSpins.retriggerAdd : 0;
+      else results.triggeredFS = freespins;
+    }
+    results.totalWin = Math.round(results.totalWin);
+    return results;
+  }
+
+  function settle(board) {
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+    if (!isFree) {
+      if (state.balance < bet()) return { error: "Insufficient balance" };
+      state.balance -= bet();
+    } else {
+      state.freeSpinsLeft--;
+    }
+
+    const overclockNow = state.overclockActive;
+    const result = evaluate(board, { inFreeSpins: isFree, overclock: overclockNow });
+    state.board = board;
+
+    if (result.triggeredFS > 0) {
+      if (!state.inFreeSpins) {
+        state.inFreeSpins = true;
+        state.freeSpinsLeft = result.triggeredFS;
+      } else {
+        state.freeSpinsLeft += result.triggeredFS;
+      }
+    }
+
+    if (result.totalWin > 0) state.balance += result.totalWin;
+    state.lastWin = result.totalWin;
+    state.lastNet = result.totalWin - (isFree ? 0 : bet());
+
+    // --- Overclock meter logic ---
+    // If overclock was consumed this spin → reset meter
+    // else → fill it (more on wins)
+    if (overclockNow) {
+      state.charge = 0;
+      state.overclockActive = false;
+    } else {
+      const gain = result.totalWin > 0
+        ? CONFIG.overclock.fillPerWin
+        : CONFIG.overclock.fillPerSpin;
+      state.charge = Math.min(CONFIG.overclock.max, state.charge + gain);
+      if (state.charge >= CONFIG.overclock.max) {
+        state.overclockActive = true;   // armed for next spin
+      }
+    }
+
+    if (state.inFreeSpins && state.freeSpinsLeft <= 0) state.inFreeSpins = false;
+
+    return result;
+  }
+
+  return {
+    state, bet, canSpin, generateBoard, settle, evaluate,
+    setBetIndex(i) { state.betIndex = Math.max(0, Math.min(CONFIG.betSteps.length - 1, i)); }
+  };
+})();
+
+/* =====================================================================
+   UI LAYER
+   ===================================================================== */
+(function() {
+  const canvas = document.getElementById("board");
+  const ctx = canvas.getContext("2d");
+  const el = id => document.getElementById(id);
+
+  const ui = {
+    balance: el("balanceVal"),
+    win: el("winVal"),
+    bet: el("betVal"),
+    spin: el("spinBtn"),
+    auto: el("autoBtn"),
+    stop: el("stopBtn"),
+    autoCnt: el("autoCnt"),
+    fsBanner: el("fsBanner"),
+    fsCount: el("fsCount"),
+    winOv: el("winOv"),
+    winTier: el("winTier"),
+    winAmt: el("winAmt"),
+    winSub: el("winSub"),
+    speed: el("speedSel"),
+    sound: el("soundBtn"),
+    bgLayer: el("bgLayer"),
+    chargeWrap: el("chargeWrap"),
+    chargeFill: el("chargeFill"),
+    chargeVal: el("chargeVal"),
+    history: []
+  };
+  const state = GameEngine.state;
+
+  /* ---------- Background ---------- */
+  function setBg(kind) {
+    const url = kind === "free" ? GIF_ASSETS.freeSpins
+              : kind === "big"  ? GIF_ASSETS.bigWin
+              : GIF_ASSETS.normal;
+    ui.bgLayer.style.backgroundImage = "url('" + url + "')";
+    ui.bgLayer.classList.remove("free","big");
+    if (kind === "free") ui.bgLayer.classList.add("free");
+    if (kind === "big")  ui.bgLayer.classList.add("big");
+  }
+  [GIF_ASSETS.normal, GIF_ASSETS.freeSpins, GIF_ASSETS.bigWin].forEach(u => {
+    const im = new Image(); im.src = u;
+  });
+
+  /* ---------- Data rain (CSS-driven) ---------- */
+  (function() {
+    const wrap = el("rainLayer");
+    if (!wrap) return;
+    for (let i = 0; i < 26; i++) {
+      const s = document.createElement("span");
+      s.style.left = RNG.int(100) + "%";
+      s.style.animationDuration = (5 + RNG.int(9)) + "s";
+      s.style.animationDelay = (-RNG.int(14)) + "s";
+      s.style.opacity = (0.3 + Math.random() * 0.5).toFixed(2);
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* ---------- Canvas sizing ---------- */
+  let CW = 1, CH = 1, BX = 0, BY = 0, BS = 0, CWc = 0, CHc = 0;
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    CW = Math.max(1, Math.floor(r.width));
+    CH = Math.max(1, Math.floor(r.height));
+    canvas.width = CW * DPR; canvas.height = CH * DPR;
+    canvas.style.width = CW + "px"; canvas.style.height = CH + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const margin = 24;
+    BS = Math.min(CW - margin * 2, CH - margin * 2 - 20);
+    BX = (CW - BS) / 2;
+    BY = (CH - BS) / 2 + 6;
+    CWc = BS / 3;
+    CHc = BS / 3;
+
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  function cellXY(idx) {
+    const c = idx % 3, r = Math.floor(idx / 3);
+    return { x: BX + c * CWc, y: BY + r * CHc, w: CWc, h: CHc };
+  }
+  function cellCenter(idx) {
+    const c = cellXY(idx);
+    return { x: c.x + c.w / 2, y: c.y + c.h / 2 };
+  }
+
+  /* ---------- Anim state ---------- */
+  const anim = {
+    phase: "idle",
+    settled: [false, false, false],
+    winCells: {},
+    winDiagDown: false,
+    winDiagUp: false,
+    fullXActive: false,
+    cornerActive: false,
+    particles: [],       // rain streaks + sparks
+    ripples: [],
+    glowPhase: 0,
+    lastFrame: performance.now(),
+    shake: 0,
+    traceProgress: 0,
+    // Circuit-boot reveal: per-cell boot progress (0..1) when settled
+    boots: {},
+    // Scan line: 0..1 travels top→bottom during spin
+    scanT: 0,
+    glitchPhase: 0
+  };
+
+  /* ---------- Helpers ---------- */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function spawnSparks(cx, cy, count, colors, opts) {
+    opts = opts || {};
+    for (let i = 0; i < count; i++) {
+      const a = RNG.int(360) * Math.PI / 180;
+      const sp = (opts.speed || 90) + RNG.int(150);
+      anim.particles.push({
+        kind: "spark",
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp * 0.1,
+        vy: Math.sin(a) * sp * 0.1 - 1.5,
+        size: (opts.minSize || 2) + RNG.int(opts.sizeRange || 3),
+        col: colors[RNG.int(colors.length)],
+        life: 1, maxLife: 800 + RNG.int(600),
+        square: opts.square !== false
+      });
+    }
+  }
+  // Digital-rain streak
+  function spawnRainStreak(cx, cy, color) {
+    anim.particles.push({
+      kind: "rain",
+      x: cx + (RNG.int(40) - 20),
+      y: cy - 30,
+      vx: (RNG.int(20) - 10) * 0.05,
+      vy: 8 + RNG.int(6),
+      w: 2,
+      h: 14 + RNG.int(20),
+      col: color || "#00f0ff",
+      life: 1, maxLife: 700 + RNG.int(400)
+    });
+  }
+  function spawnRipple(cx, cy, maxR, col) {
+    anim.ripples.push({ x: cx, y: cy, r: maxR * 0.2, maxR: maxR, col: col, life: 1 });
+  }
+
+  /* ---------- Draw single cell ---------- */
+  function drawCell(idx, now, dt) {
+    const cell = cellXY(idx);
+    const pad = Math.min(cell.w, cell.h) * 0.06;
+    const px = cell.x + pad, py = cell.y + pad;
+    const pw = cell.w - pad * 2, ph = cell.h - pad * 2;
+    const symId = state.board[idx];
+    const sym = SYMBOLS[symId];
+    if (!sym) return;
+
+    const key = String(idx);
+    const isWin = anim.winCells[idx] === true;
+    const isFullX = anim.fullXActive && CONFIG.patterns.fullX.indexOf(idx) >= 0;
+    const isCorner = anim.cornerActive && CONFIG.patterns.corners.indexOf(idx) >= 0;
+    const isSpinning = anim.phase === "spinning" && !anim.settled[idx % 3];
+
+    let symbolToDraw = symId;
+    if (isSpinning) {
+      const pool = ORDER.map(k => SYMBOLS[k]).filter(s => s.weight > 0);
+      symbolToDraw = pool[RNG.int(pool.length)].id;
+    }
+
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2);
+
+    // ---- Plate ----
+    ctx.beginPath();
+    roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.12);
+    if (isFullX) {
+      const pulse = 0.6 + Math.sin(anim.glowPhase * 4) * 0.4;
+      ctx.fillStyle = "rgba(0,240,255," + (0.2 + pulse * 0.2) + ")";
+      ctx.shadowColor = "#00f0ff";
+      ctx.shadowBlur = 28 + pulse * 22;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(102,247,255,0.95)";
+    } else if (isCorner) {
+      const pulse = 0.6 + Math.sin(anim.glowPhase * 4) * 0.4;
+      ctx.fillStyle = "rgba(255,0,229," + (0.16 + pulse * 0.18) + ")";
+      ctx.shadowColor = "#ff00e5";
+      ctx.shadowBlur = 24 + pulse * 18;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255,102,240,0.92)";
+    } else if (isWin) {
+      const pulse = 0.6 + Math.sin(anim.glowPhase * 3.5) * 0.4;
+      ctx.fillStyle = "rgba(0,255,136," + (0.12 + pulse * 0.16) + ")";
+      ctx.shadowColor = "#00ff88";
+      ctx.shadowBlur = 18 + pulse * 14;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(0,255,136,0.9)";
+    } else {
+      ctx.fillStyle = "rgba(5,5,8,0.75)";
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(0,240,255,0.22)";
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // grid hash marks in corners (cyber look)
+    if (!isWin && !isFullX && !isCorner) {
+      ctx.strokeStyle = "rgba(0,240,255,0.4)";
+      ctx.lineWidth = 1.5;
+      const tick = Math.min(pw, ph) * 0.08;
+      const off = Math.min(pw, ph) * 0.12;
+      ctx.beginPath();
+      // top-left corner
+      ctx.moveTo(-pw/2 + off, -ph/2 + off - tick); ctx.lineTo(-pw/2 + off, -ph/2 + off);
+      ctx.lineTo(-pw/2 + off - tick, -ph/2 + off);
+      // top-right
+      ctx.moveTo(pw/2 - off - tick, -ph/2 + off); ctx.lineTo(pw/2 - off, -ph/2 + off);
+      ctx.lineTo(pw/2 - off, -ph/2 + off - tick);
+      // bottom-right
+      ctx.moveTo(pw/2 - off, ph/2 - off + tick); ctx.lineTo(pw/2 - off, ph/2 - off);
+      ctx.lineTo(pw/2 - off + tick, ph/2 - off);
+      // bottom-left
+      ctx.moveTo(-pw/2 + off + tick, ph/2 - off); ctx.lineTo(-pw/2 + off, ph/2 - off);
+      ctx.lineTo(-pw/2 + off, ph/2 - off + tick);
+      ctx.stroke();
+    }
+
+    // ---- Circuit-boot flash (settle) ----
+    if (anim.boots[key] !== undefined) {
+      const t = anim.boots[key];      // 0 → 1
+      // Vertical sweep within the cell: bright cyan line races top→bottom
+      const sweepY = -ph / 2 + ph * t;
+      // Bright line
+      ctx.save();
+      ctx.globalAlpha = (1 - t) * 0.9;
+      ctx.fillStyle = "#00f0ff";
+      ctx.shadowColor = "#00f0ff";
+      ctx.shadowBlur = 20;
+      ctx.fillRect(-pw / 2, sweepY - 2, pw, 4);
+      // Bright green bottom-half flash
+      ctx.globalAlpha = (1 - t) * 0.35;
+      ctx.fillStyle = "#00ff88";
+      ctx.fillRect(-pw / 2, -ph / 2, pw, sweepY + ph / 2);
+      ctx.restore();
+      anim.boots[key] += dt / 260;
+      if (anim.boots[key] >= 1) delete anim.boots[key];
+    }
+
+    // ---- Draw sprite (with glitch on winning cells) ----
+    if (isWin || isFullX || isCorner) {
+      // Chromatic-aberration glitch: draw sprite 3× with offsets
+      const g = 2 + Math.sin(anim.glitchPhase * 3.4 + idx) * 2.2;
+      // Cyan channel
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.globalCompositeOperation = "lighter";
+      SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+        -pw / 2 + 6 - g, -ph / 2 + 6, pw - 12, ph - 12, 1);
+      ctx.restore();
+      // Magenta channel
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.globalCompositeOperation = "lighter";
+      SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+        -pw / 2 + 6 + g, -ph / 2 + 6, pw - 12, ph - 12, 1);
+      ctx.restore();
+      // Clean sprite on top
+      SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+        -pw / 2 + 6, -ph / 2 + 6, pw - 12, ph - 12, 1);
+    } else {
+      SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+        -pw / 2 + 6, -ph / 2 + 6, pw - 12, ph - 12, 1);
+    }
+
+    // ---- Scan-line pass over every cell while spinning ----
+    if (isSpinning) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      const scanY = -ph / 2 + ph * ((anim.scanT + idx * 0.1) % 1);
+      ctx.fillStyle = "#00f0ff";
+      ctx.shadowColor = "#00f0ff";
+      ctx.shadowBlur = 14;
+      ctx.fillRect(-pw / 2, scanY, pw, 2);
+      ctx.restore();
+    }
+
+    ctx.restore();
+
+    // ---- Special tag ----
+    if (!isSpinning && sym.special) {
+      ctx.save();
+      ctx.fillStyle = sym.special === "wild"
+        ? "rgba(255,0,229,.95)" : "rgba(0,255,136,.95)";
+      ctx.fillRect(px, py + ph - 16, pw, 16);
+      ctx.fillStyle = sym.special === "wild" ? "#fff" : "#04241a";
+      ctx.font = "700 10px 'Orbitron', sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(sym.special === "wild" ? "GLITCH" : "VIRUS",
+        px + pw / 2, py + ph - 8);
+      ctx.restore();
+    }
+
+    if (isCorner && !isFullX) {
+      drawCornerBrackets(px, py, pw, ph, "#ff00e5", now);
+    }
+    if (isFullX) {
+      drawCornerBrackets(px, py, pw, ph, "#00f0ff", now);
+    }
+  }
+
+  function drawCornerBrackets(x, y, w, h, color, now) {
+    const len = Math.min(w, h) * 0.22;
+    const pulse = 0.6 + Math.sin(now / 120) * 0.4;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14 + pulse * 10;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "square";
+    ctx.beginPath(); ctx.moveTo(x, y + len); ctx.lineTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + w - len, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + len); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + w, y + h - len); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w - len, y + h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + len, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + h - len); ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- Diagonal trace (electric bolt style) ---------- */
+  function drawDiagonalTrace(positions, color, progress) {
+    if (positions.length < 2) return;
+    const path = [cellCenter(positions[0]), cellCenter(positions[1]), cellCenter(positions[2])];
+    const total = 2;
+    const drawn = total * progress;
+    const jitter = 4;
+
+    ctx.save();
+    ctx.lineCap = "round";
+    // Outer glow
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 26;
+    ctx.lineWidth = 8;
+    ctx.globalAlpha = 0.4;
+    drawBoltPath(path, drawn, jitter);
+    // Core
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 3;
+    drawBoltPath(path, drawn, jitter);
+    // White core
+    ctx.strokeStyle = "#fff";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 1.3;
+    drawBoltPath(path, drawn, jitter);
+    ctx.restore();
+  }
+
+  function drawBoltPath(path, drawn, jitter) {
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (let i = 1; i < path.length; i++) {
+      const segProgress = Math.max(0, Math.min(1, drawn - (i - 1)));
+      if (segProgress <= 0) break;
+      const from = path[i - 1], to = path[i];
+      // Add midpoint jitter for lightning look
+      const mx = from.x + (to.x - from.x) * segProgress * 0.5;
+      const my = from.y + (to.y - from.y) * segProgress * 0.5;
+      const offX = (Math.sin(anim.glowPhase * 8 + i) * jitter);
+      const offY = (Math.cos(anim.glowPhase * 7 + i) * jitter);
+      ctx.lineTo(mx + offX, my + offY);
+      ctx.lineTo(from.x + (to.x - from.x) * segProgress,
+                 from.y + (to.y - from.y) * segProgress);
+    }
+    ctx.stroke();
+  }
+
+  function drawFullXTracer(progress) {
+    const corners = CONFIG.patterns.corners;
+    const c0 = cellCenter(corners[0]);
+    const c1 = cellCenter(corners[1]);
+    const c2 = cellCenter(corners[2]);
+    const c3 = cellCenter(corners[3]);
+    ctx.save();
+    ctx.lineCap = "round";
+    const pulse = 0.7 + Math.sin(anim.glowPhase * 5) * 0.3;
+    const drawSeg = (a, b, segProgress) => {
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(a.x + (b.x - a.x) * segProgress, a.y + (b.y - a.y) * segProgress);
+      ctx.stroke();
+    };
+    ctx.strokeStyle = "#00f0ff";
+    ctx.shadowColor = "#00f0ff";
+    ctx.shadowBlur = 32 * pulse;
+    ctx.lineWidth = 7;
+    drawSeg(c0, c3, Math.min(1, progress * 2));
+    drawSeg(c2, c1, Math.max(0, Math.min(1, progress * 2 - 1)));
+    ctx.strokeStyle = "#fff";
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = 3;
+    drawSeg(c0, c3, Math.min(1, progress * 2));
+    drawSeg(c2, c1, Math.max(0, Math.min(1, progress * 2 - 1)));
+    ctx.restore();
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const now = performance.now();
+    const dt = Math.min(50, now - anim.lastFrame);
+    anim.lastFrame = now;
+    anim.glowPhase += dt / 220;
+    anim.glitchPhase += dt / 90;
+    // Scan line advances
+    anim.scanT = (anim.scanT + dt / 900) % 1;
+
+    ctx.save();
+    if (anim.shake > 0) {
+      anim.shake = Math.max(0, anim.shake - dt / 100);
+      const s = anim.shake;
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    ctx.clearRect(-20, -20, CW + 40, CH + 40);
+
+    // backdrop
+    const g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, "rgba(13,13,20,.6)");
+    g.addColorStop(1, "rgba(5,5,8,.85)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // header
+    ctx.font = "700 18px 'Orbitron', Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = state.inFreeSpins ? "#ff00e5" : "#00f0ff";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 18;
+    ctx.fillText(
+      state.inFreeSpins ? "▚ VIRUS BREACH ACTIVE ▞" : "◈ NEON HEIST ◈",
+      CW / 2, BY - 16
+    );
+    ctx.shadowBlur = 0;
+
+    // cells
+    for (let i = 0; i < 9; i++) drawCell(i, now, dt);
+
+    // Full-board scan line while spinning (in addition to per-cell)
+    if (anim.phase === "spinning") {
+      const scanY = BY + BS * anim.scanT;
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = "#00f0ff";
+      ctx.shadowColor = "#00f0ff";
+      ctx.shadowBlur = 24;
+      ctx.fillRect(BX, scanY, BS, 3);
+      ctx.globalAlpha = 0.12;
+      ctx.fillRect(BX, scanY + 3, BS, 40);
+      ctx.restore();
+    }
+
+    // win traces
+    if (anim.winDiagDown) drawDiagonalTrace(CONFIG.patterns.diagDown, "#00f0ff", Math.min(1, anim.traceProgress));
+    if (anim.winDiagUp)   drawDiagonalTrace(CONFIG.patterns.diagUp,   "#ff00e5", Math.min(1, anim.traceProgress));
+    if (anim.fullXActive) drawFullXTracer(anim.traceProgress);
+
+    // ripples
+    anim.ripples = anim.ripples.filter(r => r.life > 0);
+    anim.ripples.forEach(function(r) {
+      r.r += (r.maxR - r.r) * 0.16;
+      r.life -= dt / 600;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, r.life) * 0.9;
+      ctx.strokeStyle = r.col;
+      ctx.lineWidth = 3.5 * r.life + 0.6;
+      ctx.shadowColor = r.col;
+      ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    });
+
+    // particles (sparks + rain streaks)
+    anim.particles = anim.particles.filter(p => p.life > 0);
+    anim.particles.forEach(p => {
+      if (p.kind === "rain") {
+        p.x += p.vx * dt * 0.06;
+        p.y += p.vy * dt * 0.06;
+        p.life -= dt / p.maxLife;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life) * 0.9;
+        ctx.fillStyle = p.col;
+        ctx.shadowColor = p.col;
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.restore();
+      } else {
+        p.x += p.vx * dt * 0.06;
+        p.y += p.vy * dt * 0.06;
+        p.vy += 0.06 * dt * 0.06;
+        p.life -= dt / p.maxLife;
+        const a = Math.max(0, p.life);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = p.col;
+        ctx.shadowColor = p.col;
+        ctx.shadowBlur = 10;
+        const size = p.size * Math.max(0.15, p.life);
+        if (p.square) ctx.fillRect(p.x - size, p.y - size, size * 2, size * 2);
+        else { ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI * 2); ctx.fill(); }
+        ctx.restore();
+      }
+    });
+
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+
+  /* ---------- Spin animation ---------- */
+  function spinAnimation(callback) {
+    anim.phase = "spinning";
+    anim.winCells = {};
+    anim.winDiagDown = false;
+    anim.winDiagUp = false;
+    anim.fullXActive = false;
+    anim.cornerActive = false;
+    anim.traceProgress = 0;
+    anim.settled = [false, false, false];
+    anim.boots = {};
+    anim.scanT = 0;
+
+    const speed = parseFloat(ui.speed.value) || 1;
+    const colDur = 720 / speed;
+    const stagger = 190 / speed;
+    const start = performance.now();
+    const finalBoard = GameEngine.generateBoard();
+
+    let finished = false;
+    function finish(board) {
+      if (finished) return;
+      finished = true;
+      anim.phase = "evaluating";
+      callback(board);
+    }
+    const safety = setTimeout(() => {
+      anim.settled = [true, true, true];
+      state.board = finalBoard.slice();
+      finish(finalBoard);
+    }, 8000);
+
+    function step() {
+      if (finished) { clearTimeout(safety); return; }
+      const now = performance.now();
+      let allSettled = true;
+
+      for (let c = 0; c < 3; c++) {
+        const elapsed = now - (start + c * stagger);
+        if (elapsed < colDur) {
+          allSettled = false;
+        } else if (!anim.settled[c]) {
+          anim.settled[c] = true;
+          for (let r = 0; r < 3; r++) {
+            state.board[r * 3 + c] = finalBoard[r * 3 + c];
+            anim.boots[(r * 3 + c) + ""] = 0;
+          }
+          for (let r = 0; r < 3; r++) {
+            const cp = cellCenter(r * 3 + c);
+            spawnSparks(cp.x, cp.y, 6, ["#00f0ff", "#00ff88", "#ff00e5"], { square: true });
+            spawnRipple(cp.x, cp.y, 42, "rgba(0,240,255,0.7)");
+          }
+          anim.shake = Math.min(6, anim.shake + 1.4);
+          allSettled = false;
+        }
+      }
+
+      if (allSettled) { clearTimeout(safety); finish(finalBoard); }
+      else requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  /* ---------- Overclock UI ---------- */
+  function updateChargeUI() {
+    const pct = Math.round(state.charge);
+    ui.chargeFill.style.width = pct + "%";
+    ui.chargeVal.textContent = pct + "%";
+    ui.chargeWrap.classList.toggle("full", state.overclockActive);
+    if (state.overclockActive) {
+      ui.chargeFill.style.background =
+        "linear-gradient(90deg,#00f0ff,#ff00e5,#ffb020,#00f0ff)";
+    } else {
+      ui.chargeFill.style.background =
+        "linear-gradient(90deg,#00f0ff,#ff00e5)";
+    }
+  }
+
+  /* ---------- Do a spin ---------- */
+  function doSpin() {
+    if (!GameEngine.canSpin()) {
+      if (!state.inFreeSpins && state.balance < GameEngine.bet())
+        toast("Insufficient credits — lower your bet or reset.");
+      return;
+    }
+    if (state.phase === "spinning" || state.phase === "evaluating") return;
+
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+    const wasOverclock = state.overclockActive;
+    state.phase = "spinning";
+    state.lastWin = 0;
+    updateUI(true);
+    Sound.spin();
+
+    if (wasOverclock) {
+      toast("◆ OVERCLOCK ACTIVE — ×" + CONFIG.overclock.multiplier + " ON ALL WINS ◆");
+    }
+
+    spinAnimation(function(finalBoard) {
+      const result = GameEngine.settle(finalBoard);
+      state.phase = "settled";
+
+      if (result && !result.error) {
+        if (result.diagDown) {
+          anim.winDiagDown = true;
+          result.diagDown.cells.forEach(i => anim.winCells[i] = true);
+        }
+        if (result.diagUp) {
+          anim.winDiagUp = true;
+          result.diagUp.cells.forEach(i => anim.winCells[i] = true);
+        }
+        if (result.fullX) {
+          anim.fullXActive = true;
+          result.fullX.cells.forEach(i => anim.winCells[i] = true);
+          anim.shake = 18;
+          Sound.bigWin();
+          toast("◆ VAULT BONUS ◆");
+          confettiBurst();
+        }
+        if (result.cornerStrike) {
+          anim.cornerActive = true;
+          result.cornerStrike.cells.forEach(i => anim.winCells[i] = true);
+          anim.shake = Math.min(18, anim.shake + 10);
+          Sound.bigWin();
+          toast("◆ CORNER BREACH ◆");
+        }
+
+        animateTrace(900 / (parseFloat(ui.speed.value) || 1));
+
+        Object.keys(anim.winCells).forEach(k => {
+          const idx = parseInt(k, 10);
+          const cp = cellCenter(idx);
+          spawnSparks(cp.x, cp.y, 8, ["#00f0ff", "#ff00e5", "#00ff88", "#fff"], { square: true });
+          spawnRipple(cp.x, cp.y, 55, "#00ff88");
+          // digital rain
+          for (let s = 0; s < 3; s++) {
+            spawnRainStreak(cp.x, cp.y, ["#00f0ff", "#00ff88", "#ff00e5"][RNG.int(3)]);
+          }
+        });
+
+        if (result.triggeredFS > 0) {
+          if (!state.inFreeSpins && result.scatters >= 3) {
+            Sound.scatter();
+            toast("▚ " + result.triggeredFS + " FREE SPINS ▞");
+            setBg("free");
+          } else if (state.inFreeSpins) {
+            Sound.scatter();
+            toast("▚ RETRIGGER +" + result.triggeredFS + " ▞");
+          }
+        }
+
+        ui.history.unshift({
+          ts: new Date(),
+          bet: isFree ? 0 : GameEngine.bet(),
+          win: result.totalWin,
+          free: isFree,
+          scatters: result.scatters,
+          fullX: !!result.fullX,
+          corner: !!result.cornerStrike,
+          overclock: !!result.overclock
+        });
+        if (ui.history.length > 50) ui.history.pop();
+
+        if (result.totalWin > 0) {
+          Sound.win(result.totalWin >= GameEngine.bet() * 15);
+          showWinOverlay(result.totalWin, GameEngine.bet(), result);
+        }
+      }
+
+      if (!state.inFreeSpins) setBg("normal");
+      updateUI(true);
+      updateChargeUI();
+
+      if (state.overclockActive) {
+        toast("◆ OVERCLOCK CHARGED — NEXT SPIN ×" + CONFIG.overclock.multiplier + " ◆");
+      }
+
+      state.phase = "idle";
+
+      const delay = 700 / (parseFloat(ui.speed.value) || 1);
+      const wait = 500 / (parseFloat(ui.speed.value) || 1);
+      setTimeout(() => {
+        if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden) {
+          if (GameEngine.canSpin()) {
+            state.autoSpinsLeft--;
+            updateUI();
+            doSpin();
+          } else stopAuto("Auto-spin stopped — insufficient credits.");
+        } else if (state.autoActive && state.autoSpinsLeft <= 0) {
+          stopAuto("Auto-spin complete.");
+        } else updateUI();
+      }, Math.max(delay, wait) + 600);
+    });
+  }
+
+  function animateTrace(duration) {
+    const t0 = performance.now();
+    anim.traceProgress = 0;
+    function step() {
+      const p = Math.min(1, (performance.now() - t0) / duration);
+      anim.traceProgress = p;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  function confettiBurst() {
+    const colors = ["#00f0ff", "#ff00e5", "#00ff88", "#fff", "#ffb020"];
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        for (let j = 0; j < 45; j++) {
+          const a = RNG.int(360) * Math.PI / 180;
+          anim.particles.push({
+            kind: "spark",
+            x: CW / 2, y: CH / 2,
+            vx: Math.cos(a) * 9, vy: Math.sin(a) * 9 - 2,
+            size: 3, col: colors[RNG.int(colors.length)],
+            life: 1, maxLife: 1300, square: true
+          });
+        }
+      }, i * 180);
+    }
+  }
+
+  /* ---------- Win overlay ---------- */
+  function showWinOverlay(totalWin, bet, result) {
+    const ratio = totalWin / Math.max(1, bet);
+    let tier = "WIN";
+    if (ratio >= 200) tier = "MEGA WIN";
+    else if (ratio >= 80) tier = "BIG WIN";
+    else if (ratio >= 25) tier = "GREAT WIN";
+    else if (ratio >= 8) tier = "WIN";
+
+    if (result && result.fullX) tier = "VAULT BONUS";
+    else if (result && result.cornerStrike && ratio < 8) tier = "CORNER BREACH";
+    else if (result && result.overclock && ratio >= 8) tier = "OVERCLOCK WIN";
+
+    ui.winTier.textContent = tier;
+    ui.winAmt.textContent = "+" + totalWin.toLocaleString();
+    ui.winSub.textContent = state.inFreeSpins
+      ? "FREE SPIN · ×" + CONFIG.freeSpins.multiplier
+      : (result && result.overclock ? "OVERCLOCK ×" + CONFIG.overclock.multiplier : "");
+    ui.winOv.classList.add("on");
+    if (ratio >= 80) setBg("big");
+
+    const dur = Math.max(1500, 2400 / (parseFloat(ui.speed.value) || 1));
+    setTimeout(() => {
+      ui.winOv.classList.remove("on");
+      if (ratio >= 80 && !state.inFreeSpins) setBg("normal");
+    }, dur);
+  }
+
+  /* ---------- UI update ---------- */
+  function updateUI(pop) {
+    ui.balance.textContent = state.balance.toLocaleString();
+    ui.win.textContent = state.lastWin.toLocaleString();
+    ui.bet.textContent = GameEngine.bet().toLocaleString();
+    if (pop) {
+      ui.balance.classList.remove("pop"); ui.win.classList.remove("pop");
+      void ui.balance.offsetWidth;
+      ui.balance.classList.add("pop"); ui.win.classList.add("pop");
+    }
+    ui.spin.disabled = state.autoActive || !GameEngine.canSpin();
+    ui.autoCnt.textContent = state.autoActive ? "AUTO: " + state.autoSpinsLeft : "";
+    ui.auto.classList.toggle("on", state.autoActive);
+    ui.fsBanner.classList.toggle("on", state.inFreeSpins);
+    ui.fsCount.textContent = state.freeSpinsLeft;
+  }
+
+  /* ---------- Sound ---------- */
+  const Sound = (function() {
+    let ctxA = null, enabled = true;
+    function ensure() {
+      if (!ctxA) { try { ctxA = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { ctxA = null; } }
+      if (ctxA && ctxA.state === "suspended") ctxA.resume();
+      return ctxA;
+    }
+    function tone(freq, dur, type, vol, when) {
+      if (type === undefined) type = "sine";
+      if (vol === undefined) vol = 0.06;
+      if (when === undefined) when = 0;
+      if (!enabled) return;
+      const c = ensure(); if (!c) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    return {
+      spin() { tone(280, 0.08, "square", 0.04); tone(190, 0.14, "square", 0.04, 0.05); },
+      win(small) {
+        const notes = small ? [523, 659, 784, 1047] : [523, 659, 784, 1047, 1319, 1568];
+        notes.forEach((f, i) => tone(f, 0.2, "square", 0.06, i * 0.07));
+      },
+      bigWin() {
+        [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.22, "square", 0.07, i * 0.06));
+      },
+      scatter() {
+        [440, 554, 659, 880, 1108, 1319].forEach((f, i) => tone(f, 0.22, "square", 0.07, i * 0.07));
+      },
+      click() { tone(880, 0.04, "square", 0.03); },
+      toggle() { enabled = !enabled; return enabled; }
+    };
+  })();
+
+  /* ---------- Auto ---------- */
+  function startAuto() {
+    if (state.autoActive) { stopAuto(); return; }
+    if (!GameEngine.canSpin()) { toast("Not enough credits to auto-spin."); return; }
+    state.autoActive = true;
+    state.autoSpinsLeft = state.autoSpinTarget || 25;
+    Sound.click(); updateUI(); doSpin();
+  }
+  function stopAuto(msg) {
+    state.autoActive = false;
+    state.autoSpinsLeft = 0;
+    if (msg) toast(msg);
+    updateUI();
+  }
+
+  /* ---------- Toast ---------- */
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    el("toasts").appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  /* ---------- Modals ---------- */
+  function openModal(id) { el(id).classList.add("on"); }
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove("on");
+    });
+  });
+
+  function buildPaytable() {
+    const grid = el("paytableGrid");
+    grid.innerHTML = "";
+    ORDER.forEach(id => {
+      const sym = SYMBOLS[id];
+      if (!sym) return;
+      const card = document.createElement("div");
+      card.className = "sym-card" + (sym.special ? " " + sym.special : "");
+      const ic = document.createElement("div"); ic.className = "ic";
+      const img = document.createElement("img");
+      img.src = SpriteLoader.dataUrl(sym.sprite, 96, 96);
+      img.alt = sym.name;
+      ic.appendChild(img); card.appendChild(ic);
+      const nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = sym.name;
+      card.appendChild(nm);
+      const py = document.createElement("div"); py.className = "py";
+      if (sym.special === "scatter") py.textContent = "3/4/5+ → FS";
+      else if (sym.special === "wild") py.textContent = sym.pay + "×  ·  ×2 boost";
+      else py.textContent = sym.pay + "×";
+      card.appendChild(py);
+      grid.appendChild(card);
+    });
+  }
+  function buildHistory() {
+    const list = el("historyList");
+    if (!ui.history.length) { list.innerHTML = '<li style="color:var(--text-dim)">No spins yet.</li>'; return; }
+    list.innerHTML = ui.history.map(h => {
+      const cls = h.win > 0 ? "" : "loss";
+      const tag = h.free ? " [FREE]" : "";
+      const badges = (h.fullX ? " ◆X" : "") + (h.corner ? " ◆C" : "") + (h.overclock ? " ⚡" : "");
+      return '<li class="' + cls + '"><span>' + h.ts.toLocaleTimeString() + tag +
+        ' · Bet ' + h.bet + ' · V' + h.scatters + badges +
+        '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+    }).join("");
+  }
+
+  /* ---------- Events ---------- */
+  ui.spin.addEventListener("click", () => { Sound.click(); doSpin(); });
+  ui.auto.addEventListener("click", startAuto);
+  ui.stop.addEventListener("click", () => stopAuto("Auto-spin stopped."));
+
+  el("betDown").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setBetIndex(state.betIndex - 1);
+    Sound.click(); updateUI();
+  });
+  el("betUp").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setBetIndex(state.betIndex + 1);
+    Sound.click(); updateUI();
+  });
+
+  document.querySelectorAll(".preset-row button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.phase !== "idle" || state.autoActive) return;
+      const p = btn.dataset.preset;
+      if (p === "min") GameEngine.setBetIndex(0);
+      else if (p === "std") GameEngine.setBetIndex(Math.floor(CONFIG.betSteps.length / 2));
+      else if (p === "max") GameEngine.setBetIndex(CONFIG.betSteps.length - 1);
+      Sound.click(); updateUI();
+    });
+  });
+
+  document.querySelectorAll("#autoRow button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.autoActive) return;
+      state.autoSpinTarget = parseInt(btn.dataset.auto, 10);
+      document.querySelectorAll("#autoRow button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      Sound.click();
+      toast("Auto-spin target: " + state.autoSpinTarget);
+    });
+  });
+
+  el("paytableBtn").addEventListener("click", () => { buildPaytable(); openModal("paytableModal"); });
+  el("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  el("historyBtn").addEventListener("click", () => { buildHistory(); openModal("historyModal"); });
+
+  ui.sound.addEventListener("click", () => {
+    const on = Sound.toggle();
+    ui.sound.textContent = on ? "🔊" : "🔇";
+    ui.sound.classList.toggle("on", on);
+    if (on) Sound.click();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset the demo? Balance will return to " + CONFIG.startingBalance + ".")) return;
+    stopAuto();
+    state.balance = CONFIG.startingBalance;
+    state.betIndex = CONFIG.defaultBetIndex;
+    state.inFreeSpins = false;
+    state.freeSpinsLeft = 0;
+    state.lastWin = 0;
+    state.lastNet = 0;
+    state.board = new Array(9).fill("key");
+    state.charge = 0;
+    state.overclockActive = false;
+    ui.history = [];
+    anim.winCells = {};
+    anim.winDiagDown = false;
+    anim.winDiagUp = false;
+    anim.fullXActive = false;
+    anim.cornerActive = false;
+    anim.particles = [];
+    anim.ripples = [];
+    anim.boots = {};
+    setBg("normal");
+    updateUI(true);
+    updateChargeUI();
+    toast("Demo reset.");
+  });
+
+  document.addEventListener("keydown", e => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (!ui.spin.disabled) doSpin();
+    }
+    if (e.code === "Escape") document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on"));
+    if (e.key === "a" || e.key === "A") startAuto();
+    if (e.key === "s" || e.key === "S") stopAuto();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.autoActive) stopAuto("Auto-spin paused (tab inactive).");
+  });
+
+  /* ---------- Boot (IDENTICAL to working game) ---------- */
+  async function boot() {
+    setBg("normal");
+    await SpriteLoader.load();
+    state.board = GameEngine.generateBoard();
+    resize();
+    updateUI();
+    updateChargeUI();
+    requestAnimationFrame(render);
+    setTimeout(() => toast("NEON HEIST ONLINE — press RUN."), 500);
+  }
+  boot();
+})();
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

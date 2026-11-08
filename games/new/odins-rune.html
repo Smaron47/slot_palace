@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Odin's Rune — 5-Reel Norse Slot</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ice-night:#040b18;
+  --ice-deep:#0a1a30;
+  --ice-mid:#122a4a;
+  --ice-soft:#1d3d68;
+  --silver:#b8c8dc;
+  --silver-2:#e0ecf8;
+  --silver-3:#8ba0b8;
+  --gold:#d4af37;
+  --gold-2:#f4d976;
+  --gold-dark:#7a5e0a;
+  --rune-red:#c81e3a;
+  --rune-red-2:#e94a5f;
+  --rune-green:#3cb87d;
+  --rune-teal:#4dd0e1;
+  --text:#dce8f5;
+  --text-dim:#7a94b3;
+  --radius:12px;
+  --radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Rajdhani',system-ui,sans-serif;
+  background:var(--ice-night);color:var(--text);
+  overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;user-select:none;
+}
+
+/* ---------- GIF background ---------- */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#040b18 center/cover no-repeat url('../../assets/bg10.gif');
+  transition:filter .7s, opacity .7s;
+  filter:brightness(.5) saturate(1.2) hue-rotate(200deg);
+  opacity:.9;
+}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(77,208,225,.22),transparent 55%),
+    radial-gradient(ellipse at 15% 90%,rgba(212,175,55,.16),transparent 55%),
+    radial-gradient(ellipse at 85% 90%,rgba(200,30,58,.14),transparent 55%),
+    linear-gradient(180deg,rgba(4,11,24,.55),rgba(4,11,24,.9));
+}
+#bgLayer.free{filter:brightness(.6) saturate(1.4) hue-rotate(180deg)}
+#bgLayer.big{filter:brightness(.72) saturate(1.5) hue-rotate(120deg)}
+
+/* ember/snow particles (CSS-only) */
+#embers{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+#embers span{
+  position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,rgba(244,217,118,.95),rgba(212,175,55,.4) 60%,transparent 75%);
+  box-shadow:0 0 6px rgba(244,217,118,.7);
+  animation:emberRise linear infinite;
+}
+@keyframes emberRise{
+  0%{transform:translateY(0) translateX(0);opacity:0}
+  10%{opacity:.9}
+  90%{opacity:.4}
+  100%{transform:translateY(-110vh) translateX(30px);opacity:0}
+}
+
+/* ---------- Shell ---------- */
+#game{
+  position:relative;z-index:5;
+  width:min(1150px,97vw);height:min(820px,96vh);
+  background:linear-gradient(155deg,rgba(18,42,74,.88),rgba(4,11,24,.94));
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(212,175,55,.42);
+  border-radius:var(--radius-lg);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.9),
+    inset 0 0 80px rgba(29,61,104,.2),
+    0 0 100px rgba(77,208,225,.14),
+    0 0 40px rgba(200,30,58,.14);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(120deg,transparent 42%,rgba(224,236,248,.12) 50%,transparent 58%);
+  animation:shine 9s ease-in-out infinite;
+}
+@keyframes shine{0%,58%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+
+/* top rune trim */
+#game::after{
+  content:"";position:absolute;left:14px;right:14px;top:8px;height:3px;pointer-events:none;z-index:58;
+  background-image:
+    linear-gradient(90deg,
+      transparent 0 4%,
+      var(--gold) 4% 7%, transparent 7% 11%,
+      var(--silver) 11% 14%, transparent 14% 18%,
+      var(--rune-red) 18% 21%, transparent 21% 25%,
+      var(--gold) 25% 28%, transparent 28% 32%,
+      var(--silver) 32% 35%, transparent 35% 39%,
+      var(--rune-red) 39% 42%, transparent 42% 46%,
+      var(--gold) 46% 49%, transparent 49% 53%,
+      var(--silver) 53% 56%, transparent 56% 60%,
+      var(--rune-red) 60% 63%, transparent 63% 67%,
+      var(--gold) 67% 70%, transparent 70% 74%,
+      var(--silver) 74% 77%, transparent 77% 81%,
+      var(--rune-red) 81% 84%, transparent 84% 88%,
+      var(--gold) 88% 91%, transparent 91% 95%,
+      var(--silver) 95% 98%, transparent 98% 100%
+    );
+  filter:drop-shadow(0 0 4px var(--gold));
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px 12px;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(4,11,24,.8),transparent);
+  border-bottom:1px solid rgba(212,175,55,.24);
+  position:relative;z-index:2;
+}
+.brand{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.45rem;letter-spacing:3px;
+  color:var(--gold);
+  display:flex;align-items:center;gap:10px;
+  text-shadow:0 0 18px rgba(212,175,55,.75),0 0 30px rgba(77,208,225,.35);
+}
+.brand .rune{
+  font-size:1.3rem;
+  filter:drop-shadow(0 0 6px var(--silver-2)) drop-shadow(0 0 14px var(--gold));
+  animation:runePulse 3.4s ease-in-out infinite;
+}
+@keyframes runePulse{0%,100%{transform:scale(1) rotate(0deg);opacity:1}50%{transform:scale(1.15) rotate(-8deg);opacity:.85}}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.55);
+  border:1px solid rgba(212,175,55,.5);color:var(--gold-2);
+  font-size:.7rem;font-weight:600;letter-spacing:1.5px;cursor:pointer;
+  transition:.2s;font-family:'Rajdhani',sans-serif;text-transform:uppercase;
+}
+.pill:hover{background:rgba(212,175,55,.22);color:#fff;transform:translateY(-1px);
+  box-shadow:0 0 14px rgba(212,175,55,.55)}
+.pill.on{background:rgba(77,208,225,.3);border-color:var(--rune-teal);color:#fff;
+  box-shadow:0 0 14px var(--rune-teal)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--gold-2) 50%),
+    linear-gradient(135deg,var(--gold-2) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+  background-size:5px 5px;background-repeat:no-repeat}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;display:grid;grid-template-columns:1fr 280px;gap:14px;padding:14px;
+  min-height:0;position:relative;z-index:2}
+
+/* Board wrap — same structure as working game */
+.board-wrap{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(18,42,74,.65),rgba(4,11,24,.9));
+  border:1px solid rgba(212,175,55,.38);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.75),
+    0 0 40px rgba(29,61,104,.28),
+    0 0 30px rgba(212,175,55,.14);
+  overflow:hidden;min-height:0;
+}
+.board-wrap::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px);
+}
+canvas#board{display:block;width:100%;height:100%;position:relative;z-index:2}
+
+#fsBanner{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:22;
+  padding:8px 24px;border-radius:30px;
+  background:linear-gradient(160deg,rgba(200,30,58,.92),rgba(4,11,24,.9));
+  border:2px solid var(--gold);color:#fff;
+  font-family:'Cinzel Decorative',serif;font-weight:900;letter-spacing:3px;font-size:.95rem;
+  text-shadow:0 0 10px var(--gold),0 0 20px #fff;
+  box-shadow:0 0 30px rgba(200,30,58,.8),0 0 50px rgba(212,175,55,.5);
+  display:none;
+}
+#fsBanner.on{display:block;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+
+/* ---------- DASHBOARD ---------- */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0}
+.stat{
+  background:linear-gradient(160deg,rgba(18,42,74,.82),rgba(4,11,24,.92));
+  border:1px solid rgba(212,175,55,.35);
+  border-radius:var(--radius);padding:12px 14px;position:relative;overflow:hidden;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(212,175,55,.14) 50%,transparent 60%);
+  animation:shine 6s ease-in-out infinite;
+}
+.stat .lbl{font-size:.6rem;letter-spacing:2.5px;color:var(--text-dim);
+  font-weight:600;text-transform:uppercase}
+.stat .val{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.5rem;
+  margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.stat.balance .val{color:var(--silver-2);text-shadow:0 0 14px rgba(224,236,248,.8)}
+.stat.win .val{color:var(--gold-2);text-shadow:0 0 14px rgba(244,217,118,.8)}
+.stat .val.pop{animation:pop .55s cubic-bezier(.2,.7,.3,1.6)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3);filter:brightness(1.8)}100%{transform:scale(1)}}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(212,175,55,.4);
+  border-radius:12px;padding:6px;
+}
+.bet-row .btn{
+  width:38px;height:38px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--silver-2),var(--silver));
+  border:none;border-radius:50%;color:#0a1a30;font-weight:900;font-size:1.15rem;
+  cursor:pointer;transition:.15s;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.7),
+    0 0 12px rgba(224,236,248,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 22px var(--silver-2)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7);box-shadow:none}
+.bet-row .amt{
+  flex:1;text-align:center;font-family:'Cinzel Decorative',serif;
+  font-weight:900;font-size:1.15rem;color:#fff;font-variant-numeric:tabular-nums;
+  letter-spacing:1.5px;
+}
+.bet-row .amt small{display:block;font-size:.52rem;color:var(--text-dim);
+  letter-spacing:1.8px;font-weight:600;margin-top:0;font-family:'Rajdhani',sans-serif;
+  text-transform:uppercase}
+
+.preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.preset-row button{
+  padding:6px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(212,175,55,.15),rgba(122,94,10,.08));
+  border:1px solid rgba(212,175,55,.4);color:var(--gold-2);
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.preset-row button:hover{background:rgba(212,175,55,.28);color:#fff;box-shadow:0 0 12px rgba(212,175,55,.5)}
+
+.auto-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.auto-row button{
+  padding:6px 2px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(77,208,225,.14),rgba(29,61,104,.06));
+  border:1px solid rgba(77,208,225,.4);color:var(--rune-teal);
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:.15s;
+}
+.auto-row button:hover{background:rgba(77,208,225,.28);color:#fff}
+.auto-row button.active{background:linear-gradient(160deg,var(--rune-teal),var(--silver-2));
+  color:#04242e;border-color:#fff;box-shadow:0 0 14px rgba(77,208,225,.7)}
+
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:10px 6px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(212,175,55,.16),rgba(122,94,10,.08));
+  border:1px solid rgba(212,175,55,.45);color:var(--gold-2);
+  font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.mini:hover{background:rgba(212,175,55,.28);color:#fff;box-shadow:0 0 14px rgba(212,175,55,.6)}
+.mini.on{background:linear-gradient(160deg,var(--rune-red),var(--rune-red-2));
+  color:#fff;border-color:#fff;box-shadow:0 0 22px var(--rune-red);
+  animation:pulse 1.3s ease-in-out infinite}
+
+.spin{
+  padding:22px 10px;border-radius:18px;border:none;cursor:pointer;
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.5rem;letter-spacing:5px;
+  color:#3a2408;
+  background:radial-gradient(circle at 32% 28%,#fff8d6 0%,var(--gold) 42%,var(--gold-dark) 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.5),0 0 45px rgba(212,175,55,.6),
+    inset 0 2px 0 rgba(255,255,255,.7);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(var(--gold),#fff,var(--rune-red),var(--rune-teal),var(--gold));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spinGlow 3.5s linear infinite;opacity:.75;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.spin:hover:not(:disabled){transform:translateY(-2px);
+  box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 70px var(--gold),
+  0 0 110px rgba(200,30,58,.5),inset 0 2px 0 rgba(255,255,255,.7)}
+.spin:active:not(:disabled){transform:translateY(3px);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px var(--gold)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+.spin .autocnt{display:block;font-size:.6rem;letter-spacing:2px;
+  color:rgba(0,0,0,.65);margin-top:2px;font-weight:700;font-family:'Rajdhani',sans-serif}
+
+/* ---------- MODALS ---------- */
+.modal{
+  position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(2,6,14,.94);backdrop-filter:blur(10px);
+  padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  width:min(880px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(18,42,74,.98),rgba(4,11,24,.98));
+  border:2px solid rgba(212,175,55,.6);
+  border-radius:20px;padding:24px 28px;
+  box-shadow:0 0 60px rgba(212,175,55,.35),0 0 90px rgba(77,208,225,.25);
+}
+.modal-card h2{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.5rem;
+  letter-spacing:3px;color:var(--gold);margin-bottom:12px;
+  text-shadow:0 0 20px rgba(212,175,55,.6);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.modal-card h2 button{
+  background:rgba(212,175,55,.15);border:1px solid var(--gold);
+  color:var(--gold-2);padding:6px 14px;border-radius:10px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:1px;
+}
+.modal-card h2 button:hover{background:rgba(212,175,55,.32);color:#fff}
+.modal-card p{line-height:1.7;color:#c9dff0;font-size:.9rem;margin:8px 0}
+.modal-card .rules{color:#a8c2d8;font-size:.87rem}
+.modal-card .rules b{color:var(--gold-2)}
+
+.sym-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;margin:16px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.5);border:1px solid rgba(212,175,55,.3);
+  border-radius:12px;padding:10px;text-align:center;
+}
+.sym-card .ic{
+  width:64px;height:64px;margin:0 auto 6px;
+  border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);border:1px solid rgba(212,175,55,.28);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.sym-card .nm{font-size:.65rem;color:#a8c2d8;letter-spacing:1.2px;
+  text-transform:uppercase;font-weight:700}
+.sym-card .pay{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:6px}
+.sym-card .pay div{
+  font-family:'Cinzel Decorative',serif;font-size:.72rem;
+  color:var(--gold-2);font-weight:900;letter-spacing:.5px;
+}
+.sym-card .pay div small{
+  display:block;font-size:.55rem;color:var(--text-dim);
+  font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:1px;
+}
+.sym-card.wild .ic{border-color:var(--rune-teal);box-shadow:0 0 14px rgba(77,208,225,.6)}
+.sym-card.wild .pay div{color:var(--rune-teal)}
+.sym-card.scatter .ic{border-color:var(--rune-red);box-shadow:0 0 14px rgba(200,30,58,.6)}
+.sym-card.scatter .pay div{color:var(--rune-red-2)}
+
+/* Paylines viewer */
+.lines-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:8px;margin:14px 0;
+}
+.line-chip{
+  background:rgba(0,0,0,.5);border:1px solid rgba(212,175,55,.28);
+  border-radius:8px;padding:6px;text-align:center;
+}
+.line-chip .num{
+  font-family:'Cinzel Decorative',serif;font-size:.75rem;
+  color:var(--gold-2);font-weight:900;margin-bottom:4px;
+}
+.line-chip .dots{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:2px;
+  background:rgba(0,0,0,.5);padding:3px;border-radius:4px;
+}
+.line-chip .dot{
+  aspect-ratio:1;border-radius:2px;background:rgba(212,175,55,.12);
+}
+.line-chip .dot.on{background:var(--rune-teal);box-shadow:0 0 4px var(--rune-teal)}
+
+.history{list-style:none;font-size:.78rem}
+.history li{display:flex;justify-content:space-between;gap:10px;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.history li b{color:var(--gold-2);font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:1px}
+.history li.loss b{color:#f87171}
+
+/* ---------- WIN OVERLAY ---------- */
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(4,11,24,.55),rgba(4,11,24,.93));
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+#winOv.on{display:flex;animation:fadeIn .25s ease}
+#winOv .box{
+  text-align:center;padding:32px 56px;border-radius:26px;
+  background:linear-gradient(160deg,rgba(18,42,74,.97),rgba(4,11,24,.97));
+  border:3px solid var(--gold);
+  box-shadow:0 0 90px var(--gold),0 0 130px rgba(77,208,225,.5),
+    inset 0 0 50px rgba(212,175,55,.2);
+  animation:winPop .6s cubic-bezier(.2,.7,.3,1.5);
+  position:relative;overflow:hidden;
+}
+#winOv .box::before{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(transparent 30%,rgba(212,175,55,.38) 50%,transparent 70%);
+  animation:spinGlow 3s linear infinite;
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:2.1rem;letter-spacing:5px;
+  color:#fff;text-shadow:0 0 30px var(--gold),0 0 60px var(--rune-red);
+  position:relative;z-index:2;
+}
+#winOv .amt{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:2.7rem;
+  color:var(--gold);text-shadow:0 0 30px var(--gold),0 0 60px #fff;
+  margin-top:6px;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+  letter-spacing:3px;
+}
+#winOv .sub{font-size:.72rem;color:var(--text-dim);letter-spacing:3px;
+  margin-top:12px;font-weight:600;text-transform:uppercase;position:relative;z-index:2}
+
+/* ---------- TOASTS ---------- */
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:950;
+  display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(18,42,74,.96),rgba(4,11,24,.96));
+  border:1px solid var(--gold);color:var(--gold-2);
+  font-size:.82rem;font-weight:700;letter-spacing:1.2px;
+  box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(212,175,55,.5);
+  animation:toastIn .3s ease,toastOut .3s ease 2.6s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .dash .stat{flex:1;min-width:120px;padding:8px 10px}
+  .dash .stat .val{font-size:1.1rem}
+  .controls{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .bet-row{flex:1 1 100%}
+  .preset-row{flex:1 1 100%}
+  .auto-row{flex:1 1 100%}
+  .mini-row{flex:1 1 45%}
+  .spin{flex:1 1 100%;padding:15px;font-size:1.25rem}
+  .brand{font-size:1rem;letter-spacing:2px}
+  .topbar{padding:10px 12px}
+  .pill{padding:5px 10px;font-size:.58rem}
+  #fsBanner{font-size:.72rem;padding:6px 14px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  #embers{display:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="embers"></div>
+
+<div id="game">
+  <div class="topbar">
+    <div class="brand">
+      <span class="rune">ᚱ</span>
+      <span>ODIN'S RUNE</span>
+      <span class="rune">ᚱ</span>
+    </div>
+    <div class="topbar-right">
+      <select id="speedSel" class="pill">
+        <option value="0.7">🐢 Slow</option>
+        <option value="1" selected>⚡ Normal</option>
+        <option value="1.6">🚀 Fast</option>
+        <option value="2.4">💨 Turbo</option>
+      </select>
+      <button class="pill" id="paytableBtn">Paytable</button>
+      <button class="pill" id="linesBtn">Lines</button>
+      <button class="pill" id="helpBtn">Rules</button>
+      <button class="pill" id="historyBtn">History</button>
+      <button class="pill" id="soundBtn">🔊</button>
+      <button class="pill" id="resetBtn">♻</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="board-wrap">
+      <div id="fsBanner">⚔ FREE SPINS: <span id="fsCount">0</span></div>
+      <canvas id="board"></canvas>
+    </div>
+
+    <div class="dash">
+      <div class="stat balance">
+        <div class="lbl">Silver</div>
+        <div class="val" id="balanceVal">1,000</div>
+      </div>
+      <div class="stat win">
+        <div class="lbl">Last Raid</div>
+        <div class="val" id="winVal">0</div>
+      </div>
+
+      <div class="controls">
+        <div class="bet-row">
+          <button class="btn" id="betDown">−</button>
+          <div class="amt">
+            <span id="betVal">100</span>
+            <small>TOTAL BET · 20 LINES</small>
+          </div>
+          <button class="btn" id="betUp">+</button>
+        </div>
+        <div class="preset-row">
+          <button data-preset="min">MIN</button>
+          <button data-preset="std">STD</button>
+          <button data-preset="max">MAX</button>
+        </div>
+        <div class="auto-row" id="autoRow">
+          <button data-auto="10">10</button>
+          <button data-auto="25" class="active">25</button>
+          <button data-auto="50">50</button>
+          <button data-auto="100">100</button>
+        </div>
+        <div class="mini-row">
+          <button class="mini" id="autoBtn">🔁 AUTO</button>
+          <button class="mini" id="stopBtn">⏹ STOP</button>
+        </div>
+        <button class="spin" id="spinBtn">
+          RAID
+          <span class="autocnt" id="autoCnt"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYTABLE -->
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>⚔ Paytable <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Win by matching symbols on the same payline starting from <b>reel 1, left to right</b>. Wilds substitute. Payouts shown as <b>× line bet</b> (line bet = total bet ÷ 20).</p>
+    <div class="sym-grid" id="paytableGrid"></div>
+    <p class="rules" style="margin-top:14px">
+      <b>ᚱ EXPANDING WILDS:</b> Any reel that contains a Wild <b>expands to fill its entire reel</b>, massively boosting line wins.<br>
+      <b>☀ SCATTER (Sunwheel):</b> 3 → 10 Free Spins · 4 → 15 FS · 5 → 20 FS · retrigger +5. During Free Spins all wins are <b>×2</b>.
+    </p>
+  </div>
+</div>
+
+<!-- LINES VIEWER -->
+<div class="modal" id="linesModal">
+  <div class="modal-card">
+    <h2>⚔ 20 Paylines <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Highlighted dots show which row each payline runs through on each reel. All 20 lines are always active.</p>
+    <div class="lines-grid" id="linesGrid"></div>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>⚔ How To Play <button data-close>✕ CLOSE</button></h2>
+    <p>1. Set your <b>total bet</b> with the + / − buttons or the MIN / STD / MAX presets. All 20 paylines are always active.</p>
+    <p>2. Press <b>RAID</b> or <b>SPACE</b> to spin the 5 reels.</p>
+    <p>3. Wins form when <b>3 or more matching symbols</b> land on the same payline, from reel 1 leftwards.</p>
+    <p>4. <b>Wilds substitute</b> for any regular symbol. Every reel that contains a wild <b>expands to fill all 3 rows</b>.</p>
+    <p>5. <b>Sunwheel Scatters</b> trigger Free Spins — 3/4/5 → 10/15/20 spins, ×2 multiplier, retriggers add +5.</p>
+    <p>6. Choose your auto-spin count (10/25/50/100) and press AUTO. Press STOP to cancel.</p>
+    <p style="color:var(--text-dim);font-size:.82rem;margin-top:14px">🎮 Virtual-credit demo — for entertainment only. Not for real-money wagering.</p>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>⚔ Saga Log <button data-close>✕ CLOSE</button></h2>
+    <ul class="history" id="historyList"><li style="color:var(--text-dim)">No spins yet.</li></ul>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   ODIN'S RUNE — 5-Reel × 20-Payline Norse Slot
+   Completely different engine:
+     • 5 reels × 3 rows
+     • 20 fixed paylines
+     • Expanding Wilds (any reel with a wild fills all 3 rows)
+     • Free Spins with retrigger
+   Sprite loader / RNG / boot sequence are byte-identical to the
+   working Pirate's Cross t7.html so icons are guaranteed to render.
+   ===================================================================== */
+
+const GIF_ASSETS = {
+  normal:    "../../assets/bg10.gif",
+  freeSpins: "../../assets/bg1.gif",
+  bigWin:    "../../assets/bg3.gif"
+};
+
+const CONFIG = {
+  reels: 5,
+  rows: 3,
+  startingBalance: 1000,
+  betSteps: [20, 40, 100, 200, 500, 1000, 2000],
+  defaultBetIndex: 2,   // 100
+
+  autoSpinMax: 25,
+
+  // 20 fixed paylines — each entry is [rowIndexPerReel] (0=top, 1=middle, 2=bottom)
+  paylines: [
+    [1,1,1,1,1],   // 1 middle straight
+    [0,0,0,0,0],   // 2 top straight
+    [2,2,2,2,2],   // 3 bottom straight
+    [0,1,2,1,0],   // 4 V
+    [2,1,0,1,2],   // 5 ^
+    [0,0,1,0,0],   // 6 top mid-dip
+    [2,2,1,2,2],   // 7 bottom mid-rise
+    [1,0,0,0,1],   // 8 top arch
+    [1,2,2,2,1],   // 9 bottom arch
+    [0,1,1,1,0],   // 10 small top arch
+    [2,1,1,1,2],   // 11 small bottom arch
+    [0,1,2,2,2],   // 12 down slope
+    [2,1,0,0,0],   // 13 up slope
+    [0,2,0,2,0],   // 14 zigzag
+    [2,0,2,0,2],   // 15 zigzag inverted
+    [1,0,2,0,1],   // 16 wave
+    [1,2,0,2,1],   // 17 wave inverted
+    [0,2,1,2,0],   // 18 diag in
+    [2,0,1,0,2],   // 19 diag out
+    [0,1,0,1,0]    // 20 top wave
+  ],
+
+  wildRules: {
+    enabled: true,
+    expandToReel: true,       // ← the key new mechanic
+    substitutesRegular: true,
+    substitutesScatter: false
+  },
+
+  scatter: {
+    thresholds: [
+      { min: 5, freeSpins: 20 },
+      { min: 4, freeSpins: 15 },
+      { min: 3, freeSpins: 10 }
+    ]
+  },
+
+  freeSpins: {
+    multiplier: 2,
+    retrigger: true,
+    retriggerAdd: 5
+  }
+};
+
+/* ---------- SYMBOLS (fresh sprite set) ---------- */
+const SYMBOLS = {
+  wild:    { id:"wild",    name:"Wild",   sprite:4,  weight:3, pay3:100, pay4:400, pay5:2000, special:"wild" },
+  scatter: { id:"scatter", name:"Sunwheel", sprite:0, weight:2, pay3:0, pay4:0, pay5:0, special:"scatter" },
+  raven:   { id:"raven",   name:"Raven",  sprite:14, weight:8,  pay3:40,  pay4:150, pay5:750 },
+  wolf:    { id:"wolf",    name:"Wolf",   sprite:15, weight:10, pay3:25,  pay4:100, pay5:500 },
+  sword:   { id:"sword",   name:"Sword",  sprite:16, weight:12, pay3:15,  pay4:60,  pay5:300 },
+  shield:  { id:"shield",  name:"Shield", sprite:17, weight:14, pay3:10,  pay4:40,  pay5:200 },
+  horn:    { id:"horn",    name:"Horn",   sprite:18, weight:16, pay3:6,   pay4:25,  pay5:120 },
+  ring:    { id:"ring",    name:"Ring",   sprite:19, weight:20, pay3:4,   pay4:15,  pay5:80 }
+};
+const ORDER = ["wild","scatter","raven","wolf","sword","shield","horn","ring"];
+
+/* ---------- RNG (crypto, unbiased) ---------- */
+const RNG = (function() {
+  const buf = new Uint32Array(1);
+  const hasCrypto = (typeof crypto !== "undefined" && crypto.getRandomValues);
+  function uint32() {
+    if (hasCrypto) { crypto.getRandomValues(buf); return buf[0] >>> 0; }
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  function int(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error("RNG.int: " + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;
+    let r; do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  function weighted(items) {
+    const total = items.reduce((s, x) => s + x.weight, 0);
+    if (total <= 0) throw new Error("RNG.weighted: total 0");
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++) {
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted, uint32 };
+})();
+
+/* ---------- SPRITE LOADER (identical to working game) ---------- */
+const SPRITE_COORDS = [
+  {x:25,y:402,w:82,h:64},{x:115,y:401,w:78,h:67},{x:199,y:403,w:78,h:61},
+  {x:287,y:402,w:75,h:66},{x:376,y:401,w:73,h:69},{x:25,y:477,w:79,h:58},
+  {x:116,y:474,w:77,h:60},{x:202,y:474,w:75,h:60},{x:289,y:481,w:66,h:46},
+  {x:372,y:477,w:79,h:60},{x:27,y:569,w:69,h:84},{x:112,y:568,w:66,h:85},
+  {x:197,y:569,w:65,h:84},{x:280,y:569,w:65,h:84},{x:479,y:125,w:67,h:68},
+  {x:562,y:207,w:66,h:67},{x:716,y:205,w:68,h:66},{x:799,y:207,w:63,h:62},
+  {x:881,y:204,w:58,h:70},{x:973,y:125,w:76,h:69},{x:1058,y:126,w:71,h:71},
+  {x:1141,y:126,w:71,h:69},{x:1224,y:130,w:71,h:64},{x:1304,y:126,w:76,h:68},
+  {x:976,y:606,w:128,h:49}
+];
+
+const SpriteLoader = (function() {
+  const img = new Image();
+  let ready = false;
+  const url = "../../assets/ultimate_multi_slot_sprite.jpg";
+  function load() {
+    return new Promise(resolve => {
+      img.onload = () => { ready = true; resolve(true); };
+      img.onerror = () => { console.warn("[sprite] missing " + url); resolve(false); };
+      img.src = url;
+      setTimeout(() => { if (!ready) resolve(false); }, 8000);
+    });
+  }
+  function drawTo(c, idx, dx, dy, dw, dh, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const s = SPRITE_COORDS[idx];
+    c.save(); c.globalAlpha = alpha;
+    if (ready && s) {
+      try { c.drawImage(img, s.x, s.y, s.w, s.h, dx, dy, dw, dh); }
+      catch (e) { fallback(c, idx, dx, dy, dw, dh); }
+    } else fallback(c, idx, dx, dy, dw, dh);
+    c.restore();
+  }
+  function fallback(c, idx, x, y, w, h) {
+    const p = ["#d4af37","#4dd0e1","#c81e3a","#1d3d68","#f4d976","#7a5e0a","#b8c8dc","#e0ecf8"];
+    c.fillStyle = p[idx % p.length];
+    c.beginPath(); c.arc(x+w/2, y+h/2, Math.min(w,h)*0.4, 0, Math.PI*2); c.fill();
+    c.fillStyle = "#040b18";
+    c.font = "bold " + Math.floor(h*0.32) + "px Cinzel,Arial";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(String(idx+1), x+w/2, y+h/2);
+  }
+  function dataUrl(idx, w, h) {
+    if (w === undefined) w = 64;
+    if (h === undefined) h = 64;
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    drawTo(c.getContext("2d"), idx, 0, 0, w, h, 1);
+    return c.toDataURL();
+  }
+  return { load, drawTo, dataUrl, isReady: () => ready };
+})();
+
+/* =====================================================================
+   LINE ENGINE — evaluates 5-reel paylines with wild substitution
+   Board is 5×3 indexed as board[reel][row].
+   ===================================================================== */
+const LineEngine = (function() {
+  /* Given an array of 5 symbol ids (one per reel, along a line),
+     return { symbol, count } if 3+ consecutive match, else null. */
+  function matchLine(symbols) {
+    // 1) Scatter anywhere breaks the line entirely
+    for (let i = 0; i < symbols.length; i++) {
+      if (symbols[i] === "scatter") return null;
+    }
+    // 2) Determine the anchor (first non-wild symbol; if all wilds, anchor = wild)
+    let anchor = null;
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      if (s === "wild") continue;
+      anchor = s;
+      break;
+    }
+    if (anchor === null) anchor = "wild";   // all wilds
+    const def = SYMBOLS[anchor];
+    if (!def) return null;
+
+    // 3) Count consecutive matches from the left
+    let count = 0;
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      if (s === "wild" || s === anchor) count++;
+      else break;
+    }
+    if (count < 3) return null;
+    // 4) Look up the payout for that count (3/4/5)
+    const payKey = count === 5 ? "pay5" : count === 4 ? "pay4" : "pay3";
+    const pay = def[payKey] || 0;
+    if (pay <= 0) return null;
+    return { symbol: anchor, count, pay };
+  }
+
+  /* Evaluate every line against the board. Returns
+     { wins: [{ line, symbol, count, pay, cells, payout }], total } */
+  function evaluateAll(board, lineBet, cfg) {
+    const wins = [];
+    let total = 0;
+    for (let li = 0; li < cfg.paylines.length; li++) {
+      const rows = cfg.paylines[li];
+      const syms = rows.map((row, reel) => board[reel][row]);
+      const m = matchLine(syms);
+      if (!m) continue;
+      const cells = [];
+      for (let k = 0; k < m.count; k++) cells.push([k, rows[k]]);
+      const payout = m.pay * lineBet;
+      wins.push({ line: li, symbol: m.symbol, count: m.count,
+                  pay: m.pay, cells, payout });
+      total += payout;
+    }
+    return { wins, total };
+  }
+
+  return { matchLine, evaluateAll };
+})();
+
+/* =====================================================================
+   WILD ENGINE — expands any reel that contains a wild
+   ===================================================================== */
+const WildEngine = (function() {
+  /* Returns a NEW board where any reel that had at least one wild
+     now has all three rows set to wild (scatter cells preserved). */
+  function expandWilds(board) {
+    const reels = board.length;
+    const rows = board[0].length;
+    const out = board.map(col => col.slice());
+    const expandedReels = [];
+    for (let r = 0; r < reels; r++) {
+      let hasWild = false;
+      for (let row = 0; row < rows; row++) {
+        if (out[r][row] === "wild") { hasWild = true; break; }
+      }
+      if (hasWild) {
+        for (let row = 0; row < rows; row++) {
+          if (out[r][row] !== "scatter") out[r][row] = "wild";
+        }
+        expandedReels.push(r);
+      }
+    }
+    return { board: out, expandedReels };
+  }
+  return { expandWilds };
+})();
+
+/* ---------- BONUS ENGINE ---------- */
+const BonusEngine = (function() {
+  function countScatters(board) {
+    let n = 0;
+    for (let r = 0; r < board.length; r++)
+      for (let row = 0; row < board[r].length; row++)
+        if (board[r][row] === "scatter") n++;
+    return n;
+  }
+  function freeSpinsFor(count) {
+    const th = CONFIG.scatter.thresholds;
+    for (let i = 0; i < th.length; i++) if (count >= th[i].min) return th[i].freeSpins;
+    return 0;
+  }
+  return { countScatters, freeSpinsFor };
+})();
+
+/* ---------- GAME ENGINE ---------- */
+const GameEngine = (function() {
+  const state = {
+    phase: "idle",
+    balance: CONFIG.startingBalance,
+    betIndex: CONFIG.defaultBetIndex,
+    board: null,
+    lastWin: 0,
+    lastNet: 0,
+    inFreeSpins: false,
+    freeSpinsLeft: 0,
+    autoActive: false,
+    autoSpinsLeft: 0,
+    autoSpinTarget: 25
+  };
+
+  const bet = () => CONFIG.betSteps[state.betIndex];
+  const lineBet = () => bet() / CONFIG.paylines.length;
+
+  function newEmptyBoard() {
+    const b = [];
+    for (let r = 0; r < CONFIG.reels; r++) {
+      const col = [];
+      for (let row = 0; row < CONFIG.rows; row++) col.push("ring");
+      b.push(col);
+    }
+    return b;
+  }
+
+  function generateBoard() {
+    const pool = ORDER.map(k => SYMBOLS[k]).filter(s => s.weight > 0);
+    const b = [];
+    for (let r = 0; r < CONFIG.reels; r++) {
+      const col = [];
+      for (let row = 0; row < CONFIG.rows; row++) col.push(RNG.weighted(pool).id);
+      b.push(col);
+    }
+    return b;
+  }
+
+  function canSpin() {
+    if (state.phase === "spinning" || state.phase === "evaluating") return false;
+    if (state.inFreeSpins && state.freeSpinsLeft > 0) return true;
+    return state.balance >= bet();
+  }
+
+  /* Full settlement for one spin.
+     Order: check free spin / deduct bet → expand wilds → evaluate lines →
+            count scatters → compute total → update balance & FS state. */
+  function settle(rawBoard) {
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+    if (!isFree) {
+      if (state.balance < bet()) return { error: "Insufficient balance" };
+      state.balance -= bet();
+    } else {
+      state.freeSpinsLeft--;
+    }
+
+    // Count scatters BEFORE expansion (a scatter cell is preserved anyway)
+    const scatters = BonusEngine.countScatters(rawBoard);
+
+    // Wild expansion
+    const exp = WildEngine.expandWilds(rawBoard);
+    const board = exp.board;
+    const expandedReels = exp.expandedReels;
+    state.board = board;
+
+    // Evaluate 20 paylines
+    const result = LineEngine.evaluateAll(board, lineBet(), CONFIG);
+
+    // Free spin multiplier
+    let total = result.total;
+    let appliedMultiplier = 1;
+    if (isFree && CONFIG.freeSpins.multiplier > 1) {
+      appliedMultiplier = CONFIG.freeSpins.multiplier;
+      total = total * appliedMultiplier;
+    }
+
+    // Free spin trigger / retrigger
+    let triggeredFS = 0;
+    if (scatters >= 3) {
+      if (state.inFreeSpins) {
+        triggeredFS = CONFIG.freeSpins.retrigger ? CONFIG.freeSpins.retriggerAdd : 0;
+      } else {
+        triggeredFS = BonusEngine.freeSpinsFor(scatters);
+      }
+    }
+    if (triggeredFS > 0) {
+      if (!state.inFreeSpins) {
+        state.inFreeSpins = true;
+        state.freeSpinsLeft = triggeredFS;
+      } else {
+        state.freeSpinsLeft += triggeredFS;
+      }
+    }
+
+    total = Math.round(total);
+    if (total > 0) state.balance += total;
+    state.lastWin = total;
+    state.lastNet = total - (isFree ? 0 : bet());
+
+    if (state.inFreeSpins && state.freeSpinsLeft <= 0) state.inFreeSpins = false;
+
+    return {
+      board, wins: result.wins, total,
+      scatters, expandedReels,
+      appliedMultiplier,
+      triggeredFS,
+      isFree
+    };
+  }
+
+  return {
+    state, bet, lineBet, canSpin, generateBoard, settle,
+    newEmptyBoard,
+    setBetIndex(i) {
+      state.betIndex = Math.max(0, Math.min(CONFIG.betSteps.length - 1, i));
+    }
+  };
+})();
+
+/* =====================================================================
+   UI LAYER
+   ===================================================================== */
+(function() {
+  const canvas = document.getElementById("board");
+  const ctx = canvas.getContext("2d");
+  const el = id => document.getElementById(id);
+
+  const ui = {
+    balance: el("balanceVal"),
+    win: el("winVal"),
+    bet: el("betVal"),
+    spin: el("spinBtn"),
+    auto: el("autoBtn"),
+    stop: el("stopBtn"),
+    autoCnt: el("autoCnt"),
+    fsBanner: el("fsBanner"),
+    fsCount: el("fsCount"),
+    winOv: el("winOv"),
+    winTier: el("winTier"),
+    winAmt: el("winAmt"),
+    winSub: el("winSub"),
+    speed: el("speedSel"),
+    sound: el("soundBtn"),
+    bgLayer: el("bgLayer"),
+    history: []
+  };
+  const state = GameEngine.state;
+
+  /* ---------- Background ---------- */
+  function setBg(kind) {
+    const url = kind === "free" ? GIF_ASSETS.freeSpins
+              : kind === "big"  ? GIF_ASSETS.bigWin
+              : GIF_ASSETS.normal;
+    ui.bgLayer.style.backgroundImage = "url('" + url + "')";
+    ui.bgLayer.classList.remove("free","big");
+    if (kind === "free") ui.bgLayer.classList.add("free");
+    if (kind === "big")  ui.bgLayer.classList.add("big");
+  }
+  [GIF_ASSETS.normal, GIF_ASSETS.freeSpins, GIF_ASSETS.bigWin].forEach(u => {
+    const im = new Image(); im.src = u;
+  });
+
+  /* ---------- Ember particles ---------- */
+  (function() {
+    const wrap = el("embers");
+    if (!wrap) return;
+    for (let i = 0; i < 26; i++) {
+      const s = document.createElement("span");
+      s.style.left = RNG.int(100) + "%";
+      s.style.animationDuration = (8 + RNG.int(12)) + "s";
+      s.style.animationDelay = (-RNG.int(20)) + "s";
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* ---------- Canvas sizing ---------- */
+  let CW = 1, CH = 1, BX = 0, BY = 0, CWc = 0, CHc = 0;
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    CW = Math.max(1, Math.floor(r.width));
+    CH = Math.max(1, Math.floor(r.height));
+    canvas.width = CW * DPR; canvas.height = CH * DPR;
+    canvas.style.width = CW + "px"; canvas.style.height = CH + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const padX = 14, padTop = 34, padBot = 16;
+    const availW = CW - padX * 2;
+    const availH = CH - padTop - padBot;
+    CWc = availW / CONFIG.reels;
+    CHc = availH / CONFIG.rows;
+    BX = padX;
+    BY = padTop;
+
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  function cellXY(reel, row) {
+    return {
+      x: BX + reel * CWc,
+      y: BY + row * CHc,
+      w: CWc,
+      h: CHc
+    };
+  }
+  function cellCenter(reel, row) {
+    const c = cellXY(reel, row);
+    return { x: c.x + c.w / 2, y: c.y + c.h / 2 };
+  }
+
+  /* ---------- Anim state ---------- */
+  const anim = {
+    phase: "idle",
+    settled: [false, false, false, false, false],
+    winCells: {},              // "reel,row" → true
+    winLines: [],              // array of { cells, color }
+    particles: [],
+    ripples: [],
+    glowPhase: 0,
+    lastFrame: performance.now(),
+    shake: 0,
+    traceProgress: 0,
+    // Expanding wild animation: reel → progress 0..1
+    expanding: {},             // reel index → t (0..1)
+    // per-cell sparkle burst on settle
+    bursts: {},
+    banner: null               // temporary big text on board
+  };
+
+  state.board = GameEngine.generateBoard();
+
+  /* ---------- Helpers ---------- */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function spawnParticles(cx, cy, count, colors, opts) {
+    opts = opts || {};
+    for (let i = 0; i < count; i++) {
+      const a = RNG.int(360) * Math.PI / 180;
+      const sp = (opts.speed || 90) + RNG.int(150);
+      anim.particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp * 0.1,
+        vy: Math.sin(a) * sp * 0.1 - 1.5,
+        size: (opts.minSize || 2) + RNG.int(opts.sizeRange || 3),
+        rot: RNG.int(360) * Math.PI / 180,
+        vr: (RNG.int(200) - 100) / 300,
+        col: colors[RNG.int(colors.length)],
+        life: 1, maxLife: 800 + RNG.int(700),
+        square: opts.square !== false
+      });
+    }
+  }
+  function spawnRipple(cx, cy, maxR, col) {
+    anim.ripples.push({ x: cx, y: cy, r: maxR * 0.25, maxR: maxR, col: col, life: 1 });
+  }
+
+  /* ---------- Draw single cell ---------- */
+  function drawCell(reel, row, now, dt) {
+    const cell = cellXY(reel, row);
+    const pad = Math.min(cell.w, cell.h) * 0.06;
+    const px = cell.x + pad, py = cell.y + pad;
+    const pw = cell.w - pad * 2, ph = cell.h - pad * 2;
+    const symId = state.board[reel][row];
+    const sym = SYMBOLS[symId];
+    if (!sym) return;
+
+    const key = reel + "," + row;
+    const isWin = anim.winCells[key] === true;
+    const isSpinning = anim.phase === "spinning" && !anim.settled[reel];
+
+    let symbolToDraw = symId;
+    if (isSpinning) {
+      const pool = ORDER.map(k => SYMBOLS[k]).filter(s => s.weight > 0);
+      symbolToDraw = pool[RNG.int(pool.length)].id;
+    }
+
+    // expand pop: if this reel is currently expanding, pop the cell
+    let popScale = 1;
+    if (anim.expanding[reel] !== undefined) {
+      const t = anim.expanding[reel];
+      popScale = 1 + Math.sin(t * Math.PI) * 0.18;
+    }
+    // burst: on settle
+    let burstT = anim.bursts[key];
+    if (burstT !== undefined) {
+      anim.bursts[key] += dt / 340;
+      if (anim.bursts[key] >= 1) delete anim.bursts[key];
+    }
+
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2);
+    ctx.scale(popScale, popScale);
+
+    // ---- Plate ----
+    ctx.beginPath();
+    roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.14);
+    if (isWin) {
+      const pulse = 0.55 + Math.sin(anim.glowPhase * 3.5) * 0.4;
+      ctx.fillStyle = "rgba(212,175,55," + (0.18 + pulse * 0.2) + ")";
+      ctx.shadowColor = "#d4af37";
+      ctx.shadowBlur = 20 + pulse * 18;
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(244,217,118,0.95)";
+    } else {
+      ctx.fillStyle = "rgba(4,11,24,0.68)";
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(212,175,55,0.2)";
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // subtle silver rune marks in corners (idle)
+    if (!isWin && !isSpinning) {
+      ctx.strokeStyle = "rgba(184,200,220,0.35)";
+      ctx.lineWidth = 1.2;
+      const r = Math.min(pw, ph) * 0.05;
+      const off = Math.min(pw, ph) * 0.15;
+      ctx.beginPath();
+      ctx.moveTo(-pw/2 + off - r, -ph/2 + off);
+      ctx.lineTo(-pw/2 + off, -ph/2 + off - r);
+      ctx.moveTo(pw/2 - off + r, ph/2 - off);
+      ctx.lineTo(pw/2 - off, ph/2 - off + r);
+      ctx.stroke();
+    }
+
+    // ---- Sprite ----
+    SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+      -pw / 2 + 6, -ph / 2 + 6, pw - 12, ph - 12, 1);
+
+    // ---- Burst flash on settle ----
+    if (burstT !== undefined) {
+      ctx.globalAlpha = 1 - burstT;
+      ctx.fillStyle = "#f4d976";
+      ctx.beginPath();
+      roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.14);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+
+    // ---- Special tag ----
+    if (!isSpinning && sym.special) {
+      ctx.save();
+      ctx.fillStyle = sym.special === "wild"
+        ? "rgba(77,208,225,.95)" : "rgba(200,30,58,.95)";
+      ctx.fillRect(px, py + ph - 14, pw, 14);
+      ctx.fillStyle = "#fff";
+      ctx.font = "700 9px 'Rajdhani', sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(sym.special === "wild" ? "WILD" : "SCATTER",
+        px + pw / 2, py + ph - 7);
+      ctx.restore();
+    }
+  }
+
+  /* ---------- Draw one win trace across its cells ---------- */
+  function drawWinLine(cells, color, progress) {
+    if (cells.length < 2) return;
+    const pts = cells.map(c => cellCenter(c[0], c[1]));
+    const drawn = (pts.length - 1) * progress;
+
+    ctx.save();
+    ctx.lineCap = "round";
+    // Glow pass
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = 10;
+    ctx.globalAlpha = 0.35;
+    strokeSegments(pts, drawn);
+    // Core pass
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 12;
+    strokeSegments(pts, drawn);
+    // Highlight pass
+    ctx.strokeStyle = "#fff";
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.9;
+    strokeSegments(pts, drawn);
+    ctx.restore();
+  }
+
+  function strokeSegments(pts, drawn) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const seg = Math.max(0, Math.min(1, drawn - (i - 1)));
+      if (seg <= 0) break;
+      const a = pts[i - 1], b = pts[i];
+      ctx.lineTo(a.x + (b.x - a.x) * seg, a.y + (b.y - a.y) * seg);
+    }
+    ctx.stroke();
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const now = performance.now();
+    const dt = Math.min(50, now - anim.lastFrame);
+    anim.lastFrame = now;
+    anim.glowPhase += dt / 240;
+
+    ctx.save();
+    if (anim.shake > 0) {
+      anim.shake = Math.max(0, anim.shake - dt / 100);
+      const s = anim.shake;
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    ctx.clearRect(-20, -20, CW + 40, CH + 40);
+
+    const g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, "rgba(18,42,74,.55)");
+    g.addColorStop(1, "rgba(4,11,24,.8)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // header
+    ctx.font = "900 20px 'Cinzel Decorative', Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = state.inFreeSpins ? "#f4d976" : "#d4af37";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 18;
+    ctx.fillText(
+      state.inFreeSpins ? "⚔ RUNE RAGE ACTIVE ⚔" : "ᚱ ODIN'S RUNE ᚱ",
+      CW / 2, BY - 14
+    );
+    ctx.shadowBlur = 0;
+
+    // cells
+    for (let r = 0; r < CONFIG.reels; r++)
+      for (let row = 0; row < CONFIG.rows; row++)
+        drawCell(r, row, now, dt);
+
+    // spin blur columns
+    if (anim.phase === "spinning") {
+      for (let r = 0; r < CONFIG.reels; r++) {
+        if (anim.settled[r]) continue;
+        const colX = BX + r * CWc;
+        const grad = ctx.createLinearGradient(colX, 0, colX + CWc, 0);
+        grad.addColorStop(0, "rgba(212,175,55,0)");
+        grad.addColorStop(0.5, "rgba(224,236,248,0.18)");
+        grad.addColorStop(1, "rgba(212,175,55,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(colX, BY, CWc, CONFIG.rows * CHc);
+      }
+    }
+
+    // expanding wild column shimmer
+    for (const reelKey in anim.expanding) {
+      const r = parseInt(reelKey, 10);
+      const t = anim.expanding[reelKey];
+      const colX = BX + r * CWc;
+      ctx.save();
+      ctx.globalAlpha = Math.sin(t * Math.PI) * 0.55;
+      const grad = ctx.createLinearGradient(colX, 0, colX + CWc, 0);
+      grad.addColorStop(0, "rgba(77,208,225,0)");
+      grad.addColorStop(0.5, "rgba(77,208,225,1)");
+      grad.addColorStop(1, "rgba(77,208,225,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(colX, BY, CWc, CONFIG.rows * CHc);
+      ctx.restore();
+    }
+
+    // win traces
+    if (anim.traceProgress > 0) {
+      anim.winLines.forEach(w => drawWinLine(w.cells, w.color, anim.traceProgress));
+    }
+
+    // ripples
+    anim.ripples = anim.ripples.filter(r => r.life > 0);
+    anim.ripples.forEach(function(r) {
+      r.r += (r.maxR - r.r) * 0.14;
+      r.life -= dt / 620;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, r.life) * 0.85;
+      ctx.strokeStyle = r.col;
+      ctx.lineWidth = 3.5 * r.life + 0.6;
+      ctx.shadowColor = r.col;
+      ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    });
+
+    // particles
+    anim.particles = anim.particles.filter(p => p.life > 0);
+    anim.particles.forEach(p => {
+      p.x += p.vx * dt * 0.06;
+      p.y += p.vy * dt * 0.06;
+      p.vy += 0.06 * dt * 0.06;
+      p.rot += p.vr * dt * 0.06;
+      p.life -= dt / p.maxLife;
+      const a = Math.max(0, p.life);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.shadowColor = p.col;
+      ctx.shadowBlur = 10;
+      const size = p.size * Math.max(0.15, p.life);
+      if (p.square) ctx.fillRect(-size, -size, size * 2, size * 2);
+      else { ctx.beginPath(); ctx.arc(0,0,size,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+
+    // temporary banner text
+    if (anim.banner) {
+      const b = anim.banner;
+      b.life -= dt / 1200;
+      if (b.life <= 0) anim.banner = null;
+      else {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, b.life * 2);
+        ctx.font = "900 34px 'Cinzel Decorative', Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 30;
+        ctx.fillText(b.text, CW / 2, BY + CONFIG.rows * CHc / 2);
+        ctx.restore();
+      }
+    }
+
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+
+  /* ---------- Spin animation ---------- */
+  function spinAnimation(callback) {
+    anim.phase = "spinning";
+    anim.winCells = {};
+    anim.winLines = [];
+    anim.traceProgress = 0;
+    anim.expanding = {};
+    anim.settled = [false, false, false, false, false];
+    anim.bursts = {};
+
+    const speed = parseFloat(ui.speed.value) || 1;
+    const colDur = 720 / speed;
+    const stagger = 130 / speed;
+    const start = performance.now();
+    const finalBoard = GameEngine.generateBoard();
+
+    let finished = false;
+    function finish(board) {
+      if (finished) return;
+      finished = true;
+      anim.phase = "evaluating";
+      callback(board);
+    }
+    const safety = setTimeout(() => {
+      anim.settled = [true, true, true, true, true];
+      state.board = finalBoard.map(c => c.slice());
+      finish(finalBoard);
+    }, 8000);
+
+    function step() {
+      if (finished) { clearTimeout(safety); return; }
+      const now = performance.now();
+      let allSettled = true;
+
+      for (let r = 0; r < CONFIG.reels; r++) {
+        const elapsed = now - (start + r * stagger);
+        if (elapsed < colDur) {
+          allSettled = false;
+        } else if (!anim.settled[r]) {
+          anim.settled[r] = true;
+          for (let row = 0; row < CONFIG.rows; row++) {
+            state.board[r][row] = finalBoard[r][row];
+            anim.bursts[r + "," + row] = 0;
+          }
+          for (let row = 0; row < CONFIG.rows; row++) {
+            const cp = cellCenter(r, row);
+            spawnParticles(cp.x, cp.y, 4, ["#d4af37", "#f4d976", "#4dd0e1"], { square: true });
+          }
+          spawnRipple(BX + r * CWc + CWc / 2, BY + CONFIG.rows * CHc / 2,
+                      CWc * 0.9, "rgba(212,175,55,0.6)");
+          anim.shake = Math.min(5, anim.shake + 1);
+          allSettled = false;
+        }
+      }
+
+      if (allSettled) { clearTimeout(safety); finish(finalBoard); }
+      else requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  /* ---------- Expanding wild animation phase ---------- */
+  function playExpansion(expandedReels, done) {
+    if (expandedReels.length === 0) { done(); return; }
+    // Set every cell of those reels to wild (already done in engine; but
+    // here we just start the animation)
+    anim.expanding = {};
+    expandedReels.forEach(r => { anim.expanding[r] = 0; });
+    anim.banner = {
+      text: "ᚱ EXPANDING WILDS ᚱ",
+      color: "#4dd0e1",
+      life: 1
+    };
+    for (let r of expandedReels) {
+      for (let row = 0; row < CONFIG.rows; row++) {
+        const cp = cellCenter(r, row);
+        spawnParticles(cp.x, cp.y, 8, ["#4dd0e1", "#e0ecf8", "#d4af37"], { square: true });
+      }
+    }
+    anim.shake = Math.min(10, anim.shake + 6);
+    Sound.wild();
+
+    const t0 = performance.now();
+    const dur = 700 / (parseFloat(ui.speed.value) || 1);
+
+    function step() {
+      const p = Math.min(1, (performance.now() - t0) / dur);
+      for (const reelKey in anim.expanding) {
+        anim.expanding[reelKey] = p;
+      }
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        anim.expanding = {};
+        done();
+      }
+    }
+    step();
+  }
+
+  /* ---------- Do a spin ---------- */
+  function doSpin() {
+    if (!GameEngine.canSpin()) {
+      if (!state.inFreeSpins && state.balance < GameEngine.bet())
+        toast("Not enough silver — lower your bet or reset.");
+      return;
+    }
+    if (state.phase === "spinning" || state.phase === "evaluating") return;
+
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+    state.phase = "spinning";
+    state.lastWin = 0;
+    updateUI(true);
+    Sound.spin();
+
+    spinAnimation(function(rawBoard) {
+      // Run the engine (deducts bet, expands wilds, evaluates lines, updates balance)
+      const result = GameEngine.settle(rawBoard);
+
+      if (result && !result.error) {
+        // Play expansion animation FIRST, then highlight wins
+        playExpansion(result.expandedReels, function() {
+          // Highlight wins
+          anim.winCells = {};
+          anim.winLines = [];
+          const palette = [
+            "#d4af37", "#4dd0e1", "#c81e3a", "#3cb87d",
+            "#f4d976", "#b8c8dc", "#e94a5f", "#7a5e0a"
+          ];
+          result.wins.forEach((w, i) => {
+            const col = palette[i % palette.length];
+            anim.winLines.push({ cells: w.cells, color: col });
+            w.cells.forEach(([reel, row]) => {
+              anim.winCells[reel + "," + row] = true;
+            });
+          });
+          animateTrace(900 / (parseFloat(ui.speed.value) || 1));
+
+          // burst particles on each winning cell
+          Object.keys(anim.winCells).forEach(k => {
+            const [r, row] = k.split(",").map(Number);
+            const cp = cellCenter(r, row);
+            spawnParticles(cp.x, cp.y, 6, ["#d4af37", "#f4d976", "#fff"], { square: true });
+            spawnRipple(cp.x, cp.y, 40, "#d4af37");
+          });
+
+          // banners for big moments
+          if (result.scatters >= 3) {
+            Sound.scatter();
+            if (!result.isFree || result.triggeredFS > 0) {
+              const t = result.triggeredFS || 10;
+              toast("☀ " + t + " FREE SPINS ☀");
+              setBg("free");
+              anim.banner = { text: "⚔ " + t + " FREE SPINS ⚔", color: "#f4d976", life: 1 };
+            }
+          }
+
+          // history
+          ui.history.unshift({
+            ts: new Date(),
+            bet: result.isFree ? 0 : GameEngine.bet(),
+            win: result.total,
+            free: result.isFree,
+            scatters: result.scatters,
+            expanded: result.expandedReels.length
+          });
+          if (ui.history.length > 50) ui.history.pop();
+
+          if (result.total > 0) {
+            Sound.win(result.total >= GameEngine.bet() * 15);
+            showWinOverlay(result.total, GameEngine.bet(), result);
+          }
+
+          if (!state.inFreeSpins) setBg("normal");
+          updateUI(true);
+
+          state.phase = "idle";
+
+          const delay = 700 / (parseFloat(ui.speed.value) || 1);
+          setTimeout(() => {
+            if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden) {
+              if (GameEngine.canSpin()) {
+                state.autoSpinsLeft--;
+                updateUI();
+                doSpin();
+              } else stopAuto("Auto-spin stopped — insufficient credits.");
+            } else if (state.autoActive && state.autoSpinsLeft <= 0) {
+              stopAuto("Auto-spin complete.");
+            } else updateUI();
+          }, delay + 700);
+        });
+      } else {
+        // shouldn't happen, but recover gracefully
+        state.phase = "idle";
+        updateUI();
+      }
+    });
+  }
+
+  function animateTrace(duration) {
+    const t0 = performance.now();
+    anim.traceProgress = 0;
+    function step() {
+      const p = Math.min(1, (performance.now() - t0) / duration);
+      anim.traceProgress = p;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  /* ---------- Win overlay ---------- */
+  function showWinOverlay(totalWin, bet, result) {
+    const ratio = totalWin / Math.max(1, bet);
+    let tier = "WIN";
+    if (ratio >= 300) tier = "MEGA WIN";
+    else if (ratio >= 120) tier = "BIG WIN";
+    else if (ratio >= 40) tier = "GREAT WIN";
+    else if (ratio >= 12) tier = "WIN";
+
+    if (result && result.expandedReels && result.expandedReels.length >= 2 && ratio < 12) {
+      tier = "WILD REELS";
+    }
+
+    ui.winTier.textContent = tier;
+    ui.winAmt.textContent = "+" + totalWin.toLocaleString();
+    ui.winSub.textContent = state.inFreeSpins
+      ? "FREE SPIN · ×" + CONFIG.freeSpins.multiplier
+      : (result && result.expandedReels ? result.expandedReels.length + " WILD REEL" + (result.expandedReels.length > 1 ? "S" : "") : "");
+    ui.winOv.classList.add("on");
+    if (ratio >= 120) setBg("big");
+
+    const dur = Math.max(1500, 2400 / (parseFloat(ui.speed.value) || 1));
+    setTimeout(() => {
+      ui.winOv.classList.remove("on");
+      if (ratio >= 120 && !state.inFreeSpins) setBg("normal");
+    }, dur);
+  }
+
+  /* ---------- UI update ---------- */
+  function updateUI(pop) {
+    ui.balance.textContent = state.balance.toLocaleString();
+    ui.win.textContent = state.lastWin.toLocaleString();
+    ui.bet.textContent = GameEngine.bet().toLocaleString();
+    if (pop) {
+      ui.balance.classList.remove("pop"); ui.win.classList.remove("pop");
+      void ui.balance.offsetWidth;
+      ui.balance.classList.add("pop"); ui.win.classList.add("pop");
+    }
+    ui.spin.disabled = state.autoActive || !GameEngine.canSpin();
+    ui.autoCnt.textContent = state.autoActive ? "AUTO: " + state.autoSpinsLeft : "";
+    ui.auto.classList.toggle("on", state.autoActive);
+    ui.fsBanner.classList.toggle("on", state.inFreeSpins);
+    ui.fsCount.textContent = state.freeSpinsLeft;
+  }
+
+  /* ---------- Sound ---------- */
+  const Sound = (function() {
+    let ctxA = null, enabled = true;
+    function ensure() {
+      if (!ctxA) { try { ctxA = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { ctxA = null; } }
+      if (ctxA && ctxA.state === "suspended") ctxA.resume();
+      return ctxA;
+    }
+    function tone(freq, dur, type, vol, when) {
+      if (type === undefined) type = "sine";
+      if (vol === undefined) vol = 0.06;
+      if (when === undefined) when = 0;
+      if (!enabled) return;
+      const c = ensure(); if (!c) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    return {
+      spin() { tone(220, 0.1, "triangle", 0.05); tone(165, 0.14, "sine", 0.045, 0.05); },
+      win(small) {
+        const notes = small ? [523, 659, 784, 1047] : [523, 659, 784, 1047, 1319, 1568];
+        notes.forEach((f, i) => tone(f, 0.2, "sine", 0.08, i * 0.07));
+      },
+      bigWin() {
+        [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.24, "triangle", 0.09, i * 0.06));
+      },
+      scatter() {
+        [440, 554, 659, 880, 1108, 1319].forEach((f, i) => tone(f, 0.22, "sine", 0.09, i * 0.07));
+      },
+      wild() {
+        // sweeping sound for wild expansion
+        const base = 300;
+        [0, 0.08, 0.16, 0.24, 0.32].forEach((w, i) =>
+          tone(base + i * 90, 0.15, "triangle", 0.08, w));
+      },
+      click() { tone(880, 0.04, "triangle", 0.03); },
+      toggle() { enabled = !enabled; return enabled; }
+    };
+  })();
+
+  /* ---------- Auto spin ---------- */
+  function startAuto() {
+    if (state.autoActive) { stopAuto(); return; }
+    if (!GameEngine.canSpin()) { toast("Not enough silver to auto-spin."); return; }
+    state.autoActive = true;
+    state.autoSpinsLeft = state.autoSpinTarget || 25;
+    Sound.click(); updateUI(); doSpin();
+  }
+  function stopAuto(msg) {
+    state.autoActive = false;
+    state.autoSpinsLeft = 0;
+    if (msg) toast(msg);
+    updateUI();
+  }
+
+  /* ---------- Toast ---------- */
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    el("toasts").appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  /* ---------- Modals ---------- */
+  function openModal(id) { el(id).classList.add("on"); }
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove("on");
+    });
+  });
+
+  function buildPaytable() {
+    const grid = el("paytableGrid");
+    grid.innerHTML = "";
+    ORDER.forEach(id => {
+      const sym = SYMBOLS[id];
+      if (!sym) return;
+      const card = document.createElement("div");
+      card.className = "sym-card" + (sym.special ? " " + sym.special : "");
+      const ic = document.createElement("div"); ic.className = "ic";
+      const img = document.createElement("img");
+      img.src = SpriteLoader.dataUrl(sym.sprite, 96, 96);
+      img.alt = sym.name;
+      ic.appendChild(img); card.appendChild(ic);
+      const nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = sym.name;
+      card.appendChild(nm);
+      const py = document.createElement("div"); py.className = "pay";
+      if (sym.special === "scatter") {
+        py.innerHTML = "<div>—<small>FS</small></div><div>—<small>FS</small></div><div>—<small>FS</small></div>";
+      } else {
+        py.innerHTML =
+          "<div>" + sym.pay3 + "<small>3×</small></div>" +
+          "<div>" + sym.pay4 + "<small>4×</small></div>" +
+          "<div>" + sym.pay5 + "<small>5×</small></div>";
+      }
+      card.appendChild(py);
+      grid.appendChild(card);
+    });
+  }
+
+  function buildLinesGrid() {
+    const grid = el("linesGrid");
+    grid.innerHTML = "";
+    CONFIG.paylines.forEach((line, i) => {
+      const chip = document.createElement("div");
+      chip.className = "line-chip";
+      const num = document.createElement("div");
+      num.className = "num";
+      num.textContent = "#" + (i + 1);
+      chip.appendChild(num);
+      const dots = document.createElement("div");
+      dots.className = "dots";
+      // Render as 5 columns × 3 rows (row-major would be confusing; use row-major)
+      for (let row = 0; row < 3; row++) {
+        for (let reel = 0; reel < 5; reel++) {
+          const d = document.createElement("div");
+          d.className = "dot" + (line[reel] === row ? " on" : "");
+          dots.appendChild(d);
+        }
+      }
+      chip.appendChild(dots);
+      grid.appendChild(chip);
+    });
+  }
+
+  function buildHistory() {
+    const list = el("historyList");
+    if (!ui.history.length) { list.innerHTML = '<li style="color:var(--text-dim)">No spins yet.</li>'; return; }
+    list.innerHTML = ui.history.map(h => {
+      const cls = h.win > 0 ? "" : "loss";
+      const tag = h.free ? " [FREE]" : "";
+      const badges = (h.expanded ? " ᚱ×" + h.expanded : "");
+      return '<li class="' + cls + '"><span>' + h.ts.toLocaleTimeString() + tag +
+        ' · Bet ' + h.bet + ' · ☀' + h.scatters + badges +
+        '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+    }).join("");
+  }
+
+  /* ---------- Events ---------- */
+  ui.spin.addEventListener("click", () => { Sound.click(); doSpin(); });
+  ui.auto.addEventListener("click", startAuto);
+  ui.stop.addEventListener("click", () => stopAuto("Auto-spin stopped."));
+
+  el("betDown").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setBetIndex(state.betIndex - 1);
+    Sound.click(); updateUI();
+  });
+  el("betUp").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.setBetIndex(state.betIndex + 1);
+    Sound.click(); updateUI();
+  });
+
+  document.querySelectorAll(".preset-row button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.phase !== "idle" || state.autoActive) return;
+      const p = btn.dataset.preset;
+      if (p === "min") GameEngine.setBetIndex(0);
+      else if (p === "std") GameEngine.setBetIndex(Math.floor(CONFIG.betSteps.length / 2));
+      else if (p === "max") GameEngine.setBetIndex(CONFIG.betSteps.length - 1);
+      Sound.click(); updateUI();
+    });
+  });
+
+  document.querySelectorAll("#autoRow button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.autoActive) return;
+      state.autoSpinTarget = parseInt(btn.dataset.auto, 10);
+      document.querySelectorAll("#autoRow button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      Sound.click();
+      toast("Auto-spin target: " + state.autoSpinTarget);
+    });
+  });
+
+  el("paytableBtn").addEventListener("click", () => { buildPaytable(); openModal("paytableModal"); });
+  el("linesBtn").addEventListener("click", () => { buildLinesGrid(); openModal("linesModal"); });
+  el("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  el("historyBtn").addEventListener("click", () => { buildHistory(); openModal("historyModal"); });
+
+  ui.sound.addEventListener("click", () => {
+    const on = Sound.toggle();
+    ui.sound.textContent = on ? "🔊" : "🔇";
+    ui.sound.classList.toggle("on", on);
+    if (on) Sound.click();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset the demo? Balance will return to " + CONFIG.startingBalance + ".")) return;
+    stopAuto();
+    state.balance = CONFIG.startingBalance;
+    state.betIndex = CONFIG.defaultBetIndex;
+    state.inFreeSpins = false;
+    state.freeSpinsLeft = 0;
+    state.lastWin = 0;
+    state.lastNet = 0;
+    state.board = GameEngine.generateBoard();
+    ui.history = [];
+    anim.winCells = {};
+    anim.winLines = [];
+    anim.particles = [];
+    anim.ripples = [];
+    anim.expanding = {};
+    anim.bursts = {};
+    anim.banner = null;
+    setBg("normal");
+    updateUI(true);
+    toast("Demo reset.");
+  });
+
+  document.addEventListener("keydown", e => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (!ui.spin.disabled) doSpin();
+    }
+    if (e.code === "Escape") document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on"));
+    if (e.key === "a" || e.key === "A") startAuto();
+    if (e.key === "s" || e.key === "S") stopAuto();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.autoActive) stopAuto("Auto-spin paused (tab inactive).");
+  });
+
+  /* ---------- Boot (IDENTICAL to working game) ---------- */
+  async function boot() {
+    setBg("normal");
+    await SpriteLoader.load();
+    state.board = GameEngine.generateBoard();
+    resize();
+    updateUI();
+    requestAnimationFrame(render);
+    setTimeout(() => toast("Welcome to Odin's Rune — press RAID."), 500);
+  }
+  boot();
+})();
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

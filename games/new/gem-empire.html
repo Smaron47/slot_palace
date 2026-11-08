@@ -1,0 +1,1132 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gem Empire — Stable Cascades · Mega Tiles · Glow Wins</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+    <div id="app"></div>
+    <script src="../../static/js/shared/icons.js"></script>
+    <script src="../../static/js/shared/slot-engine.js"></script>
+    <script src="../../static/js/shared/engine.js"></script>
+    <script src="../../static/js/shared/theme-kit.js"></script>
+    <script src="../../static/js/shared/init.js"></script>
+    <script>
+    window.startGame = function () {
+        const { ICON_LIB, SlotEngine, GameEngine } = window;
+        const { drawSvgSym, Easing, glow } = ICON_LIB;
+        const SE = SlotEngine;
+
+        const game = GameEngine.buildGameUI(document.getElementById('app'), {
+            title: '💎 GEM EMPIRE', theme: 'gem', bg: 'bg11', bgFree: 'bg10', bgBigWin: 'bg9', balance: 10000, bet: 20,
+            uiImages: true,
+            howToWin: 'Match 3+ identical GEM icons on a payline (left to right), as clusters, or as ways. Wilds substitute for all regular symbols AND add +50% to any win they touch. Scatters pay anywhere and trigger FREE SPINS: 3 = 8 spins, 4 = 10 spins (multiplier ×2!), 5+ = 15 spins. Cascade: every winning combo crashes and is replaced — the tumble multiplier climbs each step. Mega tiles pay big when hit. A SCATTER IS GUARANTEED every 19 spins!'
+        });
+        const { canvas, ctx, state, confetti, toast } = game;
+
+        // ================================================================
+        //  GOLDEN PHARAOH UPGRADE — full-screen GIF bg, transaction/win
+        //  overlays, scatter ×2 multiplier, multiplier counter,
+        //  speed control (slow/mid/fast) driving every animation timing.
+        // ================================================================
+        const gc = document.getElementById('gameContainer');
+        const gifLayer = gc.querySelector('#gifLayer');
+        const ASSETS = {
+            bg1: '../../assets/bg11.gif', bg2: '../../assets/bg10.gif', bg3: '../../assets/bg11.gif',
+            transaction: '../../assets/transaction.gif', win: '../../assets/win.gif'
+        };
+
+        // -------- SPEED CONTROL (slow/normal · mid · fast) --------
+        window.GAME_PREFS = window.GAME_PREFS || {};
+        const SPEEDS = { slow: 1, mid: 1.8, fast: 3 };
+        window.GAME_PREFS.speed = SPEEDS.mid;            // default MID
+        const speed = () => window.GAME_PREFS.speed || 1;
+
+        // -------- FULL-PAGE BACKGROUND (fixed behind everything) --------
+        // a separate fixed layer over the viewport so the GIF is almost full
+        // page — the game container becomes transparent glass over it.
+        let bodyBg = document.getElementById('gpBodyBg');
+        if (!bodyBg) {
+            bodyBg = document.createElement('div');
+            bodyBg.id = 'gpBodyBg';
+            bodyBg.style.cssText = `position:fixed;inset:0;z-index:0;background:#000 center/cover no-repeat url('${ASSETS.bg3}');opacity:0.96;pointer-events:none;filter:brightness(1.05)`;
+            document.body.appendChild(bodyBg);
+        }
+        gifLayer.style.cssText = `position:absolute;inset:0;z-index:0;background:#000 center/cover no-repeat url('${ASSETS.bg3}');opacity:0;pointer-events:none`;
+        // engine forces gifLayer opacity — keep hidden, we use bodyBg instead
+        setTimeout(() => { gifLayer.style.opacity = '0'; }, 1600);
+
+        // ================================================================
+        //  NEON CABINET CHROME — chase marquee, scanlines, glass gloss,
+        //  corner brackets: makes the game window look like a real machine
+        // ================================================================
+        const chrome = document.createElement('style');
+        chrome.textContent = `
+            #gameContainer{border-radius:30px!important;background:linear-gradient(155deg,rgba(6,14,34,.93),rgba(1,4,12,.96))!important;border:2px solid rgba(0,240,255,.42)!important;box-shadow:0 0 0 2px #01060f,0 0 0 7px rgba(0,240,255,.16),0 0 70px rgba(0,240,255,.28),0 30px 90px rgba(0,0,0,.85),inset 0 0 70px rgba(0,240,255,.05)!important}
+            #pkMarquee{position:absolute;top:0;left:0;right:0;height:10px;z-index:40;display:flex;gap:14px;padding:0 16px;overflow:hidden;pointer-events:none}
+            #pkMarquee i{flex:1;border-radius:6px;background:#00F0FF;box-shadow:0 0 10px #00F0FF,0 0 24px #00F0FF;animation:pkChase 1.15s linear infinite}
+            #pkMarquee i:nth-child(3n){background:#FF00E5;box-shadow:0 0 10px #FF00E5,0 0 24px #FF00E5}
+            @keyframes pkChase{0%,100%{opacity:.22;transform:scaleY(.45)}50%{opacity:1;transform:scaleY(1)}}
+            #pkScan{position:absolute;inset:0;z-index:38;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,240,255,.03) 0 1px,transparent 1px 4px);mix-blend-mode:screen}
+            #pkGloss{position:absolute;inset:0;z-index:39;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.035) 20%,transparent 34%)}
+            .pkCorner{position:absolute;width:26px;height:26px;z-index:41;pointer-events:none}
+            .pkCorner.tl{top:6px;left:6px;border-top:3px solid #00F0FF;border-left:3px solid #00F0FF;border-top-left-radius:14px;box-shadow:-2px -2px 12px rgba(0,240,255,.5)}
+            .pkCorner.tr{top:6px;right:6px;border-top:3px solid #00F0FF;border-right:3px solid #00F0FF;border-top-right-radius:14px;box-shadow:2px -2px 12px rgba(0,240,255,.5)}
+            .pkCorner.bl{bottom:6px;left:6px;border-bottom:3px solid #FF00E5;border-left:3px solid #FF00E5;border-bottom-left-radius:14px;box-shadow:-2px 2px 12px rgba(255,0,229,.5)}
+            .pkCorner.br{bottom:6px;right:6px;border-bottom:3px solid #FF00E5;border-right:3px solid #FF00E5;border-bottom-right-radius:14px;box-shadow:2px 2px 12px rgba(255,0,229,.5)}
+        `;
+        document.head.appendChild(chrome);
+        const mq = document.createElement('div'); mq.id = 'pkMarquee';
+        for (let i = 0; i < 26; i++) mq.appendChild(document.createElement('i'));
+        gc.appendChild(mq);
+        ['pkScan', 'pkGloss'].forEach(id => { const d = document.createElement('div'); d.id = id; gc.appendChild(d); });
+        ['tl', 'tr', 'bl', 'br'].forEach(pos => { const d = document.createElement('div'); d.className = 'pkCorner ' + pos; gc.appendChild(d); });
+
+        // Orbit + facets + glass chrome are added by the shared engine for
+        // every game window (see engine.js applyCrystalGlass). Golden owns
+        // its gold background / fade handling below; the shared glass layers
+        // are re-themed gold via the gpStyle override rules.
+
+        function setBg(name) {
+            bodyBg.style.backgroundImage = `url('../../assets/${name}.gif')`;
+            bodyBg.style.opacity = '0.96';
+        }
+        // start loading the sprite sheet right away
+        ICON_LIB.getSprite && ICON_LIB.getSprite();
+
+        // -------- SESSION TRACKING --------
+        let spinCount = 0;              // paid spins (for guaranteed scatter)
+        let forceScatterSpin = false;   // next board forces scatter
+        let multiplier = 1;        // session multiplier, shown top-right
+        let spinWin = 0;           // wins accumulated in the current spin
+        let sessionWin = 0;        // total wins accumulated (whole session)
+        let scatterBounceT = 0;    // timestamp of last scatter pop
+        let multTimer = null;      // reel-roll timer for the multiplier
+
+        // multiplier box (top-right, pulses on every increase)
+        const multBox = document.createElement('div');
+        multBox.id = 'multBox';
+        multBox.style.cssText = `position:absolute;top:70px;right:14px;z-index:300;text-align:center;pointer-events:none;padding:8px 16px;border-radius:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(0,240,255,0.55);box-shadow:0 0 20px rgba(0,240,255,0.35);backdrop-filter:blur(4px)`;
+        multBox.innerHTML = `<div style="font-size:.58rem;color:#00F0FF;letter-spacing:2px;font-weight:700">MULTIPLIER</div><div id="multVal" style="font-size:1.9rem;font-weight:900;color:#fff;text-shadow:0 0 16px #00F0FF;line-height:1">×1</div>`;
+        gc.appendChild(multBox);
+        const multVal = multBox.querySelector('#multVal');
+        function updateMult(pop) {
+            multVal.textContent = '×' + multiplier;
+            if (pop) {
+                multVal.style.animation = 'none'; multVal.offsetHeight;
+                // reel-like: drops from top with zoom + glow
+                multVal.style.animation = (multiplier > (window.__lastMult || 1)) ?
+                    'multDrop .9s cubic-bezier(0.2,0.7,0.3,1)' : 'multZoom .7s ease';
+                multBox.style.boxShadow = '0 0 34px rgba(0,240,255,0.95)';
+                mtLevelFlash();
+                setTimeout(() => multBox.style.boxShadow = '0 0 20px rgba(0,240,255,0.35)', 800);
+            }
+            window.__lastMult = multiplier;
+        }
+        // subtle background level-up flash for the multiplier box
+        function mtLevelFlash() {
+            multBox.style.background = 'radial-gradient(circle, rgba(0,240,255,.5), rgba(0,0,0,.55) 70%)';
+            setTimeout(() => multBox.style.background = 'rgba(0,0,0,0.55)', 500);
+        }
+        updateMult(false);
+        // reel-style multiplier roll: cycles values like the symbol reels, then
+        // settles on a random value (boosted pool during FREE SPINS).
+        function rollMultiplier() {
+            const pool = (inFreeSpins && freeSpins > 0) ? [2,2,3,3,5,5,8,10] : [1,1,1,2,2,3,3,5,5,8];
+            multiplier = pool[Math.floor(Math.random() * pool.length)];
+            const steps = Math.max(5, Math.floor(11 / speed()));
+            if (multTimer) clearInterval(multTimer);
+            let i = 0;
+            multTimer = setInterval(() => {
+                i++;
+                if (i >= steps) {
+                    clearInterval(multTimer); multTimer = null;
+                    multVal.textContent = '×' + multiplier;
+                    multVal.style.animation = 'none'; multVal.offsetHeight;
+                    multVal.style.animation = 'multReel .5s cubic-bezier(0.2,0.7,0.3,1)';
+                    multBox.style.boxShadow = '0 0 24px rgba(0,240,255,0.6)';
+                    setTimeout(() => multBox.style.boxShadow = '0 0 20px rgba(0,240,255,0.35)', 700);
+                } else {
+                    let v; do { v = 1 + Math.floor(Math.random() * 10); } while (v === multiplier);
+                    multVal.textContent = '×' + v;
+                    multVal.style.animation = 'none'; multVal.offsetHeight;
+                    multVal.style.animation = 'multReelTick .16s linear';
+                }
+            }, 95 / speed());
+        }
+
+        // ================================================================
+        //  TRANSACTION + WIN GIF OVERLAYS
+        // ================================================================
+        const txOv = document.createElement('div');
+        txOv.style.cssText = `position:fixed;inset:0;top:0;left:0;right:0;bottom:0;z-index:5800;display:flex;align-items:center;justify-content:center;background:#000 center/cover no-repeat url('${ASSETS.transaction}');opacity:0;transition:opacity .35s;pointer-events:none`;
+        gc.appendChild(txOv);
+
+        // WIN overlay: dim + blurred backdrop + centered popup box (win.gif)
+        const winOv = document.createElement('div');
+        winOv.style.cssText = `position:absolute;z-index:650;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);opacity:0;transition:opacity .35s;pointer-events:none;overflow:hidden`;
+        winOv.innerHTML = `
+            <div id="winBox" class="gp-winbox" data-tier="big" style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:#0a0502 center/contain no-repeat url('${ASSETS.win}');border-radius:18px;border:3px solid rgba(0,240,255,0.85);box-shadow:0 0 80px rgba(0,240,255,0.5),0 24px 60px rgba(0,0,0,0.75),inset 0 0 46px rgba(0,240,255,0.12);overflow:hidden;animation:winPop .45s cubic-bezier(0.175,0.885,0.32,1.4)">
+                <div id="winTint" data-tier="big" style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:linear-gradient(160deg,rgba(0,240,255,.55),rgba(150,90,0,.25));transition:background .35s"></div>
+                <div id="winTier" class="big" style="position:relative;z-index:2;font-size:clamp(2.4rem,6vw,4.2rem);font-weight:900;letter-spacing:6px;color:#fff;text-shadow:0 0 30px #00F0FF,0 0 60px #FF00E5;background:rgba(0,0,0,0.45);padding:4px 34px;border-radius:16px;margin-top:6%;animation:winTextZoom .7s cubic-bezier(0.175,0.885,0.32,1.4)">WIN!</div>
+                <div id="winNum" style="position:relative;z-index:2;font-size:clamp(2.6rem,6vw,4rem);font-weight:900;color:#00F0FF;letter-spacing:2px;text-shadow:0 0 26px #00F0FF,0 4px 12px rgba(0,0,0,0.9);background:rgba(0,0,0,0.55);padding:10px 38px;border-radius:14px;border:2px solid rgba(0,240,255,0.75);font-variant-numeric:tabular-nums;margin-top:10px">+0</div>
+            </div>`;
+        gc.appendChild(winOv);
+        const winBox = winOv.querySelector('#winBox');
+        const winTint = winOv.querySelector('#winTint');
+        const winTier = winOv.querySelector('#winTier');
+        const winNum = winOv.querySelector('#winNum');
+
+        // FREE-SPIN popup (big, animated) — shown after transaction
+        const fsOv = document.createElement('div');
+        fsOv.style.cssText = `position:absolute;inset:0;z-index:655;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);opacity:0;transition:opacity .3s;pointer-events:none`;
+        fsOv.innerHTML = `<div id="fsBox" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(560px,82vw);padding:34px 44px;border-radius:26px;background:linear-gradient(160deg,rgba(180,40,120,.55),rgba(60,10,70,.8));border:3px solid #FF55CC;box-shadow:0 0 70px rgba(255,85,200,.65);text-align:center;animation:fsPop .6s cubic-bezier(0.175,0.885,0.32,1.4)">
+                <div style="font-size:.9rem;letter-spacing:4px;color:#FFB6E8;font-weight:700">🎰 FREE SPINS TRIGGERED 🎰</div>
+                <div id="fsNum" style="font-size:5rem;font-weight:900;color:#fff;text-shadow:0 0 40px #FF55CC,0 0 90px #FF00AA;margin:6px 0">10</div>
+                <div style="font-size:1.4rem;font-weight:900;color:#B0FFFF;letter-spacing:2px">FREE SPINS</div>
+                <div style="font-size:.8rem;color:#ffd;margin-top:8px;letter-spacing:1px">+ MULTIPLIER ×2 · GLASS REELS BONUS</div>
+            </div>`;
+        gc.appendChild(fsOv);
+        const fsBox = fsOv.querySelector('#fsBox');
+        const fsNum = fsOv.querySelector('#fsNum');
+        function showFreeSpinPopup(count, cb) {
+            fsNum.textContent = count || freeSpins;
+            fsBox.style.animation = 'none'; fsBox.offsetHeight;
+            fsBox.style.animation = 'fsPop .6s cubic-bezier(0.175,0.885,0.32,1.4)';
+            fsOv.style.opacity = '1';
+            game.playBonusSound();
+            confetti.spawn(90);
+            setTimeout(() => { fsOv.style.opacity = '0'; if (cb) cb(); }, 2200 / speed());
+        }
+
+        // tier detection → BIG / MEGA / SUPER
+        function tierFor(am) {
+            const b = state.bet;
+            if (am >= b * 100) return { tier: 'SUPER WIN',   cls: 'super' };
+            if (am >= b * 50)  return { tier: 'MEGA WIN',    cls: 'mega' };
+            if (am >= b * 20)  return { tier: 'BIG WIN',     cls: 'big' };
+            return null;
+        }
+        // splash helper: one bright flash of transaction then action
+        function splashTx(ms, cb) {
+            txOv.style.opacity = '1';
+            setTimeout(() => { txOv.style.opacity = '0'; if (cb) cb(); }, ms / speed());
+        }
+
+        function showTx(cb) {
+            splashTx(1600, cb);   // full-screen, slower
+        }
+
+        // win.gif pops up (blurred bg) → counter rolls to amount → fades
+        function showWinGif(amount, cb) {
+            const t = tierFor(amount) || { tier: 'WIN!', cls: 'big' };
+            winTier.textContent = t.tier;
+            // apply tier glow to box + tint overlay, keep the win.gif visible
+            winBox.className = 'gp-winbox';
+            winBox.dataset.tier = t.cls;
+            winTint.dataset.tier = t.cls;
+            winTier.className = t.cls;
+            winBox.style.animation = 'none'; winBox.offsetHeight;
+            winBox.style.animation = 'winPop .5s cubic-bezier(0.175,0.885,0.32,1.4)';
+            // size the win GIF to match the reel/canvas window exactly
+            const _ra = gc.querySelector('.reel-area');
+            if (_ra) {
+                const rr = _ra.getBoundingClientRect();
+                const cr = gc.getBoundingClientRect();
+                winOv.style.top = (rr.top - cr.top) + 'px';
+                winOv.style.left = (rr.left - cr.left) + 'px';
+                winOv.style.width = rr.width + 'px';
+                winOv.style.height = rr.height + 'px';
+            }
+            winTier.style.animation = 'none'; winTier.offsetHeight;
+            winTier.style.animation = 'winTextZoom .7s cubic-bezier(0.175,0.885,0.32,1.4)';
+            winOv.style.opacity = '1';
+            winNum.textContent = '0';
+            const dur = 2600 / speed(), t0 = performance.now();
+            function count(now) {
+                const p = Math.min(1, (now - t0) / dur);
+                const e = 1 - Math.pow(1 - p, 3);
+                winNum.textContent = '+' + Math.round(amount * e).toLocaleString();
+                if (p < 1) requestAnimationFrame(count);
+            }
+            requestAnimationFrame(count);
+            game.playWinSound(amount);
+            confetti.spawn(90);
+            game.shake();
+            setTimeout(() => { winOv.style.opacity = '0'; if (cb) cb(); }, 3300 / speed());
+        }
+
+        // ================================================================
+        //  SPEED CONTROL UI (top bar) — slow/mid/fast
+        // ================================================================
+        const topBar = gc.querySelector('.top-bar');
+        const speedSel = document.createElement('select');
+        speedSel.id = 'speedSel';
+        speedSel.style.cssText = `padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.6);border:1px solid #00F0FF;color:#00F0FF;font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:1px;cursor:pointer;font-weight:700`;
+        speedSel.innerHTML = `<option value="slow">🐢 SLOW</option><option value="mid" selected>⚡ MID</option><option value="fast">🚀 FAST</option>`;
+        speedSel.addEventListener('change', () => {
+            window.GAME_PREFS.speed = SPEEDS[speedSel.value] || 1;
+            toast.show('Speed', `${speedSel.value.toUpperCase()} — ${window.GAME_PREFS.speed}×`);
+        });
+        topBar.appendChild(speedSel);
+
+        // MANUAL button — opens the sprite icon guide / how-to-win
+        const manualBtn = document.createElement('button');
+        manualBtn.id = 'manualBtn';
+        manualBtn.className = 'top-btn';
+        manualBtn.style.cssText = `background:rgba(0,240,255,0.12);border:1px solid rgba(0,240,255,0.4);color:#00F0FF;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:1px;transition:all 0.3s`;
+        manualBtn.innerHTML = '📖 MANUAL';
+        topBar.appendChild(manualBtn);
+        manualBtn.addEventListener('click', openManual);
+
+        // injected keyframes + glass UI overrides
+        if (!document.getElementById('gpStyle')) {
+            const st = document.createElement('style');
+            st.id = 'gpStyle';
+            st.textContent = `
+                @keyframes multPop{0%{transform:scale(0.2)}60%{transform:scale(1.6)}100%{transform:scale(1)}}
+                @keyframes multDrop{0%{transform:translateY(-140px) scale(.6);opacity:0;filter:brightness(2.2)}25%{opacity:1}55%{transform:translateY(14px) scale(1.35);filter:brightness(1.6)}70%{transform:translateY(-4px) scale(1.12)}100%{transform:translateY(0) scale(1);opacity:1;filter:brightness(1)}}
+                @keyframes multZoom{0%{transform:scale(1)}40%{transform:scale(1.9);filter:brightness(1.9)}100%{transform:scale(1)}}
+                @keyframes multReel{0%{transform:translateY(80%) scale(.6);opacity:0;filter:brightness(2.2)}55%{transform:translateY(-8%) scale(1.1);opacity:1;filter:brightness(1.5)}100%{transform:translateY(0) scale(1);opacity:1;filter:brightness(1)}}
+                @keyframes multReelTick{0%{transform:translateY(55%) scale(.7);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+                @keyframes winPop{0%{transform:scale(.25) rotate(-8deg);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+                @keyframes winTextZoom{0%{transform:scale(2.6);opacity:0;filter:blur(6px)}60%{transform:scale(.92);opacity:1}100%{transform:scale(1);filter:blur(0)}}
+                @keyframes fsPop{0%{transform:scale(.2) rotate(-10deg);opacity:0}55%{transform:scale(1.1) rotate(3deg);opacity:1}75%{transform:scale(.96)}100%{transform:scale(1) rotate(0)}}
+                @keyframes gpFade{from{opacity:0}to{opacity:1}}
+                @keyframes sparkleFly{0%{transform:scale(0);opacity:1}100%{transform:scale(1.2);opacity:0}}
+                /* glass reel window + gradient panels */
+                #gameContainer{background:transparent!important;border:1px solid rgba(0,240,255,.34)!important;box-shadow:0 0 90px rgba(0,240,255,.22)!important;z-index:2!important;}
+                .main-area{backdrop-filter:blur(3px);}
+                .reel-area{background:linear-gradient(158deg,rgba(255,190,60,.06),rgba(40,22,4,.12) 38%,rgba(4,2,0,.34) 80%)!important;border:1px solid rgba(0,240,255,.45)!important;box-shadow:inset 0 0 60px rgba(0,0,0,.32),0 0 34px rgba(0,240,255,.15)!important;backdrop-filter:blur(12px)!important;background-clip:padding-box;}
+                .right-panel .panel{background:linear-gradient(165deg,rgba(70,46,12,.26),rgba(16,10,3,.34))!important;border:1px solid rgba(0,240,255,.28)!important;backdrop-filter:blur(11px)!important;box-shadow:inset 0 0 26px rgba(0,0,0,.45),0 0 16px rgba(0,240,255,.08)!important;}
+                .top-bar{background:linear-gradient(180deg,rgba(10,6,1,.5),rgba(8,5,1,.14) 75%,transparent)!important;backdrop-filter:blur(6px);}
+                .spin-btn{right:10px!important;background:radial-gradient(circle at 32% 28%,#fff3b0 0%,#00F0FF 42%,#B8860B 100%)!important;box-shadow:0 0 40px rgba(0,240,255,.65),0 6px 18px rgba(0,0,0,.6),inset 0 0 18px rgba(255,255,255,.35)!important;border:3px solid rgba(255,255,255,.85)!important;}
+                .spin-btn:hover{transform:translateY(-50%) scale(1.07)!important;box-shadow:0 0 60px rgba(0,240,255,.9),0 8px 22px rgba(0,0,0,.6)!important;}
+                .top-btn,.bet-btn,.action-btn{background:linear-gradient(180deg,rgba(255,225,130,.32),rgba(0,240,255,.16) 38%,rgba(120,78,6,.18) 70%,rgba(0,240,255,.04))!important;border:1px solid rgba(0,240,255,.55)!important;color:#B0FFFF!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -6px 12px rgba(90,50,0,.25),0 3px 10px rgba(0,0,0,.45)!important;backdrop-filter:blur(6px)!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;}
+                .top-btn:hover,.bet-btn:hover,.action-btn:hover{background:linear-gradient(180deg,rgba(255,235,160,.5),rgba(0,240,255,.3) 38%,rgba(170,110,10,.3) 70%,rgba(0,240,255,.1))!important;box-shadow:0 0 24px rgba(0,240,255,.6),inset 0 1px 0 rgba(255,255,255,.4)!important;}
+                #speedSel{background:linear-gradient(160deg,rgba(0,240,255,.22),rgba(90,60,0,.3))!important;border:1px solid rgba(0,240,255,.5)!important;color:#B0FFFF!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)!important;backdrop-filter:blur(6px);}
+                #manualBtn{background:linear-gradient(160deg,rgba(0,255,192,.18),rgba(0,140,110,.1))!important;border:1px solid rgba(0,255,192,.5)!important;color:#B9FFE8!important;}
+                .manual-modal{position:fixed;inset:0;z-index:3200;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.84);backdrop-filter:blur(7px)}
+                /* bigger win/free-spin popup tiers — GIF stays visible, tier = glow + tint */
+                #winBox.gp-winbox{position:relative;backdrop-filter:blur(4px);}
+                #winBox[data-tier="big"]{border-color:#00F0FF!important;box-shadow:0 0 80px rgba(0,240,255,.6),0 30px 70px rgba(0,0,0,.8)!important;}
+                #winBox[data-tier="mega"]{border-color:#FF00E5!important;box-shadow:0 0 90px rgba(255,140,0,.75),0 30px 70px rgba(0,0,0,.8)!important;}
+                #winBox[data-tier="super"]{border-color:#FF00A8!important;box-shadow:0 0 100px rgba(255,0,160,.8),0 30px 70px rgba(0,0,0,.8)!important;}
+                #winTint[data-tier="mega"]{background:linear-gradient(160deg,rgba(255,140,0,.6),rgba(200,50,0,.28))!important;}
+                #winTint[data-tier="super"]{background:linear-gradient(160deg,rgba(255,0,128,.62),rgba(120,0,200,.26))!important;}
+                #winTier.big{color:#00F0FF!important;}
+                #winTier.mega{color:#7A00FF!important;text-shadow:0 0 34px #FF00E5,0 0 70px #FF3300!important;}
+                #winTier.super{color:#FF6BFF!important;text-shadow:0 0 36px #FF00FF,0 0 80px #AA00FF!important;}
+                /* ===== testfuck-inspired CRYSTAL GLASS SYSTEM ===== */
+                .gp-orb{position:fixed;border-radius:50%;filter:blur(80px);z-index:1;opacity:.85;pointer-events:none;mix-blend-mode:screen;animation:gpOrbFloat 11s ease-in-out infinite alternate;}
+                @keyframes gpOrbFloat{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-34px) scale(1.12)}}
+                .gp-facets{position:absolute;inset:0;z-index:45;pointer-events:none;border-radius:inherit;overflow:hidden;mix-blend-mode:overlay;opacity:.5;
+                  background:
+                    linear-gradient(135deg,transparent 49.6%,rgba(255,255,255,.22) 50%,transparent 50.4%),
+                    linear-gradient(225deg,transparent 49.6%,rgba(0,240,255,.16) 50%,transparent 50.4%),
+                    linear-gradient(45deg,transparent 49.7%,rgba(255,255,255,.14) 50%,transparent 50.3%);}
+                #gameContainer{background:linear-gradient(150deg,rgba(60,42,10,.12),rgba(12,7,2,.26))!important;backdrop-filter:blur(9px)!important;-webkit-backdrop-filter:blur(9px)!important;border-top:1px solid rgba(255,255,255,.42)!important;border-left:1px solid rgba(255,255,255,.20)!important;border-bottom:1px solid rgba(0,240,255,.10)!important;border-right:1px solid rgba(0,240,255,.10)!important;box-shadow:0 30px 70px rgba(0,0,0,.8),inset 6px 6px 18px rgba(255,255,255,.10),inset -8px -8px 24px rgba(0,0,0,.55),0 0 110px rgba(0,240,255,.28)!important;}
+                #gameContainer::after{content:"";position:absolute;inset:0;z-index:46;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,0) 42%,rgba(255,255,255,.16) 50%,rgba(255,255,255,0) 58%);transform:translateX(-130%) skewX(-14deg);animation:gpShine 7s ease-in-out infinite;}
+                @keyframes gpShine{0%,58%{transform:translateX(-130%) skewX(-14deg)}80%,100%{transform:translateX(130%) skewX(-14deg)}}
+                /* re-theme the shared engine glass chrome (orbs + facets) to gold */
+                .glass-facets{opacity:.55;background:linear-gradient(135deg,transparent 49.6%,rgba(0,240,255,.22) 50%,transparent 50.4%),linear-gradient(225deg,transparent 49.6%,rgba(0,240,255,.16) 50%,transparent 50.4%),linear-gradient(45deg,transparent 49.7%,rgba(255,255,255,.14) 50%,transparent 50.3%)!important;}
+                .glass-orb{opacity:.9;}
+                .right-panel .panel,.main-area,.top-bar{backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;}
+                /* right panel: richer gold glass + animated effects */
+                .right-panel .panel{border:1px solid rgba(0,240,255,.35)!important;}
+                .right-panel .panel::before{background:linear-gradient(120deg,rgba(0,240,255,0) 40%,rgba(255,225,150,.22) 50%,rgba(0,240,255,0) 60%);animation:gpPanelShine 6s ease-in-out infinite;}
+                @keyframes gpPanelShine{0%,55%{transform:translateX(-170%)}85%,100%{transform:translateX(170%)}}
+                @keyframes gpNumPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(0,240,255,.35))}50%{filter:drop-shadow(0 0 14px rgba(0,240,255,.95));transform:scale(1.02)}}
+                #balanceDisplay,#winDisplay{animation:gpNumPulse 3.4s ease-in-out infinite;}
+                /* canvas more transparent + diamond crystal over the reel window */
+                #gameCanvas{opacity:.8!important;filter:drop-shadow(0 0 10px rgba(0,240,255,.12));}
+                .reel-area::before{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;mix-blend-mode:overlay;opacity:.6;
+                  background:
+                    linear-gradient(135deg,rgba(255,255,255,.05) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.05) 50%,rgba(255,255,255,.05) 75%,transparent 75%),
+                    linear-gradient(45deg,rgba(255,255,255,.05) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.05) 50%,rgba(255,255,255,.05) 75%,transparent 75%);
+                  background-size:46px 46px;animation:gpReelGlass 9s ease-in-out infinite;}
+                @keyframes gpReelGlass{0%,100%{opacity:.45}50%{opacity:.85}}
+                /* advanced glossy glass buttons with a moving sheen */
+                .top-btn,.bet-btn,.action-btn{position:relative;overflow:hidden;}
+                .top-btn::after,.bet-btn::after,.action-btn::after{content:"";position:absolute;top:-60%;left:-80%;width:60%;height:220%;background:linear-gradient(105deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.45) 50%,rgba(255,255,255,0) 70%);transform:skewX(-24deg) translateX(0);pointer-events:none;transition:left .55s ease;}
+                .top-btn:hover::after,.bet-btn:hover::after,.action-btn:hover::after{left:140%;}
+                .top-btn:hover,.bet-btn:hover,.action-btn:hover{transform:translateY(-2px) scale(1.03)!important;filter:brightness(1.12);}
+                .top-btn:active,.bet-btn:active,.action-btn:active{transform:translateY(0) scale(.98)!important;}
+                .spin-btn{position:relative;}
+                .spin-btn::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(#00F0FF 0deg,#fff 90deg,#FF00E5 220deg,#00F0FF 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));animation:gpSpinGlow 3s linear infinite;z-index:-1;}
+                @keyframes gpSpinGlow{to{transform:rotate(360deg)}}
+                /* ===== responsive: background visible but icons stay bright (canvas opaque), mobile-optimized ===== */
+                @media (max-width:860px){
+                    #gpBodyBg{opacity:1!important;filter:brightness(1.08)!important;}
+                    #gameContainer{background:linear-gradient(150deg,rgba(60,42,10,.04),rgba(8,5,2,.12))!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important;}
+                    .main-area{background:transparent!important;margin-top:2px!important;}
+                    #gameCanvas{opacity:1!important;}
+                    .reel-area{margin:6px 0 8px!important;background:linear-gradient(158deg,rgba(255,190,60,.03),rgba(22,13,4,.07) 40%,rgba(3,2,0,.16) 78%)!important;box-shadow:inset 0 0 20px rgba(0,0,0,.2)!important;}
+                    .right-panel .panel{background:linear-gradient(165deg,rgba(70,46,12,.15),rgba(14,9,3,.22))!important;padding:8px!important;}
+                    .top-bar{background:linear-gradient(180deg,rgba(10,6,1,.26),transparent)!important;backdrop-filter:blur(3px)!important;}
+                    .glass-facets{opacity:.4!important;}
+                    /* compact premium mobile numbers */
+                    #balanceDisplay{font-size:1.25rem!important;}
+                    #winDisplay{font-size:1rem!important;}
+                    #infoDisplay{font-size:.9rem!important;}
+                    #betValue{font-size:1rem!important;}
+                    .bet-btn{width:32px!important;height:32px!important;}
+                    /* small glass multiplier badge, top-right */
+                    #multBox{top:52px!important;right:8px!important;padding:4px 9px!important;border-radius:9px!important;}
+                    #multBox div:first-child{font-size:.45rem!important;letter-spacing:1px!important;}
+                    #multVal{font-size:1.05rem!important;}
+                    /* subtle animated theme glow above the top bar (bg preview) */
+                    .top-bar::before{content:"";position:absolute;left:0;right:0;top:-46px;height:72px;z-index:-1;pointer-events:none;background:radial-gradient(60% 90% at 50% 0%,rgba(255,200,80,.38),rgba(255,200,80,0) 72%),url('${ASSETS.bg3}') center/cover no-repeat;opacity:.5;filter:blur(2px);}
+                }
+            `;
+            document.head.appendChild(st);
+        }
+
+        // REAL reel-spin + cascade state
+        let reelSpin = null;            // active reel animation
+        let reelSymbols = [];          // per-column pseudo-random strips
+        let fsReelGlow = false;        // enhanced glow during free-spin reels
+        let settleSparkles = [];       // sparkle particles on reel settle
+
+        // ================================================================
+        //  ICON GUIDE / MANUAL (sprite icons + powers + how-to-win)
+        // ================================================================
+        function openManual() {
+            let m = document.getElementById('gpManual');
+            if (m) { m.style.display = 'flex'; return; }
+            m = document.createElement('div');
+            m.id = 'gpManual';
+            m.className = 'manual-modal';
+            m.style.animation = 'gpFade .2s ease';
+            const rowT = (keys2) => keys2.map(k => {
+                const data = T[k] ? (T[k].pay || []) : [];
+                const pays = k === 'wild' ? 'SUB WILD · +50%' :
+                            k === 'scatter' ? '3+ = BONUS · ×2 MULT' :
+                            '3/4/5: ' + (data[2] ? data[2]+'/'+data[3]+'/'+data[4] : '0');
+                const col = k === 'wild' ? '#00FF88' : k === 'scatter' ? '#00F0FF' : '#B0FFFF';
+                const icon = ICON_LIB.drawSpriteToCanvas(k, 72);
+                return '<div style="background:rgba(0,0,0,.4);border:1px solid ' + col + '55;border-radius:14px;padding:10px;text-align:center;min-width:86px">'
+                    + (icon ? '<img src="' + icon + '" style="width:58px;height:58px;object-fit:contain">' : '<div style="width:58px;height:58px"></div>')
+                    + '<div style="font-size:.62rem;color:#ccc;margin-top:4px;text-transform:uppercase">' + (k==='wild'?'WILD':k==='scatter'?'SCATTER':'ICON ' + k.replace('spr_','')) + '</div>'
+                    + '<div style="font-size:.7rem;font-weight:700;color:' + col + '">' + pays + '</div></div>';
+            }).join('');
+            m.innerHTML = '<div style="width:min(900px,94vw);max-height:86vh;overflow:auto;background:linear-gradient(165deg,rgba(35,24,8,.97),rgba(12,7,2,.97));border:2px solid #00F0FF66;border-radius:20px;padding:22px 26px;font-family:Orbitron,sans-serif;color:#fff;box-shadow:0 0 60px rgba(0,240,255,.25)">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #00F0FF44;padding-bottom:12px">'
+                + '<div><div style="font-size:1.5rem;font-weight:900;color:#00F0FF;letter-spacing:2px">💎 GEM EMPIRE — MANUAL</div>'
+                + '<div style="font-size:.72rem;color:#ccb;margin-top:4px">Icon power · how to win · bonus rules</div></div>'
+                + '<button id="gpManualClose" style="padding:8px 18px;border-radius:8px;background:#00F0FF22;border:1px solid #00F0FF;color:#00F0FF;font-family:Orbitron;cursor:pointer;font-weight:700">✕ CLOSE</button></div>'
+                + '<div style="margin-top:16px;font-size:.8rem;line-height:1.7;color:#f0ead0">'
+                + '<b style="color:#00F0FF">HOW TO WIN:</b> Match 3+ identical symbols on a payline (left→right), as a cluster, or as ways. '
+                + '<b style="color:#00F0FF">WILD</b> substitutes for any symbol and adds <b style="color:#00FF88">+50%</b> to its win. '
+                + '<b style="color:#00F0FF">SCATTER</b> pays anywhere — 3 = 8 free spins · 4 = 10 free spins &amp; <b>×2 multiplier</b> · 5+ = 15 spins. '
+                + 'Every cascade step climbs the tumble multiplier (×) and the board refills — keep winning! '
+                + '<b style="color:#00F0FF">MEGA tiles</b> (2×1, 1×2, 2×2…) pay a bonus when hit. '
+                + '<b style="color:#FF00E5">GUARANTEED SCATTER every 19 spins!</b></div>'
+                + '<div style="margin-top:16px;font-size:.72rem;color:#00F0FF;letter-spacing:2px;font-weight:700;text-transform:uppercase">Symbol Payments</div>'
+                + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin-top:10px">' + rowT(RANGE.slice(2).filter(k=>k!=='wild'&&k!=='scatter')) + rowT(['scatter','wild']) + '</div>'
+                + '</div>';
+            document.body.appendChild(m);
+            m.querySelector('#gpManualClose').addEventListener('click', () => m.style.display = 'none');
+            m.addEventListener('click', (e) => { if (e.target === m) m.style.display = 'none'; });
+            ICON_LIB.getSprite();
+        }
+
+        // ===== unique GEM sprite icons (spr_01..spr_33 from symbols.json) =====
+        const RANGE = ['wild','scatter',
+            ...Array.from({length:33},(_,i)=>'spr_' + String(i+1).padStart(2,'0'))];
+        const T = SE.buildRangeTable(RANGE, { wild: 0, scatter: 1 });
+        const POOL = RANGE.slice(2);
+        const WILD_ID = RANGE[0];
+
+        const COLS = 6, ROWS = 4;
+        const LINES = [];
+        for (let r = 0; r < ROWS; r++) LINES.push(Array.from({length: COLS}, (_, c) => [c, r]));
+        LINES.push([[0,0],[1,1],[2,2],[3,2],[4,2],[5,3]], [[0,3],[1,2],[2,1],[3,1],[4,1],[5,0]]);
+
+        const grid = new SE.Grid(COLS, ROWS);
+
+        // ===== mega tiles =====
+        const MEGA_SHAPES = [[1,2],[2,1],[2,2],[1,3],[3,1]];
+        let megas = [];       // active mega tiles this board
+
+        function buildBoard() {
+            grid.fillFrom(POOL);
+            megas = [];
+            // sprinkle 0-2 megas with 55% chance for at least one
+            const count = Math.random() < 0.55 ? 1 + Math.floor(Math.random() * 2) : 0;
+            const used = new Set();
+            for (let i = 0; i < count; i++) {
+                for (let tries = 0; tries < 25; tries++) {
+                    const [mw, mh] = MEGA_SHAPES[Math.floor(Math.random() * MEGA_SHAPES.length)];
+                    const c = Math.floor(Math.random() * (COLS - mw + 1));
+                    const r = Math.floor(Math.random() * (ROWS - mh + 1));
+                    // check all cells free & not wild/scatter-critical
+                    let free = true;
+                    for (let cc = c; cc < c + mw && free; cc++)
+                        for (let rr = r; rr < r + mh && free; rr++)
+                            if (used.has(cc + ',' + rr)) free = false;
+                    if (!free) continue;
+                    const mega = SE.placeMega(grid, POOL, c, r, mw, mh);
+                    if (mega) {
+                        mega.cells.forEach(([cc, rr]) => { grid.set(cc, rr, mega.id); used.add(cc + ',' + rr); });
+                        megas.push(mega);
+                    }
+                    break;
+                }
+            }
+            // ---- SCATTER INJECTION ----
+            // forced 4 on the 19th spin (guaranteed free-spins), else 45% chance of 2
+            let target = 0;
+            if (forceScatterSpin) target = 4;
+            else if (Math.random() < 0.45) target = 2;
+            for (let i = 0; i < target; i++) {
+                const free = grid.all().filter(x => POOL.includes(x.id));
+                if (free.length) {
+                    const pick = free[Math.floor(Math.random() * free.length)];
+                    grid.set(pick.c, pick.r, RANGE[1]);
+                }
+            }
+            forceScatterSpin = false;
+        }
+        buildBoard();
+
+        // ===== STATE =====
+        const cellAnim = {};
+        let winCells = new Set();
+        let freeSpins = 0, inFreeSpins = false;
+        let tumbleMult = 1;
+        let busy = false;
+        let crashFx = [];
+
+        game.setInfoTitle('Tumble');
+        game.setInfo('1x');
+        grid.all().forEach(x => cellAnim[x.c + ',' + x.r] = { type: 'reveal', t: 0 });
+
+        function cellRect(c, r, W, H) {
+            const pad = 20, top = 48, bottom = 32;
+            const cw = (W - pad*2) / COLS, ch = (H - top - bottom) / ROWS;
+            return { x: pad + c*cw, y: top + r*ch, w: cw, h: ch };
+        }
+
+        // ===== RENDER =====
+        let last = performance.now();
+        let glowPhase = 0;
+        function render() {
+            const W = canvas.width, H = canvas.height;
+            const now = performance.now();
+            const dt = Math.min(50, now - last); last = now;
+            glowPhase += dt / 300;
+
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = 'rgba(2,8,20,0.5)';
+            ctx.fillRect(0, 0, W, H);
+
+            glow(ctx, inFreeSpins ? `FREE SPINS: ${freeSpins}` : 'GEM EMPIRE', W/2, 22, '#00F0FF', 15, 14);
+            glow(ctx, tumbleMult > 1 ? `TUMBLE ×${tumbleMult} · MEGA TILES` : 'GEMS · CLUSTER · SCATTER · MEGAS', W/2, H-14, '#7A00FF', 11, 8);
+
+            ctx.strokeStyle = 'rgba(0,240,255,0.3)'; ctx.lineWidth = 2;
+            ctx.strokeRect(18, 42, W-36, H-74);
+
+            // ---- CHANGED: animated neon light sweep across the reel area ----
+            const swp = (now % 4200) / 4200;
+            const sx = -W * 0.4 + swp * (W * 1.8);
+            const sg = ctx.createLinearGradient(sx, 0, sx + W * 0.38, H);
+            sg.addColorStop(0, 'rgba(0,240,255,0)');
+            sg.addColorStop(0.5, 'rgba(0,240,255,0.07)');
+            sg.addColorStop(0.72, 'rgba(255,0,229,0.05)');
+            sg.addColorStop(1, 'rgba(255,0,229,0)');
+            ctx.fillStyle = sg;
+            ctx.fillRect(18, 42, W - 36, H - 74);
+
+            // ---- cell plates ----
+            for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+                const { x, y, w, h } = cellRect(c, r, W, H);
+                const isWin = winCells.has(c + ',' + r);
+                ctx.fillStyle = isWin ? 'rgba(0,240,255,0.16)' : 'rgba(0,0,0,0.38)';
+                ctx.strokeStyle = 'rgba(0,240,255,0.12)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x+2, y+2, w-4, h-4, Math.min(w,h)*0.30*0.6);
+                else ctx.rect(x+2, y+2, w-4, h-4);
+                ctx.fill(); ctx.stroke();
+            }
+
+            // ---- mega tiles first (draw as one big rounded tile) ----
+            if (!reelSpin) megas.forEach(m => {
+                const a = cellRect(m.cells[0][0], m.cells[0][1], W, H);
+                const b = cellRect(m.cells[m.cells.length-1][0], m.cells[m.cells.length-1][1], W, H);
+                const x = a.x, y = a.y, w = b.x + b.w - a.x, h = b.y + b.h - a.y;
+                const anyWin = m.cells.some(([c,r]) => winCells.has(c+','+r));
+
+                // glowing outline when any part wins
+                if (anyWin) {
+                    ctx.save();
+                    const pulse = 0.6 + Math.sin(glowPhase * 2.2) * 0.4;
+                    ctx.strokeStyle = `rgba(160,240,255,${pulse})`;
+                    ctx.lineWidth = 4;
+                    ctx.shadowColor = '#00F0FF';
+                    ctx.shadowBlur = 18 + pulse * 14;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(x+3, y+3, w-6, h-6, Math.min(w,h)*0.22);
+                    else ctx.rect(x+3, y+3, w-6, h-6);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // fill mega area
+                ctx.fillStyle = anyWin ? 'rgba(0,240,255,0.22)' : 'rgba(0,0,0,0.42)';
+                ctx.strokeStyle = 'rgba(0,240,255,0.35)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x+2, y+2, w-4, h-4, Math.min(w,h)*0.22);
+                else ctx.rect(x+2, y+2, w-4, h-4);
+                ctx.fill(); ctx.stroke();
+
+                drawSvgSym(ctx, m.id, x+6, y+6, w-12, h-12, 1, 0.30);
+            });
+
+            // draw spinning reel columns (those not yet settled)
+            if (reelSpin) {
+                for (let c = 0; c < COLS; c++) if (!reelColumnDone(c)) {
+                    renderReelStrip(c, W, H, now);
+                }
+                tickReel(now);
+            }
+
+            // live scatter count on the board — with 2+ present (3rd pending),
+            // the scatter icons pulse frantically like "scatter incoming"
+            let liveScatter = 0;
+            if (!inFreeSpins) for (let c0 = 0; c0 < COLS; c0++) for (let r0 = 0; r0 < ROWS; r0++) {
+                const _id = grid.get(c0, r0);
+                if (T[_id] && T[_id].scatter) liveScatter++;
+            }
+
+            // ---- regular symbols ----
+            for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+                const key = c + ',' + r;
+                if (megas.some(m => m.cells.some(([mc,mr]) => mc===c && mr===r))) continue;
+                // column still spinning → drawn by reel strip, skip here
+                if (reelSpin && !reelColumnDone(c)) continue;
+
+                const { x, y, w, h } = cellRect(c, r, W, H);
+                const isWin = winCells.has(key);
+                const id = grid.get(c, r);
+                const s = T[id] || {};
+
+                // crash / reveal / drop anim
+                let scale = 1, alpha = 0.94, dy = 0, rot = 0, bob = 0;
+                const a = cellAnim[key];
+                if (a) {
+                    a.t = Math.min(1, a.t + dt / (a.type === 'crash' ? 360 : 600) * (window.GAME_PREFS ? window.GAME_PREFS.speed : 1));
+                    const t = a.t;
+                    if (a.type === 'reveal' || a.type === 'drop') {
+                        const bp = Easing.outBack(Math.max(0, t));
+                        scale = 0.68 + 0.32 * bp;
+                        dy = (1 - bp) * -h * 1.1;
+                        // CHANGED animation: dropped icons spin in with a twist
+                        if (a.type === 'drop') rot = (1 - bp) * 0.9;
+                    } else if (a.type === 'crash') {
+                        // CHANGED animation: icons spin-OUT the other way with a
+                        // bigger pop before the cascade refill
+                        scale = 1 + 0.7 * t; alpha = 1 - t; rot = -t * 1.0;
+                    }
+                    if (t >= 1) delete cellAnim[key];
+                } else if (!reelSpin) {
+                    // CHANGED animation: stronger wave sway — columns ripple
+                    // up/down in a travelling sine wave (instead of subtle bob)
+                    bob = Math.sin(glowPhase * 3.0 + c * 0.9 + r * 0.5);
+                    dy = bob * h * 0.055;
+                    scale = 1 + bob * 0.03;
+                }
+
+                // scatter pip/bounce pulse after a scatter trigger
+                if (s.scatter && scatterBounceT) {
+                    const bdt = (performance.now() - scatterBounceT) / 1000;
+                    if (bdt < 1.3) {
+                        const bi = 1 - bdt / 1.3;
+                        scale *= 1 + 0.45 * bi * Math.abs(Math.sin(bdt * speed() * 4));
+                        alpha = Math.min(1, 0.72 + 0.28 * Math.sin(bdt * speed() * 6));
+                    }
+                }
+
+                ctx.save();
+                ctx.translate(x + w/2, y + h/2 + dy);
+                ctx.rotate(rot);
+                ctx.scale(scale, scale);
+
+                // golden aura on scatter icons
+                if (s.scatter) {
+                    const pulse = 0.5 + Math.sin(glowPhase * 3 + c) * 0.35;
+                    // req: with 2+ scatters on the board (3rd pending) → bigger,
+                    // faster "scatter incoming" pulse, not only after the trigger
+                    const hot = liveScatter >= 2 && !scatterBounceT && !inFreeSpins;
+                    const p = hot ? (0.4 + Math.abs(Math.sin(glowPhase * 6 + c * 1.4 + r * 1.1))) : pulse;
+                    ctx.fillStyle = `rgba(255,80,230,${0.04 + p * 0.16})`;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(-w/2+5, -h/2+5, w-10, h-10, Math.min(w,h)*0.30*0.6);
+                    else ctx.rect(-w/2+5, -h/2+5, w-10, h-10);
+                    ctx.fill();
+                    ctx.strokeStyle = `rgba(0,240,255,${hot ? 0.45 + p * 0.55 : 0.2 + pulse * 0.4})`;
+                    ctx.lineWidth = hot ? 4 : 3;
+                    ctx.shadowColor = '#00F0FF';
+                    ctx.shadowBlur = hot ? 22 : 12;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(-w/2+5, -h/2+5, w-10, h-10, Math.min(w,h)*0.30*0.6);
+                    else ctx.rect(-w/2+5, -h/2+5, w-10, h-10);
+                    ctx.stroke();
+                }
+
+                // GLOWING OUTLINE for matched icons — light line + pulse
+                if (isWin) {
+                    const pulse = 0.6 + Math.sin(glowPhase * 2.4 + c) * 0.4;
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(160,240,255,${pulse})`;
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#00F0FF';
+                    ctx.shadowBlur = 14 + pulse * 12;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(-w/2+4, -h/2+4, w-8, h-8, Math.min(w,h)*0.30*0.6);
+                    else ctx.rect(-w/2+4, -h/2+4, w-8, h-8);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                drawSvgSym(ctx, id, -w/2+5, -h/2+5, w-10, h-10, alpha, 0.30);
+                ctx.restore();
+
+                // ---- CHANGED: glass gloss + soft neon rim on every icon ----
+                const gg = ctx.createLinearGradient(0, y+5, 0, y+h-5);
+                gg.addColorStop(0, 'rgba(255,255,255,0.16)');
+                gg.addColorStop(0.38, 'rgba(255,255,255,0.02)');
+                gg.addColorStop(1, 'rgba(0,10,25,0.22)');
+                ctx.fillStyle = gg;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x+5, y+5+bob, w-10, h-10, Math.min(w,h)*0.30*0.6);
+                else ctx.rect(x+5, y+5+bob, w-10, h-10);
+                ctx.fill();
+            }
+
+            // crash + settle sparkle particles
+            drawSparkles();
+            crashFx = crashFx.filter(p => p.life > 0);
+            crashFx.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.025;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.col;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+
+            requestAnimationFrame(render);
+        }
+
+        function crashBurst(c, r) {
+            const { x, y, w, h } = cellRect(c, r, canvas.width, canvas.height);
+            for (let i = 0; i < 12; i++) {
+                const a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 3;
+                crashFx.push({ x: x+w/2, y: y+h/2, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp-1.5,
+                    s: 2+Math.random()*3, life: 1, col: ['#00F0FF','#FF00E5','#E0B0FF'][i%3] });
+            }
+        }
+
+        // ---------- REAL REEL SPIN ----------
+        function startReelSpin() {
+            const now = performance.now();
+            const per = Math.max(360, Math.min(1500, 950 / speed()));   // per-column spin
+            const stag = Math.max(90, Math.min(520, 230 / speed()));    // column stagger
+            const settle = Math.max(140, 300 / speed());
+            fsReelGlow = !!inFreeSpins;
+            reelSymbols = [];
+            for (let c = 0; c < COLS; c++) {
+                const col = [];
+                for (let i = 0; i < 16 + Math.floor(Math.random()*4); i++) col.push(POOL[Math.floor(Math.random()*POOL.length)]);
+                for (let r = 0; r < ROWS; r++) col.push(grid.get(c, r));   // final rows at the bottom
+                reelSymbols[c] = col;
+            }
+            reelSpin = { t0: now, per, stag, settle, done: false, doneAt: 0, settled: 0, flashCol: new Map() };
+            settleSparkles = [];
+        }
+
+        function sparkleBurst(c, strong) {
+            const { x, y, w, h } = cellRect(c, 0, canvas.width, canvas.height);
+            const b = cellRect(c, ROWS-1, canvas.width, canvas.height);
+            const stripH = (b.y + b.h) - y;
+            const n = strong ? 22 : 10;
+            const cols = strong ? ['#FF55CC','#00F0FF','#FFFFFF','#00E0FF'] : ['#B0FFFF','#00F0FF','#E0B0FF'];
+            for (let i = 0; i < n; i++) {
+                const cy = y + Math.random()*stripH;
+                settleSparkles.push({ x: x + w/2 + (Math.random()-0.5)*w, y: cy,
+                    vx:(Math.random()-0.5)*2, vy: -Math.random()*2.4 - 0.6,
+                    life: 1, s: 1.5+Math.random()*2.5, col: cols[i%cols.length] });
+            }
+        }
+
+        function reelColumnDone(c) {   // true when reel settled to final board
+            const rs = reelSpin; if (!rs) return true;
+            // CHANGED animation: columns settle RIGHT→LEFT (reversed stagger)
+            const start = rs.t0 + (COLS - 1 - c) * rs.stag;
+            return (performance.now() - start) / rs.per >= 1;
+        }
+
+        // draw the scrolling strip for a spinning column; also triggers settle FX
+        function renderReelStrip(c, W, H, now) {
+            const rs = reelSpin; if (!rs) return;
+            // CHANGED: matches the reversed settle order above
+            const start = rs.t0 + (COLS - 1 - c) * rs.stag;
+            const pc = Math.max(0, Math.min(1, (now - start) / rs.per));
+            const a = cellRect(c, 0, W, H);
+            const b = cellRect(c, ROWS-1, W, H);
+            const colX = a.x, colW = a.w, stripH = (b.y + b.h) - a.y;
+            const cellH = stripH / ROWS;
+
+            if (pc >= 1) {
+                if (!rs.flashCol.has(c)) {
+                    rs.flashCol.set(c, now);
+                    sparkleBurst(c, fsReelGlow);
+                    for (let r = 0; r < ROWS; r++)
+                        cellAnim[c + ',' + r] = { type: 'reveal', t: -r*0.08 };
+                }
+                // settle glow fade (rising gradient flash)
+                const ft = Math.max(0, 1 - (now - rs.flashCol.get(c)) / rs.settle);
+                if (ft > 0) {
+                    const g = ctx.createLinearGradient(0, a.y + stripH, 0, a.y);
+                    g.addColorStop(0, 'rgba(0,240,255,0)');
+                    g.addColorStop(0.5, (fsReelGlow ? 'rgba(255,85,200,' : 'rgba(0,240,255,') + (0.34*ft) + ')');
+                    g.addColorStop(1, 'rgba(255,255,255,0)');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(colX, a.y, colW, stripH);
+                }
+                return;
+            }
+
+            // ---- column still scrolling ----
+            const list = reelSymbols[c] || [];
+            if (!list.length) return;
+            const speedKm = Math.min(6, 2.6 + pc*1.4) * speed();   // decelerate as it settles
+            const scrollPix = (now * 0.05 * speedKm) % cellH;
+            const idxBase = Math.floor((now * 0.05 * speedKm) / cellH);
+            ctx.save();
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(colX+1, a.y-1, colW-2, stripH+2, Math.min(colW,cellH)*0.28);
+            else ctx.rect(colX+1, a.y-1, colW-2, stripH+2);
+            ctx.clip();
+            for (let i = 0; i < ROWS + 2; i++) {
+                const sy = a.y - cellH + scrollPix + i*cellH;
+                if (sy > b.y + b.h) break;
+                const sym = list[(idxBase + i) % list.length] || POOL[0];
+                let al = 1;
+                if (i === 0) al = 0.35;
+                if (sy + cellH > b.y + b.h) al = 0.3;
+                if (fsReelGlow) al = Math.min(1, al + 0.15);
+                drawSvgSym(ctx, sym, colX, sy, colW, cellH, al, 0.30);
+            }
+            if (fsReelGlow) {
+                const g = ctx.createLinearGradient(a.y, 0, b.y + b.h, 0);
+                g.addColorStop(0, 'rgba(255,85,200,0.18)');
+                g.addColorStop(0.5, 'rgba(0,240,255,0.1)');
+                g.addColorStop(1, 'rgba(0,224,255,0.18)');
+                ctx.fillStyle = g;
+                ctx.fillRect(colX, a.y, colW, stripH);
+            }
+            ctx.restore();
+        }
+
+        // settle detection → cascade transition
+        function tickReel(now) {
+            const rs = reelSpin; if (!rs) return;
+            rs.settled = 0;
+            for (let c = 0; c < COLS; c++) if (reelColumnDone(c)) rs.settled++;
+            if (rs.settled >= COLS) {
+                if (!rs.done) { rs.done = true; rs.doneAt = now; }
+                if (now - rs.doneAt > rs.settle + 120/speed()) {
+                    reelSpin = null;
+                    if (busy) setTimeout(cascadeChain, 60/speed());
+                }
+            }
+        }
+
+        // draw settle + crash sparkle particles
+        function drawSparkles() {
+            settleSparkles = settleSparkles.filter(p => p.life > 0);
+            settleSparkles.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life -= 0.035;
+                const tw = Math.abs(Math.sin(p.life * 20));
+                ctx.globalAlpha = Math.max(0, p.life) * (0.4 + 0.6*tw);
+                ctx.fillStyle = p.col;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s * (0.6 + 0.6*(1-p.life)), 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // ===== SAFE CASCADE LOOP =====
+        // one evaluation per step, crash ONLY winners, refill ONLY those
+        // cells, hard cap on chain length — game can never run away.
+        function cascadeChain() {
+            let guard = 0;
+            const step = () => {
+                if (guard++ > SE.MAX_CASCADE) { endChain(); return; }
+
+                const res = SE.evalAll(grid, T, state.bet, { lines: LINES, megas });
+                let extra = 1;
+                // wilds always contribute; simple global boost by wild count
+                grid.all().forEach(x => { if (T[x.id] && T[x.id].wild) extra += 0.5; });
+
+                res.final = res.total > 0 ? Math.round(res.total * tumbleMult * multiplier * extra) : 0;
+
+                if (res.final > 0) {
+                    const paid = res.final;
+                    tumbleMult = Math.min(20, tumbleMult + 1);
+                    game.setInfo('×' + tumbleMult);
+                    state.balance += paid;
+                    game.updateBalance();
+                    spinWin += paid;
+                    sessionWin += paid;
+                    game.animateWinDisplay(paid);
+                    game.playWinSound(paid);
+                    // small banner per cascade step; BIG/MEGA/SUPER shown at spin end
+                    if (!tierFor(spinWin)) {
+                        game.showWinOverlay(paid,
+                            tumbleMult >= 5 ? 'MEGA TUMBLE!' : tumbleMult >= 3 ? 'BIG TUMBLE!' : 'TUMBLE WIN!',
+                            `×${tumbleMult} cascade`);
+                    }
+                    if (paid >= state.bet * 15) { confetti.spawn(70); game.shake(); }
+
+                    // collect winner cells — never the sticky scatter
+                    winCells = new Set();
+                    res.all.forEach(w => (w.positions || []).forEach(([c, r]) => {
+                        const id = grid.get(c, r);
+                        if (T[id] && !T[id].scatter) winCells.add(c + ',' + r);
+                    }));
+
+                    // crash FX + anim on matched only
+                    winCells.forEach(k => {
+                        const [c, r] = k.split(',').map(Number);
+                        crashBurst(c, r);
+                        cellAnim[k] = { type: 'crash', t: 0 };
+                    });
+                    game.playBonusSound();
+
+                    // wild transform: 12% a winner becomes wild (sticky visual)
+                    winCells.forEach(k => {
+                        if (Math.random() < 0.12) toDropWild.set(k, WILD_ID);
+                    });
+
+                    setTimeout(() => {
+                        const pos = [...winCells].map(k => k.split(',').map(Number));
+                        // drop wilds first where transformed
+                        toDropWild.forEach((wid, k) => {
+                            const [c, r] = k.split(',').map(Number);
+                            grid.set(c, r, wid);
+                            cellAnim[k] = { type: 'drop', t: 0 };
+                        });
+                        const remaining = pos.filter(([c, r]) => !toDropWild.has(c + ',' + r));
+                        toDropWild.clear();
+                        SE.replaceCrashed(grid, remaining, POOL);
+                        remaining.forEach(([c, r]) => cellAnim[c + ',' + r] = { type: 'drop', t: 0 });
+                        setTimeout(step, 500 / speed());
+                    }, 340 / speed());
+                } else {
+                    endChain();
+                }
+            };
+            const endChain = () => {
+                if (!inFreeSpins) {
+                    // scatter check for free spins
+                    const sca = SE.evalScatter(grid, T, state.bet);
+                    if (sca.freeSpins) {
+                        freeSpins = sca.freeSpins;
+                        const n = freeSpins;
+                        const hadWin = spinWin > 0;   // did any icon match this spin?
+                        // ---- SCATTER BONUS SEQUENCE ----
+                        scatterBounceT = performance.now();
+                        game.showFeature(`SCATTER! ${n} FREE SPINS`);
+                        game.playBonusSound();
+                        const startFree = () => {
+                            busy = false;
+                            setTimeout(() => doSpin(), 250 / speed());
+                        };
+                        if (hadWin) {
+                            // WIN (icons matched) → FREE-SPINS popup → transaction → free-spin (win) reels
+                            showWinGif(spinWin, () =>
+                                showFreeSpinPopup(n, () =>
+                                    showTx(() => {
+                                        multiplier = Math.min(128, multiplier * 2);
+                                        updateMult(true);
+                                        setBg('bg10');
+                                        inFreeSpins = true;
+                                        startFree();
+                                    })
+                                )
+                            );
+                        } else {
+                            // scatter but NO icons matched → skip the fanfare,
+                            // just ×2 + FREE-SPINS popup and keep the game rolling
+                            multiplier = Math.min(128, multiplier * 2);
+                            updateMult(true);
+                            setBg('bg10');
+                            inFreeSpins = true;
+                            showFreeSpinPopup(n, startFree);
+                        }
+                        return;
+                    }
+                }
+                if (inFreeSpins && freeSpins > 0) {
+                    busy = false;
+                    setTimeout(() => doSpin(), 900 / speed());
+                } else {
+                    if (inFreeSpins) { inFreeSpins = false; setBg('bg11'); }  // return to normal bg
+                    const tier = tierFor(spinWin);
+                    if (tier) {
+                        // ---- BIG / MEGA / SUPER WIN SEQUENCE ----
+                        // transaction.gif → win.gif + rolling counter of total win
+                        if (tier) setBg('bg10');   // BIG WIN → bg10 background
+                        game.setSpinning(true); busy = true;
+                        showTx(() => {
+                            showWinGif(spinWin, () => {
+                                setBg('bg11');     // restore normal background
+                                tumbleMult = 1;
+                                game.setInfo('1x');
+                                busy = false;
+                                game.finishSpin();
+                            });
+                        });
+                        return;
+                    }
+                    tumbleMult = 1;
+                    game.setInfo('1x');
+                    busy = false;
+                    game.finishSpin();
+                }
+            };
+            step();
+        }
+        const toDropWild = new Map();
+
+        // ===== SPIN =====
+        function doSpin() {
+            if (busy) return;
+            const free = inFreeSpins && freeSpins > 0;
+            if (!free) {
+                if (state.balance < state.bet) { toast.show('Insufficient Balance', 'Lower bet or reset.'); return; }
+                state.balance -= state.bet;
+                setBg('bg11');                 // back to normal background
+                spinCount++;
+                if (spinCount % 19 === 0) forceScatterSpin = true;   // GUARANTEED scatter
+            } else freeSpins--;
+            game.updateBalance();
+            game.playSpinSound();
+            game.setSpinning(true);
+            busy = true;
+            winCells = new Set();
+            spinWin = 0;                      // reset per-spin accumulated win
+            tumbleMult = 1;
+
+            rollMultiplier();                 // random multiplier rolls like a reel each spin
+
+            buildBoard();
+            // restart reel-spin animation (columns scroll & settle one by one)
+            startReelSpin();
+        }
+
+        game.setOnSpin(doSpin);
+        requestAnimationFrame(render);
+    };
+    </script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

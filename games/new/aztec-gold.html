@@ -1,0 +1,2366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aztec Gold — Hold & Win</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --jungle-night:#0a1f10;
+  --jungle-deep:#0f2a17;
+  --jungle-mid:#164025;
+  --jungle-soft:#1f5632;
+  --gold:#e6b800;
+  --gold-2:#ffd700;
+  --gold-3:#fff3a0;
+  --gold-dark:#8a6a00;
+  --jade:#3eb87d;
+  --jade-2:#6ee7b7;
+  --stone:#8b8878;
+  --stone-2:#d4cfc0;
+  --blood:#b91c1c;
+  --blood-2:#ef4444;
+  --sky:#38bdf8;
+  --text:#f5f0dd;
+  --text-dim:#8fa888;
+  --radius:14px;
+  --radius-lg:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Rajdhani',system-ui,sans-serif;
+  background:var(--jungle-night);color:var(--text);
+  overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;user-select:none;
+}
+
+/* ---------- GIF background ---------- */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#0a1f10 center/cover no-repeat url('../../assets/bg11.gif');
+  transition:filter .7s, opacity .7s;
+  filter:brightness(.5) saturate(1.3) hue-rotate(80deg);
+  opacity:.9;
+}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.22),transparent 55%),
+    radial-gradient(ellipse at 20% 90%,rgba(62,184,125,.18),transparent 55%),
+    radial-gradient(ellipse at 85% 85%,rgba(185,28,28,.14),transparent 55%),
+    linear-gradient(180deg,rgba(10,31,16,.55),rgba(10,31,16,.9));
+}
+#bgLayer.free{filter:brightness(.6) saturate(1.4) hue-rotate(60deg)}
+#bgLayer.big{filter:brightness(.72) saturate(1.5) hue-rotate(120deg)}
+#bgLayer.holdwin{filter:brightness(.7) saturate(1.6) hue-rotate(40deg)}
+
+/* jungle particles (CSS-only) */
+#spores{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+#spores span{
+  position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,rgba(255,243,160,.95),rgba(230,184,0,.4) 60%,transparent 75%);
+  box-shadow:0 0 6px rgba(255,215,0,.6);
+  animation:sporeRise linear infinite;
+}
+@keyframes sporeRise{
+  0%{transform:translateY(0) translateX(0);opacity:0}
+  10%{opacity:.9}
+  90%{opacity:.4}
+  100%{transform:translateY(-110vh) translateX(-30px);opacity:0}
+}
+
+/* ---------- Shell ---------- */
+#game{
+  position:relative;z-index:5;
+  width:min(1150px,97vw);height:min(820px,96vh);
+  background:linear-gradient(155deg,rgba(22,64,37,.86),rgba(10,31,16,.94));
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(230,184,0,.42);
+  border-radius:var(--radius-lg);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.9),
+    inset 0 0 80px rgba(31,86,50,.2),
+    0 0 100px rgba(230,184,0,.16),
+    0 0 40px rgba(62,184,125,.14);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(120deg,transparent 42%,rgba(255,243,160,.12) 50%,transparent 58%);
+  animation:shine 9s ease-in-out infinite;
+}
+@keyframes shine{0%,58%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+
+/* aztec pattern top border */
+#game::after{
+  content:"";position:absolute;left:12px;right:12px;top:6px;height:6px;pointer-events:none;z-index:58;
+  background-image:
+    repeating-linear-gradient(90deg,
+      var(--gold) 0 4px,
+      transparent 4px 8px,
+      var(--stone-2) 8px 12px,
+      transparent 12px 16px,
+      var(--gold) 16px 18px,
+      transparent 18px 22px
+    );
+  filter:drop-shadow(0 0 4px var(--gold));
+  border-radius:3px;
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px 12px;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(10,31,16,.8),transparent);
+  border-bottom:1px solid rgba(230,184,0,.24);
+  position:relative;z-index:2;
+}
+.brand{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.4rem;letter-spacing:3px;
+  color:var(--gold-2);
+  display:flex;align-items:center;gap:10px;
+  text-shadow:0 0 18px rgba(255,215,0,.75),0 0 30px rgba(62,184,125,.4);
+}
+.brand .glyph{
+  font-size:1.2rem;
+  filter:drop-shadow(0 0 6px var(--gold-2)) drop-shadow(0 0 14px var(--jade));
+  animation:glyphSpin 4s linear infinite;
+}
+@keyframes glyphSpin{to{transform:rotate(360deg)}}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.55);
+  border:1px solid rgba(230,184,0,.5);color:var(--gold-2);
+  font-size:.7rem;font-weight:600;letter-spacing:1.5px;cursor:pointer;
+  transition:.2s;font-family:'Rajdhani',sans-serif;text-transform:uppercase;
+}
+.pill:hover{background:rgba(230,184,0,.22);color:#fff;transform:translateY(-1px);
+  box-shadow:0 0 14px rgba(230,184,0,.55)}
+.pill.on{background:rgba(62,184,125,.3);border-color:var(--jade-2);color:#fff;
+  box-shadow:0 0 14px var(--jade-2)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--gold-2) 50%),
+    linear-gradient(135deg,var(--gold-2) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+  background-size:5px 5px;background-repeat:no-repeat}
+
+/* ---------- JACKPOT RIBBON ---------- */
+.jackpot-ribbon{
+  display:flex;gap:6px;padding:8px 22px;
+  background:linear-gradient(180deg,rgba(0,0,0,.5),transparent);
+  border-bottom:1px solid rgba(230,184,0,.16);
+  position:relative;z-index:2;
+  overflow-x:auto;scrollbar-width:none;
+}
+.jackpot-ribbon::-webkit-scrollbar{display:none}
+.jp-chip{
+  flex:1;min-width:90px;
+  padding:5px 10px;border-radius:8px;
+  background:linear-gradient(160deg,rgba(230,184,0,.14),rgba(138,106,0,.06));
+  border:1px solid rgba(230,184,0,.35);
+  text-align:center;
+}
+.jp-chip .k{
+  font-size:.55rem;letter-spacing:1.8px;color:var(--gold-2);
+  font-weight:700;text-transform:uppercase;
+}
+.jp-chip .v{
+  font-family:'Cinzel Decorative',serif;font-size:.95rem;
+  font-weight:900;color:#fff;margin-top:1px;
+  font-variant-numeric:tabular-nums;letter-spacing:1px;
+}
+.jp-chip.mini .v{color:var(--jade-2)}
+.jp-chip.minor .v{color:var(--sky)}
+.jp-chip.major .v{color:#c084fc}
+.jp-chip.grand .v{color:var(--gold-2)}
+.jp-chip.grand{
+  background:linear-gradient(160deg,rgba(255,215,0,.28),rgba(185,28,28,.12));
+  border-color:var(--gold-2);
+  animation:grandPulse 2s ease-in-out infinite;
+}
+@keyframes grandPulse{0%,100%{box-shadow:0 0 6px rgba(255,215,0,.4)}50%{box-shadow:0 0 20px rgba(255,215,0,.9)}}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;display:grid;grid-template-columns:1fr 280px;gap:14px;padding:14px;
+  min-height:0;position:relative;z-index:2}
+
+/* Board wrap — same structure as working games */
+.board-wrap{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(22,64,37,.6),rgba(10,31,16,.9));
+  border:1px solid rgba(230,184,0,.38);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.75),
+    0 0 40px rgba(31,86,50,.28),
+    0 0 30px rgba(230,184,0,.14);
+  overflow:hidden;min-height:0;
+  transition:border-color .4s ease,box-shadow .4s ease;
+}
+.board-wrap::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px);
+}
+.board-wrap.holdwin{
+  border-color:var(--gold-2);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.75),
+    0 0 60px rgba(255,215,0,.55),
+    0 0 100px rgba(255,215,0,.3);
+  animation:holdwinPulse 1.6s ease-in-out infinite;
+}
+@keyframes holdwinPulse{
+  0%,100%{box-shadow:inset 0 0 80px rgba(0,0,0,.75),0 0 60px rgba(255,215,0,.55),0 0 100px rgba(255,215,0,.3)}
+  50%{box-shadow:inset 0 0 80px rgba(0,0,0,.75),0 0 80px rgba(255,215,0,.85),0 0 140px rgba(255,215,0,.45)}
+}
+canvas#board{display:block;width:100%;height:100%;position:relative;z-index:2}
+
+/* Respin counter overlay */
+#respinCounter{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:22;
+  padding:8px 24px;border-radius:30px;
+  background:linear-gradient(160deg,rgba(230,184,0,.94),rgba(10,31,16,.9));
+  border:2px solid #fff;color:#0a1f10;
+  font-family:'Cinzel Decorative',serif;font-weight:900;
+  letter-spacing:2px;font-size:1rem;
+  text-shadow:0 0 6px rgba(255,255,255,.6);
+  box-shadow:0 0 30px rgba(255,215,0,.9),0 0 60px rgba(62,184,125,.5);
+  display:none;
+}
+#respinCounter.on{display:block;animation:respPulse 1s ease-in-out infinite}
+@keyframes respPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.08)}}
+#respinCounter .num{
+  font-size:1.5rem;margin-left:6px;color:#fff;
+  text-shadow:0 0 12px #fff,0 0 20px var(--gold-2);
+}
+#respinCounter .lbl{
+  font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:3px;color:#3a2408;
+}
+
+/* Hold & Win status */
+#holdWinStatus{
+  position:absolute;top:14px;right:14px;z-index:22;
+  padding:6px 14px;border-radius:20px;
+  background:linear-gradient(160deg,rgba(185,28,28,.92),rgba(10,31,16,.9));
+  border:2px solid var(--gold-2);color:#fff;
+  font-family:'Cinzel Decorative',serif;font-weight:900;
+  letter-spacing:2px;font-size:.75rem;
+  box-shadow:0 0 24px rgba(185,28,28,.8);
+  display:none;
+}
+#holdWinStatus.on{display:block;animation:respPulse 1.2s ease-in-out infinite}
+
+/* ---------- DASHBOARD ---------- */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0}
+.stat{
+  background:linear-gradient(160deg,rgba(22,64,37,.82),rgba(10,31,16,.92));
+  border:1px solid rgba(230,184,0,.35);
+  border-radius:var(--radius);padding:12px 14px;position:relative;overflow:hidden;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(230,184,0,.14) 50%,transparent 60%);
+  animation:shine 6s ease-in-out infinite;
+}
+.stat .lbl{font-size:.6rem;letter-spacing:2.5px;color:var(--text-dim);
+  font-weight:600;text-transform:uppercase}
+.stat .val{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.5rem;
+  margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.stat.balance .val{color:var(--jade-2);text-shadow:0 0 14px rgba(110,231,183,.8)}
+.stat.win .val{color:var(--gold-2);text-shadow:0 0 14px rgba(255,215,0,.8)}
+.stat .val.pop{animation:pop .55s cubic-bezier(.2,.7,.3,1.6)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3);filter:brightness(1.8)}100%{transform:scale(1)}}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(230,184,0,.4);
+  border-radius:12px;padding:6px;
+}
+.bet-row .btn{
+  width:38px;height:38px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--gold-3),var(--gold-2));
+  border:none;border-radius:50%;color:#3a2408;font-weight:900;font-size:1.15rem;
+  cursor:pointer;transition:.15s;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.7),
+    0 0 12px rgba(230,184,0,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 22px var(--gold-2)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7);box-shadow:none}
+.bet-row .amt{
+  flex:1;text-align:center;font-family:'Cinzel Decorative',serif;
+  font-weight:900;font-size:1.25rem;color:#fff;font-variant-numeric:tabular-nums;
+  letter-spacing:2px;
+}
+.bet-row .amt small{display:block;font-size:.55rem;color:var(--text-dim);
+  letter-spacing:1.8px;font-weight:600;margin-top:0;font-family:'Rajdhani',sans-serif;
+  text-transform:uppercase}
+
+.preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.preset-row button{
+  padding:6px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(230,184,0,.15),rgba(138,106,0,.08));
+  border:1px solid rgba(230,184,0,.4);color:var(--gold-2);
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.preset-row button:hover{background:rgba(230,184,0,.28);color:#fff;box-shadow:0 0 12px rgba(230,184,0,.5)}
+
+.auto-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.auto-row button{
+  padding:6px 2px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(62,184,125,.14),rgba(31,86,50,.06));
+  border:1px solid rgba(62,184,125,.4);color:var(--jade-2);
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:.15s;
+}
+.auto-row button:hover{background:rgba(62,184,125,.28);color:#fff}
+.auto-row button.active{background:linear-gradient(160deg,var(--jade),var(--jade-2));
+  color:#04241a;border-color:#fff;box-shadow:0 0 14px rgba(62,184,125,.7)}
+
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:10px 6px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(230,184,0,.16),rgba(138,106,0,.08));
+  border:1px solid rgba(230,184,0,.45);color:var(--gold-2);
+  font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.mini:hover{background:rgba(230,184,0,.28);color:#fff;box-shadow:0 0 14px rgba(230,184,0,.6)}
+.mini.on{background:linear-gradient(160deg,var(--blood),var(--blood-2));
+  color:#fff;border-color:#fff;box-shadow:0 0 22px var(--blood);
+  animation:respPulse 1.3s ease-in-out infinite}
+
+.spin{
+  padding:22px 10px;border-radius:18px;border:none;cursor:pointer;
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.5rem;letter-spacing:5px;
+  color:#3a2408;
+  background:radial-gradient(circle at 32% 28%,#fff8d6 0%,var(--gold-2) 42%,var(--gold-dark) 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.5),0 0 45px rgba(255,215,0,.6),
+    inset 0 2px 0 rgba(255,255,255,.7);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(var(--gold-2),#fff,var(--jade),var(--blood),var(--gold-2));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spinGlow 3.5s linear infinite;opacity:.75;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.spin:hover:not(:disabled){transform:translateY(-2px);
+  box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 70px var(--gold-2),
+  0 0 110px rgba(62,184,125,.5),inset 0 2px 0 rgba(255,255,255,.7)}
+.spin:active:not(:disabled){transform:translateY(3px);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px var(--gold-2)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+.spin .autocnt{display:block;font-size:.6rem;letter-spacing:2px;
+  color:rgba(0,0,0,.65);margin-top:2px;font-weight:700;font-family:'Rajdhani',sans-serif}
+.spin.hold{
+  background:radial-gradient(circle at 32% 28%,#d6ffe0 0%,var(--jade-2) 42%,#0f5c39 100%);
+  color:#04241a;
+}
+
+/* ---------- MODALS ---------- */
+.modal{
+  position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(2,8,4,.94);backdrop-filter:blur(10px);
+  padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  width:min(880px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(22,64,37,.98),rgba(10,31,16,.98));
+  border:2px solid rgba(230,184,0,.6);
+  border-radius:20px;padding:24px 28px;
+  box-shadow:0 0 60px rgba(230,184,0,.35),0 0 90px rgba(62,184,125,.25);
+}
+.modal-card h2{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1.5rem;
+  letter-spacing:3px;color:var(--gold-2);margin-bottom:12px;
+  text-shadow:0 0 20px rgba(255,215,0,.6);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.modal-card h2 button{
+  background:rgba(230,184,0,.15);border:1px solid var(--gold-2);
+  color:var(--gold-2);padding:6px 14px;border-radius:10px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:1px;
+}
+.modal-card h2 button:hover{background:rgba(230,184,0,.32);color:#fff}
+.modal-card p{line-height:1.7;color:#c9dfc9;font-size:.9rem;margin:8px 0}
+.modal-card .rules{color:#a8c2a8;font-size:.87rem}
+.modal-card .rules b{color:var(--gold-2)}
+
+.sym-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;margin:16px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.5);border:1px solid rgba(230,184,0,.3);
+  border-radius:12px;padding:10px;text-align:center;
+}
+.sym-card .ic{
+  width:64px;height:64px;margin:0 auto 6px;
+  border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);border:1px solid rgba(230,184,0,.28);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.sym-card .nm{font-size:.65rem;color:#a8c2a8;letter-spacing:1.2px;
+  text-transform:uppercase;font-weight:700}
+.sym-card .pay{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:6px}
+.sym-card .pay div{
+  font-family:'Cinzel Decorative',serif;font-size:.72rem;
+  color:var(--gold-2);font-weight:900;letter-spacing:.5px;
+}
+.sym-card .pay div small{
+  display:block;font-size:.55rem;color:var(--text-dim);
+  font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:1px;
+}
+.sym-card.coin .ic{
+  background:radial-gradient(circle at 35% 30%,#fff6b0 0%,var(--gold-2) 45%,var(--gold-dark) 100%);
+  border-color:var(--gold-2);box-shadow:0 0 14px rgba(255,215,0,.7);
+}
+.sym-card.coin .pay div{color:var(--gold-3)}
+
+.coin-values{list-style:none;margin:12px 0}
+.coin-values li{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:.85rem;
+}
+.coin-values li b{
+  font-family:'Cinzel Decorative',serif;color:var(--gold-2);
+  font-weight:900;letter-spacing:1px;font-size:.95rem;
+}
+.coin-values li.mini b{color:var(--jade-2)}
+.coin-values li.minor b{color:var(--sky)}
+.coin-values li.major b{color:#c084fc}
+.coin-values li.grand b{color:var(--gold-2);text-shadow:0 0 10px rgba(255,215,0,.7)}
+
+.history{list-style:none;font-size:.78rem}
+.history li{display:flex;justify-content:space-between;gap:10px;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.history li b{color:var(--gold-2);font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:1px}
+.history li.loss b{color:#f87171}
+
+/* ---------- WIN OVERLAY ---------- */
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(10,31,16,.55),rgba(10,31,16,.93));
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+#winOv.on{display:flex;animation:fadeIn .25s ease}
+#winOv .box{
+  text-align:center;padding:32px 56px;border-radius:26px;
+  background:linear-gradient(160deg,rgba(22,64,37,.97),rgba(10,31,16,.97));
+  border:3px solid var(--gold-2);
+  box-shadow:0 0 90px var(--gold-2),0 0 130px rgba(62,184,125,.5),
+    inset 0 0 50px rgba(230,184,0,.2);
+  animation:winPop .6s cubic-bezier(.2,.7,.3,1.5);
+  position:relative;overflow:hidden;
+}
+#winOv .box::before{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(transparent 30%,rgba(255,215,0,.38) 50%,transparent 70%);
+  animation:spinGlow 3s linear infinite;
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:2.1rem;letter-spacing:5px;
+  color:#fff;text-shadow:0 0 30px var(--gold-2),0 0 60px var(--blood);
+  position:relative;z-index:2;
+}
+#winOv .amt{
+  font-family:'Cinzel Decorative',serif;font-weight:900;font-size:2.7rem;
+  color:var(--gold-2);text-shadow:0 0 30px var(--gold-2),0 0 60px #fff;
+  margin-top:6px;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+  letter-spacing:3px;
+}
+#winOv .sub{font-size:.72rem;color:var(--text-dim);letter-spacing:3px;
+  margin-top:12px;font-weight:600;text-transform:uppercase;position:relative;z-index:2}
+
+/* ---------- TOASTS ---------- */
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:950;
+  display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(22,64,37,.96),rgba(10,31,16,.96));
+  border:1px solid var(--gold-2);color:var(--gold-2);
+  font-size:.82rem;font-weight:700;letter-spacing:1.2px;
+  box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(255,215,0,.5);
+  animation:toastIn .3s ease,toastOut .3s ease 2.6s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .dash .stat{flex:1;min-width:120px;padding:8px 10px}
+  .dash .stat .val{font-size:1.1rem}
+  .controls{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .bet-row{flex:1 1 100%}
+  .preset-row{flex:1 1 100%}
+  .auto-row{flex:1 1 100%}
+  .mini-row{flex:1 1 45%}
+  .spin{flex:1 1 100%;padding:15px;font-size:1.25rem}
+  .brand{font-size:1rem;letter-spacing:2px}
+  .topbar{padding:10px 12px}
+  .pill{padding:5px 10px;font-size:.58rem}
+  .jackpot-ribbon{padding:6px 12px}
+  .jp-chip{min-width:74px;padding:4px 6px}
+  .jp-chip .v{font-size:.75rem}
+  #respinCounter{font-size:.8rem;padding:6px 16px}
+  #respinCounter .num{font-size:1.2rem}
+  #holdWinStatus{font-size:.62rem;padding:5px 10px;right:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  #spores{display:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="spores"></div>
+
+<div id="game">
+  <div class="topbar">
+    <div class="brand">
+      <span class="glyph">☼</span>
+      <span>AZTEC GOLD</span>
+      <span class="glyph">☼</span>
+    </div>
+    <div class="topbar-right">
+      <select id="speedSel" class="pill">
+        <option value="0.7">🐢 Slow</option>
+        <option value="1" selected>⚡ Normal</option>
+        <option value="1.6">🚀 Fast</option>
+        <option value="2.4">💨 Turbo</option>
+      </select>
+      <button class="pill" id="paytableBtn">Paytable</button>
+      <button class="pill" id="helpBtn">Rules</button>
+      <button class="pill" id="historyBtn">History</button>
+      <button class="pill" id="soundBtn">🔊</button>
+      <button class="pill" id="resetBtn">♻</button>
+    </div>
+  </div>
+
+  <div class="jackpot-ribbon">
+    <div class="jp-chip mini"><div class="k">Mini</div><div class="v" id="jpMini">0</div></div>
+    <div class="jp-chip minor"><div class="k">Minor</div><div class="v" id="jpMinor">0</div></div>
+    <div class="jp-chip major"><div class="k">Major</div><div class="v" id="jpMajor">0</div></div>
+    <div class="jp-chip grand"><div class="k">Grand</div><div class="v" id="jpGrand">0</div></div>
+  </div>
+
+  <div class="main">
+    <div class="board-wrap" id="boardWrap">
+      <div id="respinCounter">
+        <span class="lbl">RESPINS</span><span class="num" id="respinNum">3</span>
+      </div>
+      <div id="holdWinStatus">◆ HOLD &amp; WIN ◆</div>
+      <canvas id="board"></canvas>
+    </div>
+
+    <div class="dash">
+      <div class="stat balance">
+        <div class="lbl">Gold</div>
+        <div class="val" id="balanceVal">1,000</div>
+      </div>
+      <div class="stat win">
+        <div class="lbl">Last Haul</div>
+        <div class="val" id="winVal">0</div>
+      </div>
+
+      <div class="controls">
+        <div class="bet-row">
+          <button class="btn" id="betDown">−</button>
+          <div class="amt">
+            <span id="betVal">100</span>
+            <small>TOTAL BET</small>
+          </div>
+          <button class="btn" id="betUp">+</button>
+        </div>
+        <div class="preset-row">
+          <button data-preset="min">MIN</button>
+          <button data-preset="std">STD</button>
+          <button data-preset="max">MAX</button>
+        </div>
+        <div class="auto-row" id="autoRow">
+          <button data-auto="10">10</button>
+          <button data-auto="25" class="active">25</button>
+          <button data-auto="50">50</button>
+          <button data-auto="100">100</button>
+        </div>
+        <div class="mini-row">
+          <button class="mini" id="autoBtn">🔁 AUTO</button>
+          <button class="mini" id="stopBtn">⏹ STOP</button>
+        </div>
+        <button class="spin" id="spinBtn">
+          SPIN
+          <span class="autocnt" id="autoCnt"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYTABLE -->
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>☼ Paytable <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Regular wins form on the 10 <b>paylines</b> (3+ from reel 1, left to right). Payouts shown as <b>× line bet</b>. The <b>big wins</b> come from the HOLD &amp; WIN feature described below.</p>
+    <div class="sym-grid" id="paytableGrid"></div>
+    <p class="rules" style="margin-top:16px">
+      <b>◆ HOLD &amp; WIN (RESPINS) ◆</b><br>
+      When <b>5 or more golden coins</b> land anywhere, they lock in place and trigger <b>3 respins</b>. Every new coin that appears during respins also locks and <b>resets the respin counter to 3</b>.
+      <br>When respins end, all coin values are summed and paid. <b>Fill all 15 cells → GRAND JACKPOT!</b>
+    </p>
+    <ul class="coin-values" id="coinValuesList"></ul>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>☼ How To Play <button data-close>✕ CLOSE</button></h2>
+    <p>1. Set your bet with the + / − buttons or the MIN / STD / MAX presets.</p>
+    <p>2. Press <b>SPIN</b> or <b>SPACE</b> to spin the 5 reels.</p>
+    <p>3. Regular wins are paid on <b>10 paylines</b> (3+ matching symbols from reel 1).</p>
+    <p>4. <b>HOLD &amp; WIN:</b> When 5+ golden coins land, they lock in place and you get <b>3 respins</b>. Every new coin that appears <b>resets the counter to 3</b>. When respins end, all coin values are summed and paid.</p>
+    <p>5. Coins can be <b>regular multipliers</b> (1×–100× bet) or <b>jackpot coins</b>: MINI (50×), MINOR (200×), MAJOR (1000×).</p>
+    <p>6. <b>Fill all 15 cells</b> with coins to win the <b>GRAND JACKPOT</b> — <b>5000× bet</b>!</p>
+    <p>7. Pick your auto-spin count (10/25/50/100) and press AUTO. STOP cancels.</p>
+    <p style="color:var(--text-dim);font-size:.82rem;margin-top:14px">🎮 Virtual-credit demo — for entertainment only. Not for real-money wagering.</p>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>☼ Temple Records <button data-close>✕ CLOSE</button></h2>
+    <ul class="history" id="historyList"><li style="color:var(--text-dim)">No spins yet.</li></ul>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   AZTEC GOLD — Hold & Win Respins
+   ------------------------------------------------------------------
+   NEW WINNING SYSTEM (different from all previous games):
+     • Base game: 10 paylines for regular symbol wins
+     • HOLD & WIN: 5+ golden coins → 3 respins
+     • Sticky coins carry cash values that persist across respins
+     • Any new coin resets respins to 3
+     • Fill grid = GRAND JACKPOT
+   Sprite loader / RNG / boot sequence are byte-identical to working game.
+   ===================================================================== */
+
+const GIF_ASSETS = {
+  normal:    "../../assets/bg11.gif",
+  freeSpins: "../../assets/bg1.gif",
+  bigWin:    "../../assets/bg3.gif"
+};
+
+const CONFIG = {
+  reels: 5,
+  rows: 3,
+  startingBalance: 1000,
+  betSteps: [10, 20, 50, 100, 200, 500, 1000],
+  defaultBetIndex: 3,   // 100
+
+  autoSpinMax: 25,
+
+  // 10 paylines for base wins
+  paylines: [
+    [1,1,1,1,1],   // middle
+    [0,0,0,0,0],   // top
+    [2,2,2,2,2],   // bottom
+    [0,1,2,1,0],   // V
+    [2,1,0,1,2],   // ^
+    [0,0,1,0,0],
+    [2,2,1,2,2],
+    [1,0,0,0,1],
+    [1,2,2,2,1],
+    [0,1,0,1,0]
+  ],
+
+  // HOLD & WIN
+  holdWin: {
+    triggerCoins: 5,           // 5+ coins trigger the feature
+    initialRespins: 3,
+    resetOnNewCoin: true,
+    grandJackpotMultiplier: 5000,
+
+    // coin value pool — each entry {weight, value, type?}
+    // type can be 'cash' (default) or 'mini'/'minor'/'major'
+    coinValues: [
+      { weight: 40, value: 1,  type: "cash" },
+      { weight: 24, value: 2,  type: "cash" },
+      { weight: 16, value: 3,  type: "cash" },
+      { weight: 10, value: 5,  type: "cash" },
+      { weight: 6,  value: 8,  type: "cash" },
+      { weight: 3,  value: 10, type: "cash" },
+      { weight: 1.5, value: 15, type: "cash" },
+      { weight: 1,  value: 20, type: "cash" },
+      { weight: 0.5, value: 30, type: "cash" },
+      { weight: 0.3, value: 50, type: "cash" },
+      { weight: 0.15, value: 100, type: "cash" },
+      { weight: 0.4, value: 50,  type: "mini" },
+      { weight: 0.15, value: 200, type: "minor" },
+      { weight: 0.05, value: 1000, type: "major" }
+    ]
+  },
+
+  // How often a "golden coin" symbol appears on the reels
+  coinSymbolWeight: 4
+};
+
+/* ---------- SYMBOLS ---------- */
+/* Coin symbol is the sticky one. Other 8 are regular payline symbols. */
+const SYMBOLS = {
+  coin:    { id:"coin",    name:"Sun Coin",   sprite:2,  weight:0,   pay3:0, pay4:0, pay5:0, special:"coin" },
+  sundoor: { id:"sundoor", name:"Sun Gate",   sprite:15, weight:6,   pay3:50, pay4:200, pay5:1000 },
+  jaguar:  { id:"jaguar",  name:"Jaguar",     sprite:16, weight:9,   pay3:25, pay4:100, pay5:500 },
+  eagle:   { id:"eagle",   name:"Eagle",      sprite:17, weight:12,  pay3:15, pay4:60,  pay5:300 },
+  serpent: { id:"serpent", name:"Serpent",    sprite:18, weight:15,  pay3:10, pay4:40,  pay5:200 },
+  mask:    { id:"mask",    name:"Mask",       sprite:19, weight:18,  pay3:6,  pay4:25,  pay5:120 },
+  temple:  { id:"temple",  name:"Temple",     sprite:20, weight:22,  pay3:4,  pay4:15,  pay5:80 },
+  jade:    { id:"jade",    name:"Jade",       sprite:21, weight:26,  pay3:3,  pay4:10,  pay5:50 },
+  glyph:   { id:"glyph",   name:"Glyph",      sprite:22, weight:30,  pay3:2,  pay4:8,   pay5:30 }
+};
+const ORDER = ["coin","sundoor","jaguar","eagle","serpent","mask","temple","jade","glyph"];
+
+/* ---------- RNG ---------- */
+const RNG = (function() {
+  const buf = new Uint32Array(1);
+  const hasCrypto = (typeof crypto !== "undefined" && crypto.getRandomValues);
+  function uint32() {
+    if (hasCrypto) { crypto.getRandomValues(buf); return buf[0] >>> 0; }
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  function int(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error("RNG.int: " + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;
+    let r; do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  function weighted(items) {
+    const total = items.reduce((s, x) => s + x.weight, 0);
+    if (total <= 0) throw new Error("RNG.weighted: total 0");
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++) {
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted, uint32 };
+})();
+
+/* ---------- SPRITE LOADER ---------- */
+const SPRITE_COORDS = [
+  {x:25,y:402,w:82,h:64},{x:115,y:401,w:78,h:67},{x:199,y:403,w:78,h:61},
+  {x:287,y:402,w:75,h:66},{x:376,y:401,w:73,h:69},{x:25,y:477,w:79,h:58},
+  {x:116,y:474,w:77,h:60},{x:202,y:474,w:75,h:60},{x:289,y:481,w:66,h:46},
+  {x:372,y:477,w:79,h:60},{x:27,y:569,w:69,h:84},{x:112,y:568,w:66,h:85},
+  {x:197,y:569,w:65,h:84},{x:280,y:569,w:65,h:84},{x:479,y:125,w:67,h:68},
+  {x:562,y:207,w:66,h:67},{x:716,y:205,w:68,h:66},{x:799,y:207,w:63,h:62},
+  {x:881,y:204,w:58,h:70},{x:973,y:125,w:76,h:69},{x:1058,y:126,w:71,h:71},
+  {x:1141,y:126,w:71,h:69},{x:1224,y:130,w:71,h:64},{x:1304,y:126,w:76,h:68},
+  {x:976,y:606,w:128,h:49}
+];
+
+const SpriteLoader = (function() {
+  const img = new Image();
+  let ready = false;
+  const url = "../../assets/ultimate_multi_slot_sprite.jpg";
+  function load() {
+    return new Promise(resolve => {
+      img.onload = () => { ready = true; resolve(true); };
+      img.onerror = () => { console.warn("[sprite] missing " + url); resolve(false); };
+      img.src = url;
+      setTimeout(() => { if (!ready) resolve(false); }, 8000);
+    });
+  }
+  function drawTo(c, idx, dx, dy, dw, dh, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const s = SPRITE_COORDS[idx];
+    c.save(); c.globalAlpha = alpha;
+    if (ready && s) {
+      try { c.drawImage(img, s.x, s.y, s.w, s.h, dx, dy, dw, dh); }
+      catch (e) { fallback(c, idx, dx, dy, dw, dh); }
+    } else fallback(c, idx, dx, dy, dw, dh);
+    c.restore();
+  }
+  function fallback(c, idx, x, y, w, h) {
+    const p = ["#e6b800","#3eb87d","#b91c1c","#38bdf8","#8b8878","#ffd700","#6ee7b7","#d4cfc0"];
+    c.fillStyle = p[idx % p.length];
+    c.beginPath(); c.arc(x+w/2, y+h/2, Math.min(w,h)*0.4, 0, Math.PI*2); c.fill();
+    c.fillStyle = "#0a1f10";
+    c.font = "bold " + Math.floor(h*0.32) + "px Cinzel,Arial";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(String(idx+1), x+w/2, y+h/2);
+  }
+  function dataUrl(idx, w, h) {
+    if (w === undefined) w = 64;
+    if (h === undefined) h = 64;
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    drawTo(c.getContext("2d"), idx, 0, 0, w, h, 1);
+    return c.toDataURL();
+  }
+  return { load, drawTo, dataUrl, isReady: () => ready };
+})();
+
+/* =====================================================================
+   LINE ENGINE (base game)
+   ===================================================================== */
+const LineEngine = (function() {
+  function matchLine(symbols) {
+    // anchor = first symbol (coins never pay on lines)
+    const first = symbols[0];
+    if (first === "coin") return null;
+    const def = SYMBOLS[first];
+    if (!def || def.pay3 === 0) return null;
+    let count = 0;
+    for (let i = 0; i < symbols.length; i++) {
+      if (symbols[i] === first) count++;
+      else break;
+    }
+    if (count < 3) return null;
+    const payKey = count === 5 ? "pay5" : count === 4 ? "pay4" : "pay3";
+    const pay = def[payKey] || 0;
+    if (pay <= 0) return null;
+    return { symbol: first, count, pay };
+  }
+
+  function evaluateAll(board, lineBet, cfg) {
+    const wins = [];
+    let total = 0;
+    for (let li = 0; li < cfg.paylines.length; li++) {
+      const rows = cfg.paylines[li];
+      const syms = rows.map((row, reel) => board[reel][row]);
+      const m = matchLine(syms);
+      if (!m) continue;
+      const cells = [];
+      for (let k = 0; k < m.count; k++) cells.push([k, rows[k]]);
+      const payout = m.pay * lineBet;
+      wins.push({ line: li, symbol: m.symbol, count: m.count,
+                  pay: m.pay, cells, payout });
+      total += payout;
+    }
+    return { wins, total };
+  }
+
+  return { matchLine, evaluateAll };
+})();
+
+/* =====================================================================
+   COIN ENGINE — coin value generation and payout computation
+   ===================================================================== */
+const CoinEngine = (function() {
+  function rollCoin() {
+    const pick = RNG.weighted(CONFIG.holdWin.coinValues);
+    return { type: pick.type, value: pick.value };
+  }
+
+  function coinCredits(coin, bet) {
+    return Math.round(coin.value * bet / 100);   // value is bet% × 100
+    // Actually: value represents MULTIPLIER (1 = 1×). But we want value to be
+    // shown as a multiplier of the bet directly, so use value directly.
+  }
+
+  // Multiplier-based: value IS the multiplier (e.g. value 5 → 5× bet)
+  // 1 credit = value × bet. Round to nearest integer.
+  function coinCreditsMultiplier(coin, bet) {
+    return Math.round(coin.value * bet);
+  }
+
+  return {
+    rollCoin,
+    coinCredits: coinCreditsMultiplier
+  };
+})();
+
+/* =====================================================================
+   GAME ENGINE
+   ===================================================================== */
+const GameEngine = (function() {
+  const state = {
+    phase: "idle",                 // idle | spinning | settling | respinning | respin_settling | collecting
+    balance: CONFIG.startingBalance,
+    betIndex: CONFIG.defaultBetIndex,
+    board: null,                   // [reel][row] = symbol id
+    // Hold & Win state
+    inHoldWin: false,
+    coins: null,                   // Map "reel,row" → { type, value, credits }
+    respins: 0,
+    // generic
+    lastWin: 0,
+    lastNet: 0,
+    autoActive: false,
+    autoSpinsLeft: 0,
+    autoSpinTarget: 25,
+    // jackpot values (display only, computed from bet)
+    jackpots: {
+      mini:  50,
+      minor: 200,
+      major: 1000,
+      grand: CONFIG.holdWin.grandJackpotMultiplier
+    }
+  };
+
+  const bet = () => CONFIG.betSteps[state.betIndex];
+  const lineBet = () => bet() / CONFIG.paylines.length;
+
+  function newBoard() {
+    const b = [];
+    for (let r = 0; r < CONFIG.reels; r++) {
+      const col = [];
+      for (let row = 0; row < CONFIG.rows; row++) col.push("glyph");
+      b.push(col);
+    }
+    return b;
+  }
+
+  function generateBoard() {
+    // Coin has its own weight (from CONFIG.coinSymbolWeight)
+    const pool = ORDER.map(k => SYMBOLS[k])
+      .filter(s => s.id !== "coin")
+      .filter(s => s.weight > 0);
+    const coinWeight = CONFIG.coinSymbolWeight;
+
+    const b = [];
+    for (let r = 0; r < CONFIG.reels; r++) {
+      const col = [];
+      for (let row = 0; row < CONFIG.rows; row++) {
+        // Roll weighted with coins included
+        const totalWeight = pool.reduce((s, x) => s + x.weight, 0) + coinWeight;
+        let roll = RNG.int(totalWeight);
+        let sym = null;
+        for (let i = 0; i < pool.length; i++) {
+          roll -= pool[i].weight;
+          if (roll < 0) { sym = pool[i]; break; }
+        }
+        if (!sym) sym = SYMBOLS.coin;
+        col.push(sym.id);
+      }
+      b.push(col);
+    }
+    return b;
+  }
+
+  // Generate only the non-sticky cells during respins
+  function generateRespinBoard() {
+    const b = state.board.map(col => col.slice());
+    const pool = ORDER.map(k => SYMBOLS[k])
+      .filter(s => s.id !== "coin")
+      .filter(s => s.weight > 0);
+    const coinWeight = CONFIG.coinSymbolWeight;
+    const totalWeight = pool.reduce((s, x) => s + x.weight, 0) + coinWeight;
+
+    for (let r = 0; r < CONFIG.reels; r++) {
+      for (let row = 0; row < CONFIG.rows; row++) {
+        const key = r + "," + row;
+        if (state.coins.has(key)) continue;   // skip sticky cells
+        let roll = RNG.int(totalWeight);
+        let sym = null;
+        for (let i = 0; i < pool.length; i++) {
+          roll -= pool[i].weight;
+          if (roll < 0) { sym = pool[i]; break; }
+        }
+        if (!sym) sym = SYMBOLS.coin;
+        b[r][row] = sym.id;
+      }
+    }
+    return b;
+  }
+
+  function canSpin() {
+    if (state.phase !== "idle" && state.phase !== "respinning" && state.phase !== "respins_ready") return false;
+    if (state.inHoldWin) return true;   // no bet for respins
+    return state.balance >= bet();
+  }
+
+  function countCoins(board) {
+    let n = 0;
+    for (let r = 0; r < CONFIG.reels; r++)
+      for (let row = 0; row < CONFIG.rows; row++)
+        if (board[r][row] === "coin") n++;
+    return n;
+  }
+
+  // Assign value to each sticky coin cell that doesn't already have one
+  function assignCoinValues(board) {
+    if (!state.coins) state.coins = new Map();
+    for (let r = 0; r < CONFIG.reels; r++) {
+      for (let row = 0; row < CONFIG.rows; row++) {
+        const key = r + "," + row;
+        if (board[r][row] === "coin" && !state.coins.has(key)) {
+          const coin = CoinEngine.rollCoin();
+          coin.credits = CoinEngine.coinCredits(coin, bet());
+          state.coins.set(key, coin);
+        }
+      }
+    }
+  }
+
+  // Compute total value of all coins (in credits)
+  function totalCoinValue() {
+    let total = 0;
+    state.coins.forEach(coin => { total += coin.credits; });
+    return total;
+  }
+
+  // ========== SETTLE A BASE SPIN ==========
+  function settleBaseSpin(rawBoard) {
+    if (state.balance < bet()) return { error: "Insufficient balance" };
+    state.balance -= bet();
+
+    state.board = rawBoard;
+
+    // Regular line wins
+    const lineResult = LineEngine.evaluateAll(rawBoard, lineBet(), CONFIG);
+
+    // Count coins
+    const coinsOnBoard = countCoins(rawBoard);
+
+    // Trigger hold & win?
+    let holdWinTriggered = false;
+    if (coinsOnBoard >= CONFIG.holdWin.triggerCoins) {
+      holdWinTriggered = true;
+      state.inHoldWin = true;
+      state.coins = new Map();
+      state.respins = CONFIG.holdWin.initialRespins;
+      assignCoinValues(rawBoard);
+    }
+
+    // Apply the current line-win total (this base spin only)
+    let totalWin = lineResult.total;
+    if (totalWin > 0) state.balance += totalWin;
+
+    state.lastWin = totalWin;
+    state.lastNet = totalWin - bet();
+
+    return {
+      board: rawBoard,
+      wins: lineResult.wins,
+      total: totalWin,
+      coinsOnBoard,
+      holdWinTriggered
+    };
+  }
+
+  // ========== SETTLE A RESPIN ==========
+  function settleRespin(rawBoard) {
+    state.board = rawBoard;
+
+    // Any new coins that appeared get sticky and value assigned
+    const before = state.coins.size;
+    assignCoinValues(rawBoard);
+    const after = state.coins.size;
+    const newCoins = after - before;
+
+    if (newCoins > 0) {
+      state.respins = CONFIG.holdWin.initialRespins;   // reset counter
+    } else {
+      state.respins--;
+    }
+
+    return {
+      board: rawBoard,
+      newCoins,
+      respins: state.respins,
+      totalCoins: after
+    };
+  }
+
+  // ========== FINALIZE HOLD & WIN (collect all coins) ==========
+  function collectCoins() {
+    const total = totalCoinValue();
+    const filledAll = state.coins.size === CONFIG.reels * CONFIG.rows;
+
+    let final = total;
+    let grand = false;
+    if (filledAll) {
+      grand = true;
+      // Grand jackpot = 5000× bet (in addition to the coin values)
+      const grandCredits = CONFIG.holdWin.grandJackpotMultiplier * bet();
+      final += grandCredits;
+    }
+
+    state.balance += final;
+    state.lastWin = final;
+    state.lastNet = final;
+
+    // Snapshot for return, then clear state
+    const result = {
+      total: final,
+      coinTotal: total,
+      grand,
+      coinCount: state.coins.size,
+      grandCredits: grand ? CONFIG.holdWin.grandJackpotMultiplier * bet() : 0
+    };
+
+    state.inHoldWin = false;
+    state.coins = null;
+    state.respins = 0;
+    state.phase = "idle";
+
+    return result;
+  }
+
+  function startRespin() {
+    state.respins = CONFIG.holdWin.initialRespins;
+  }
+
+  return {
+    state, bet, lineBet, canSpin, newBoard,
+    generateBoard, generateRespinBoard,
+    countCoins, settleBaseSpin, settleRespin, collectCoins,
+    totalCoinValue, assignCoinValues,
+    setBetIndex(i) {
+      state.betIndex = Math.max(0, Math.min(CONFIG.betSteps.length - 1, i));
+    }
+  };
+})();
+
+/* =====================================================================
+   UI LAYER
+   ===================================================================== */
+(function() {
+  const canvas = document.getElementById("board");
+  const ctx = canvas.getContext("2d");
+  const el = id => document.getElementById(id);
+
+  const ui = {
+    balance: el("balanceVal"),
+    win: el("winVal"),
+    bet: el("betVal"),
+    spin: el("spinBtn"),
+    auto: el("autoBtn"),
+    stop: el("stopBtn"),
+    autoCnt: el("autoCnt"),
+    winOv: el("winOv"),
+    winTier: el("winTier"),
+    winAmt: el("winAmt"),
+    winSub: el("winSub"),
+    speed: el("speedSel"),
+    sound: el("soundBtn"),
+    bgLayer: el("bgLayer"),
+    boardWrap: el("boardWrap"),
+    respinCounter: el("respinCounter"),
+    respinNum: el("respinNum"),
+    holdWinStatus: el("holdWinStatus"),
+    jpMini: el("jpMini"),
+    jpMinor: el("jpMinor"),
+    jpMajor: el("jpMajor"),
+    jpGrand: el("jpGrand"),
+    history: []
+  };
+  const state = GameEngine.state;
+
+  /* ---------- Background ---------- */
+  function setBg(kind) {
+    const url = kind === "free" ? GIF_ASSETS.freeSpins
+              : kind === "big"  ? GIF_ASSETS.bigWin
+              : GIF_ASSETS.normal;
+    ui.bgLayer.style.backgroundImage = "url('" + url + "')";
+    ui.bgLayer.classList.remove("free","big","holdwin");
+    if (kind === "free") ui.bgLayer.classList.add("free");
+    if (kind === "big")  ui.bgLayer.classList.add("big");
+    if (kind === "holdwin") ui.bgLayer.classList.add("holdwin");
+  }
+  [GIF_ASSETS.normal, GIF_ASSETS.freeSpins, GIF_ASSETS.bigWin].forEach(u => {
+    const im = new Image(); im.src = u;
+  });
+
+  /* ---------- Spores ---------- */
+  (function() {
+    const wrap = el("spores");
+    if (!wrap) return;
+    for (let i = 0; i < 26; i++) {
+      const s = document.createElement("span");
+      s.style.left = RNG.int(100) + "%";
+      s.style.animationDuration = (8 + RNG.int(12)) + "s";
+      s.style.animationDelay = (-RNG.int(20)) + "s";
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* ---------- Canvas sizing ---------- */
+  let CW = 1, CH = 1, BX = 0, BY = 0, CWc = 0, CHc = 0;
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    CW = Math.max(1, Math.floor(r.width));
+    CH = Math.max(1, Math.floor(r.height));
+    canvas.width = CW * DPR; canvas.height = CH * DPR;
+    canvas.style.width = CW + "px"; canvas.style.height = CH + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const padX = 14, padTop = 34, padBot = 16;
+    const availW = CW - padX * 2;
+    const availH = CH - padTop - padBot;
+    CWc = availW / CONFIG.reels;
+    CHc = availH / CONFIG.rows;
+    BX = padX;
+    BY = padTop;
+
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  function cellXY(reel, row) {
+    return {
+      x: BX + reel * CWc,
+      y: BY + row * CHc,
+      w: CWc,
+      h: CHc
+    };
+  }
+  function cellCenter(reel, row) {
+    const c = cellXY(reel, row);
+    return { x: c.x + c.w / 2, y: c.y + c.h / 2 };
+  }
+
+  /* ---------- Anim state ---------- */
+  const anim = {
+    phase: "idle",
+    settled: [false, false, false, false, false],
+    winCells: {},
+    winLines: [],
+    particles: [],
+    ripples: [],
+    glowPhase: 0,
+    lastFrame: performance.now(),
+    shake: 0,
+    traceProgress: 0,
+    bursts: {},
+    banner: null,
+    coinAppear: {},     // key → t (0..1) for new coin pop
+    collecting: null,   // { phase, done, coinIdx, keys, totalShown }
+    // cell "punch in" animation on settle
+    punch: {}
+  };
+
+  state.board = GameEngine.generateBoard();
+
+  /* ---------- Helpers ---------- */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function spawnParticles(cx, cy, count, colors, opts) {
+    opts = opts || {};
+    for (let i = 0; i < count; i++) {
+      const a = RNG.int(360) * Math.PI / 180;
+      const sp = (opts.speed || 90) + RNG.int(150);
+      anim.particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp * 0.1,
+        vy: Math.sin(a) * sp * 0.1 - 1.5,
+        size: (opts.minSize || 2) + RNG.int(opts.sizeRange || 3),
+        rot: RNG.int(360) * Math.PI / 180,
+        vr: (RNG.int(200) - 100) / 300,
+        col: colors[RNG.int(colors.length)],
+        life: 1, maxLife: 800 + RNG.int(700),
+        square: opts.square !== false
+      });
+    }
+  }
+  function spawnRipple(cx, cy, maxR, col) {
+    anim.ripples.push({ x: cx, y: cy, r: maxR * 0.25, maxR: maxR, col: col, life: 1 });
+  }
+
+  /* ---------- Draw a STICKY COIN cell (custom, not sprite) ---------- */
+  function drawCoinCell(px, py, pw, ph, coin, now) {
+    const cx = px + pw / 2, cy = py + ph / 2;
+    const radius = Math.min(pw, ph) * 0.44;
+    const pulse = 0.75 + Math.sin(now / 220) * 0.25;
+
+    ctx.save();
+
+    // Outer glow
+    const glow = ctx.createRadialGradient(cx, cy, radius * 0.5, cx, cy, radius * 1.8);
+    const glowCol = coin.type === "grand" ? "255,215,0"
+                  : coin.type === "major" ? "192,132,252"
+                  : coin.type === "minor" ? "56,189,248"
+                  : coin.type === "mini"  ? "110,231,183"
+                  : "255,215,0";
+    glow.addColorStop(0, "rgba(" + glowCol + "," + (0.5 * pulse) + ")");
+    glow.addColorStop(1, "rgba(" + glowCol + ",0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(cx, cy, radius * 1.8, 0, Math.PI * 2); ctx.fill();
+
+    // Coin base
+    const baseGrad = ctx.createRadialGradient(
+      cx - radius * 0.3, cy - radius * 0.35, radius * 0.15,
+      cx, cy, radius
+    );
+    baseGrad.addColorStop(0, "#fff6c0");
+    baseGrad.addColorStop(0.45, "#ffd700");
+    baseGrad.addColorStop(1, "#8a6a00");
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = baseGrad; ctx.fill();
+
+    // Rim
+    ctx.lineWidth = Math.max(2, radius * 0.12);
+    if (coin.type === "major") ctx.strokeStyle = "#c084fc";
+    else if (coin.type === "minor") ctx.strokeStyle = "#38bdf8";
+    else if (coin.type === "mini") ctx.strokeStyle = "#6ee7b7";
+    else ctx.strokeStyle = "#fff6c0";
+    ctx.beginPath(); ctx.arc(cx, cy, radius * 0.9, 0, Math.PI * 2); ctx.stroke();
+
+    // Inner decoration
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(0,0,0,.35)";
+    ctx.beginPath(); ctx.arc(cx, cy, radius * 0.75, 0, Math.PI * 2); ctx.stroke();
+
+    // Text
+    let label, labelSize;
+    if (coin.type === "mini")  { label = "MINI";  labelSize = radius * 0.5; }
+    else if (coin.type === "minor") { label = "MINOR"; labelSize = radius * 0.45; }
+    else if (coin.type === "major") { label = "MAJOR"; labelSize = radius * 0.45; }
+    else if (coin.type === "grand") { label = "GRAND"; labelSize = radius * 0.45; }
+    else {
+      label = coin.value + "×";
+      labelSize = radius * (coin.value >= 100 ? 0.6 : coin.value >= 10 ? 0.75 : 0.95);
+    }
+
+    ctx.font = "900 " + labelSize + "px 'Cinzel Decorative', serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    ctx.fillText(label, cx + 1, cy + 1);
+    ctx.fillStyle = coin.type === "cash" ? "#3a2408" : "#fff";
+    if (coin.type !== "cash") {
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 8;
+    }
+    ctx.fillText(label, cx, cy);
+    ctx.restore();
+  }
+
+  /* ---------- Draw single cell ---------- */
+  function drawCell(reel, row, now, dt) {
+    const cell = cellXY(reel, row);
+    const pad = Math.min(cell.w, cell.h) * 0.06;
+    const px = cell.x + pad, py = cell.y + pad;
+    const pw = cell.w - pad * 2, ph = cell.h - pad * 2;
+    const key = reel + "," + row;
+    const symId = state.board[reel][row];
+    const sym = SYMBOLS[symId];
+    if (!sym) return;
+
+    const isCoin = state.coins && state.coins.has(key);
+    const isWin = anim.winCells[key] === true;
+    const isSpinning = anim.phase === "spinning" && !anim.settled[reel];
+
+    let symbolToDraw = symId;
+    if (isSpinning) {
+      const pool = ORDER.map(k => SYMBOLS[k]).filter(s => s.weight > 0 || s.id === "coin");
+      symbolToDraw = pool[RNG.int(pool.length)].id;
+    }
+
+    // Punch-in animation on settle
+    let punchScale = 1;
+    if (anim.punch[key] !== undefined) {
+      const t = anim.punch[key];
+      punchScale = 0.4 + easeOutBack(Math.min(1, t)) * 0.6;
+      anim.punch[key] += dt / 320;
+      if (anim.punch[key] >= 1) delete anim.punch[key];
+    }
+
+    // Coin appear pop
+    let coinPop = 1;
+    if (anim.coinAppear[key] !== undefined) {
+      const t = anim.coinAppear[key];
+      coinPop = 1 + Math.sin(t * Math.PI) * 0.4;
+      anim.coinAppear[key] += dt / 500;
+      if (anim.coinAppear[key] >= 1) delete anim.coinAppear[key];
+    }
+
+    // Highlight glow for winning cells
+    let winPulse = 0;
+    if (isWin) winPulse = 0.55 + Math.sin(anim.glowPhase * 3.5) * 0.4;
+
+    // Sticky coin cells get a bright cyan/gold rim
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2);
+    ctx.scale(punchScale * coinPop, punchScale * coinPop);
+
+    // ---- Plate ----
+    ctx.beginPath();
+    roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.14);
+    if (isCoin) {
+      // Sticky coins get a golden plate
+      ctx.fillStyle = "rgba(42,32,5,0.85)";
+      ctx.shadowColor = "#ffd700";
+      ctx.shadowBlur = 20;
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#ffd700";
+    } else if (isWin) {
+      ctx.fillStyle = "rgba(255,215,0," + (0.16 + winPulse * 0.2) + ")";
+      ctx.shadowColor = "#ffd700";
+      ctx.shadowBlur = 18 + winPulse * 14;
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(255,215,0,0.95)";
+    } else {
+      ctx.fillStyle = "rgba(10,31,16,0.68)";
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(230,184,0,0.22)";
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // ---- Content ----
+    if (isCoin && state.coins) {
+      // Draw custom golden coin with its value
+      // (reset transform so drawCoinCell uses canvas coords)
+      ctx.restore();
+      ctx.save();
+      const coin = state.coins.get(key);
+      drawCoinCell(px, py, pw, ph, coin, now);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(px + pw / 2, py + ph / 2);
+      ctx.scale(punchScale, punchScale);
+    } else {
+      // Sprite
+      SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+        -pw / 2 + 6, -ph / 2 + 6, pw - 12, ph - 12, 1);
+    }
+
+    // ---- Punch-in flash ----
+    if (anim.punch[key] !== undefined) {
+      const t = anim.punch[key];
+      ctx.globalAlpha = Math.max(0, 1 - t * 1.2);
+      ctx.fillStyle = "#fff6c0";
+      ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  /* ---------- Draw win line ---------- */
+  function drawWinLine(cells, color, progress) {
+    if (cells.length < 2) return;
+    const pts = cells.map(c => cellCenter(c[0], c[1]));
+    const drawn = (pts.length - 1) * progress;
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 8;
+    ctx.globalAlpha = 0.32;
+    strokeSegments(pts, drawn);
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 3.5;
+    ctx.shadowBlur = 12;
+    strokeSegments(pts, drawn);
+    ctx.strokeStyle = "#fff";
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 1.3;
+    ctx.globalAlpha = 0.9;
+    strokeSegments(pts, drawn);
+    ctx.restore();
+  }
+  function strokeSegments(pts, drawn) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const seg = Math.max(0, Math.min(1, drawn - (i - 1)));
+      if (seg <= 0) break;
+      const a = pts[i - 1], b = pts[i];
+      ctx.lineTo(a.x + (b.x - a.x) * seg, a.y + (b.y - a.y) * seg);
+    }
+    ctx.stroke();
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const now = performance.now();
+    const dt = Math.min(50, now - anim.lastFrame);
+    anim.lastFrame = now;
+    anim.glowPhase += dt / 240;
+
+    ctx.save();
+    if (anim.shake > 0) {
+      anim.shake = Math.max(0, anim.shake - dt / 100);
+      const s = anim.shake;
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    ctx.clearRect(-20, -20, CW + 40, CH + 40);
+
+    const g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, "rgba(22,64,37,.55)");
+    g.addColorStop(1, "rgba(10,31,16,.8)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // header
+    ctx.font = "900 19px 'Cinzel Decorative', Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = state.inHoldWin ? "#6ee7b7" : "#ffd700";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 18;
+    ctx.fillText(
+      state.inHoldWin ? "☼ HOLD & WIN ☼" : "☼ AZTEC GOLD ☼",
+      CW / 2, BY - 14
+    );
+    ctx.shadowBlur = 0;
+
+    // cells
+    for (let r = 0; r < CONFIG.reels; r++)
+      for (let row = 0; row < CONFIG.rows; row++)
+        drawCell(r, row, now, dt);
+
+    // spin blur columns (only non-sticky cells)
+    if (anim.phase === "spinning") {
+      for (let r = 0; r < CONFIG.reels; r++) {
+        if (anim.settled[r]) continue;
+        const colX = BX + r * CWc;
+        const grad = ctx.createLinearGradient(colX, 0, colX + CWc, 0);
+        grad.addColorStop(0, "rgba(230,184,0,0)");
+        grad.addColorStop(0.5, "rgba(255,243,160,0.2)");
+        grad.addColorStop(1, "rgba(230,184,0,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(colX, BY, CWc, CONFIG.rows * CHc);
+      }
+    }
+
+    // win traces
+    if (anim.traceProgress > 0) {
+      anim.winLines.forEach(w => drawWinLine(w.cells, w.color, anim.traceProgress));
+    }
+
+    // ripples
+    anim.ripples = anim.ripples.filter(r => r.life > 0);
+    anim.ripples.forEach(function(r) {
+      r.r += (r.maxR - r.r) * 0.14;
+      r.life -= dt / 620;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, r.life) * 0.85;
+      ctx.strokeStyle = r.col;
+      ctx.lineWidth = 3.5 * r.life + 0.6;
+      ctx.shadowColor = r.col;
+      ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    });
+
+    // particles
+    anim.particles = anim.particles.filter(p => p.life > 0);
+    anim.particles.forEach(p => {
+      p.x += p.vx * dt * 0.06;
+      p.y += p.vy * dt * 0.06;
+      p.vy += 0.06 * dt * 0.06;
+      p.rot += p.vr * dt * 0.06;
+      p.life -= dt / p.maxLife;
+      const a = Math.max(0, p.life);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.shadowColor = p.col;
+      ctx.shadowBlur = 10;
+      const size = p.size * Math.max(0.15, p.life);
+      if (p.square) ctx.fillRect(-size, -size, size * 2, size * 2);
+      else { ctx.beginPath(); ctx.arc(0,0,size,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+
+    // temporary banner
+    if (anim.banner) {
+      const b = anim.banner;
+      b.life -= dt / 1200;
+      if (b.life <= 0) anim.banner = null;
+      else {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, b.life * 2);
+        ctx.font = "900 32px 'Cinzel Decorative', Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 30;
+        ctx.fillText(b.text, CW / 2, BY + CONFIG.rows * CHc / 2);
+        ctx.restore();
+      }
+    }
+
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+
+  /* ---------- Spin animation (5 reels) ---------- */
+  function spinAnimation(respinMode, callback) {
+    anim.phase = "spinning";
+    anim.winCells = {};
+    anim.winLines = [];
+    anim.traceProgress = 0;
+    anim.punch = {};
+    anim.settled = [false, false, false, false, false];
+    anim.bursts = {};
+
+    const speed = parseFloat(ui.speed.value) || 1;
+    const colDur = 720 / speed;
+    const stagger = 130 / speed;
+    const start = performance.now();
+
+    // If respin mode, generate a board that only rerolls non-sticky cells
+    const finalBoard = respinMode
+      ? GameEngine.generateRespinBoard()
+      : GameEngine.generateBoard();
+
+    let finished = false;
+    function finish(board) {
+      if (finished) return;
+      finished = true;
+      anim.phase = "evaluating";
+      callback(board);
+    }
+    const safety = setTimeout(() => {
+      anim.settled = [true, true, true, true, true];
+      state.board = finalBoard.map(c => c.slice());
+      finish(finalBoard);
+    }, 8000);
+
+    function step() {
+      if (finished) { clearTimeout(safety); return; }
+      const now = performance.now();
+      let allSettled = true;
+
+      for (let r = 0; r < CONFIG.reels; r++) {
+        // Skip fully-sticky reels in respin mode
+        if (respinMode) {
+          let allSticky = true;
+          for (let row = 0; row < CONFIG.rows; row++) {
+            if (!state.coins.has(r + "," + row)) { allSticky = false; break; }
+          }
+          if (allSticky) {
+            anim.settled[r] = true;
+            continue;
+          }
+        }
+
+        const elapsed = now - (start + r * stagger);
+        if (elapsed < colDur) {
+          allSettled = false;
+        } else if (!anim.settled[r]) {
+          anim.settled[r] = true;
+          for (let row = 0; row < CONFIG.rows; row++) {
+            const key = r + "," + row;
+            if (respinMode && state.coins.has(key)) continue;
+            state.board[r][row] = finalBoard[r][row];
+            anim.punch[key] = 0;
+          }
+          for (let row = 0; row < CONFIG.rows; row++) {
+            if (respinMode && state.coins.has(r + "," + row)) continue;
+            const cp = cellCenter(r, row);
+            spawnParticles(cp.x, cp.y, 4, ["#ffd700", "#fff6c0", "#6ee7b7"], { square: true });
+          }
+          spawnRipple(BX + r * CWc + CWc / 2, BY + CONFIG.rows * CHc / 2,
+                      CWc * 0.85, "rgba(255,215,0,0.6)");
+          anim.shake = Math.min(5, anim.shake + 1);
+          allSettled = false;
+        }
+      }
+
+      if (allSettled) { clearTimeout(safety); finish(finalBoard); }
+      else requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  /* ---------- Base spin flow ---------- */
+  function doBaseSpin() {
+    if (state.balance < GameEngine.bet()) {
+      toast("Not enough gold — lower your bet or reset.");
+      return;
+    }
+    if (state.phase !== "idle") return;
+    state.phase = "spinning";
+    state.lastWin = 0;
+    updateUI(true);
+    Sound.spin();
+
+    spinAnimation(false, function(rawBoard) {
+      const result = GameEngine.settleBaseSpin(rawBoard);
+
+      // Line wins presentation
+      if (result.wins && result.wins.length) {
+        anim.winCells = {};
+        anim.winLines = [];
+        const palette = ["#ffd700", "#6ee7b7", "#ef4444", "#38bdf8", "#fff6c0",
+                         "#c084fc", "#b91c1c", "#3eb87d"];
+        result.wins.forEach((w, i) => {
+          const col = palette[i % palette.length];
+          anim.winLines.push({ cells: w.cells, color: col });
+          w.cells.forEach(([reel, row]) => {
+            anim.winCells[reel + "," + row] = true;
+          });
+        });
+        animateTrace(900 / (parseFloat(ui.speed.value) || 1));
+        Object.keys(anim.winCells).forEach(k => {
+          const [r, row] = k.split(",").map(Number);
+          const cp = cellCenter(r, row);
+          spawnParticles(cp.x, cp.y, 5, ["#ffd700", "#fff6c0"], { square: true });
+        });
+        if (result.total > 0) {
+          Sound.win(result.total >= GameEngine.bet() * 10);
+          showWinOverlay(result.total, GameEngine.bet(), "WIN", "");
+        }
+      }
+
+      // HOLD & WIN trigger?
+      if (result.holdWinTriggered) {
+        setBg("holdwin");
+        ui.boardWrap.classList.add("holdwin");
+        ui.respinCounter.classList.add("on");
+        ui.holdWinStatus.classList.add("on");
+        anim.banner = { text: "☼ HOLD & WIN ☼", color: "#ffd700", life: 1 };
+        Sound.win(true);
+        toast("◆ HOLD & WIN — " + CONFIG.holdWin.initialRespins + " RESPINS ◆");
+
+        // pop each coin as it locks
+        for (let r = 0; r < CONFIG.reels; r++) {
+          for (let row = 0; row < CONFIG.rows; row++) {
+            if (state.coins.has(r + "," + row)) {
+              anim.coinAppear[r + "," + row] = 0;
+              const cp = cellCenter(r, row);
+              spawnParticles(cp.x, cp.y, 12, ["#ffd700", "#fff6c0"], { square: true });
+              spawnRipple(cp.x, cp.y, 55, "#ffd700");
+            }
+          }
+        }
+        anim.shake = 12;
+        updateRespinUI();
+
+        // Start respins after a moment
+        state.phase = "idle";
+        updateUI();
+        setTimeout(startRespinCycle, 1200 / (parseFloat(ui.speed.value) || 1));
+        return;
+      }
+
+      // No hold & win — normal end
+      if (!state.inHoldWin) setBg("normal");
+      state.phase = "idle";
+      updateUI(true);
+
+      if (result.total > 0) {
+        ui.history.unshift({
+          ts: new Date(),
+          bet: GameEngine.bet(),
+          win: result.total,
+          type: "spin"
+        });
+        if (ui.history.length > 50) ui.history.pop();
+      }
+
+      afterSpin();
+    });
+  }
+
+  /* ---------- Respin cycle ---------- */
+  function startRespinCycle() {
+    if (!state.inHoldWin) return;
+
+    if (state.respins <= 0) {
+      // Finished — collect
+      finishHoldWin();
+      return;
+    }
+
+    state.phase = "respinning";
+    updateUI(true);
+
+    setTimeout(function() {
+      spinAnimation(true, function(rawBoard) {
+        const res = GameEngine.settleRespin(rawBoard);
+
+        // Pop new coins
+        if (res.newCoins > 0) {
+          const newKeys = [];
+          for (let r = 0; r < CONFIG.reels; r++) {
+            for (let row = 0; row < CONFIG.rows; row++) {
+              const key = r + "," + row;
+              if (state.coins.has(key) && anim.coinAppear[key] === undefined) {
+                // recently added — pop it
+              }
+            }
+          }
+          // Simply pop all coin cells that aren't already popped
+          state.coins.forEach((coin, key) => {
+            if (anim.coinAppear[key] === undefined) {
+              anim.coinAppear[key] = 0;
+              const parts = key.split(",").map(Number);
+              const cp = cellCenter(parts[0], parts[1]);
+              spawnParticles(cp.x, cp.y, 12, ["#ffd700", "#fff6c0"], { square: true });
+              spawnRipple(cp.x, cp.y, 55, "#ffd700");
+            }
+          });
+          Sound.win(true);
+          toast("◆ NEW COIN — RESPINS RESET ◆");
+        } else {
+          Sound.click();
+        }
+
+        anim.shake = Math.min(10, anim.shake + 4);
+        updateRespinUI();
+        state.phase = "idle";
+        updateUI();
+
+        setTimeout(startRespinCycle, 800 / (parseFloat(ui.speed.value) || 1));
+      });
+    }, 200 / (parseFloat(ui.speed.value) || 1));
+  }
+
+  function updateRespinUI() {
+    ui.respinNum.textContent = state.respins;
+  }
+
+  /* ---------- Collect coins ---------- */
+  function finishHoldWin() {
+    state.phase = "collecting";
+    ui.respinCounter.classList.remove("on");
+    ui.holdWinStatus.classList.remove("on");
+
+    // Animate coin values popping then collect
+    const total = GameEngine.totalCoinValue();
+    const coinCount = state.coins.size;
+    const filledAll = coinCount === CONFIG.reels * CONFIG.rows;
+
+    anim.banner = {
+      text: filledAll ? "☼ GRAND JACKPOT ☼" : "☼ COLLECT ☼",
+      color: filledAll ? "#ffd700" : "#6ee7b7",
+      life: 1
+    };
+
+    // Particles storm
+    state.coins.forEach((coin, key) => {
+      const parts = key.split(",").map(Number);
+      const cp = cellCenter(parts[0], parts[1]);
+      spawnParticles(cp.x, cp.y, 14, ["#ffd700", "#fff6c0", "#6ee7b7"], { square: true });
+      spawnRipple(cp.x, cp.y, 70, coin.type === "cash" ? "#ffd700" : "#c084fc");
+    });
+    anim.shake = 20;
+    Sound.bigWin();
+    setBg("big");
+
+    setTimeout(function() {
+      const final = GameEngine.collectCoins();
+      updateJpValues();
+      updateUI(true);
+
+      ui.history.unshift({
+        ts: new Date(),
+        bet: GameEngine.bet(),
+        win: final.total,
+        type: "holdwin",
+        coins: final.coinCount,
+        grand: final.grand
+      });
+      if (ui.history.length > 50) ui.history.pop();
+
+      if (final.grand) {
+        showWinOverlay(final.total, GameEngine.bet(), "GRAND JACKPOT",
+          "ALL " + (CONFIG.reels * CONFIG.rows) + " CELLS FILLED");
+      } else if (final.total > 0) {
+        const ratio = final.total / GameEngine.bet();
+        const tier = ratio >= 100 ? "MEGA WIN" : ratio >= 40 ? "BIG WIN" :
+                     ratio >= 15 ? "GREAT WIN" : "HOLD & WIN";
+        showWinOverlay(final.total, GameEngine.bet(), tier,
+          final.coinCount + " COINS");
+      }
+
+      // Clean up visual state
+      ui.boardWrap.classList.remove("holdwin");
+      setBg("normal");
+      anim.coinAppear = {};
+      state.phase = "idle";
+      updateUI();
+      afterSpin();
+    }, 1600 / (parseFloat(ui.speed.value) || 1));
+  }
+
+  /* ---------- Common after-spin hook ---------- */
+  function afterSpin() {
+    const delay = 700 / (parseFloat(ui.speed.value) || 1);
+    setTimeout(() => {
+      if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden) {
+        if (GameEngine.canSpin()) {
+          state.autoSpinsLeft--;
+          updateUI();
+          doSpin();
+        } else stopAuto("Auto-spin stopped — insufficient credits.");
+      } else if (state.autoActive && state.autoSpinsLeft <= 0) {
+        stopAuto("Auto-spin complete.");
+      } else updateUI();
+    }, delay + 500);
+  }
+
+  /* ---------- Unified spin entry ---------- */
+  function doSpin() {
+    if (state.inHoldWin) {
+      // In hold & win mode, SPIN button acts as "CONTINUE" for respins, but
+      // we auto-run them so no action needed. Just ignore.
+      return;
+    }
+    if (state.phase !== "idle") return;
+    doBaseSpin();
+  }
+
+  function animateTrace(duration) {
+    const t0 = performance.now();
+    anim.traceProgress = 0;
+    function step() {
+      const p = Math.min(1, (performance.now() - t0) / duration);
+      anim.traceProgress = p;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  /* ---------- Win overlay ---------- */
+  function showWinOverlay(totalWin, bet, tierText, subtitle) {
+    const ratio = totalWin / Math.max(1, bet);
+    let tier = tierText;
+    if (!tier) {
+      tier = "WIN";
+      if (ratio >= 300) tier = "MEGA WIN";
+      else if (ratio >= 120) tier = "BIG WIN";
+      else if (ratio >= 40) tier = "GREAT WIN";
+      else if (ratio >= 12) tier = "WIN";
+    }
+
+    ui.winTier.textContent = tier;
+    ui.winAmt.textContent = "+" + totalWin.toLocaleString();
+    ui.winSub.textContent = subtitle || "";
+    ui.winOv.classList.add("on");
+
+    const dur = Math.max(1800, 2600 / (parseFloat(ui.speed.value) || 1));
+    setTimeout(() => {
+      ui.winOv.classList.remove("on");
+    }, dur);
+  }
+
+  /* ---------- UI update ---------- */
+  function updateUI(pop) {
+    ui.balance.textContent = state.balance.toLocaleString();
+    ui.win.textContent = state.lastWin.toLocaleString();
+    ui.bet.textContent = GameEngine.bet().toLocaleString();
+    if (pop) {
+      ui.balance.classList.remove("pop"); ui.win.classList.remove("pop");
+      void ui.balance.offsetWidth;
+      ui.balance.classList.add("pop"); ui.win.classList.add("pop");
+    }
+    ui.spin.disabled = state.autoActive || !GameEngine.canSpin();
+    ui.spin.classList.toggle("hold", state.inHoldWin);
+    ui.spin.firstChild.textContent = state.inHoldWin ? "WAIT\n" : "SPIN\n";
+    ui.autoCnt.textContent = state.autoActive ? "AUTO: " + state.autoSpinsLeft : "";
+    ui.auto.classList.toggle("on", state.autoActive);
+  }
+
+  function updateJpValues() {
+    const b = GameEngine.bet();
+    ui.jpMini.textContent = (state.jackpots.mini * b).toLocaleString();
+    ui.jpMinor.textContent = (state.jackpots.minor * b).toLocaleString();
+    ui.jpMajor.textContent = (state.jackpots.major * b).toLocaleString();
+    ui.jpGrand.textContent = (state.jackpots.grand * b).toLocaleString();
+  }
+
+  /* ---------- Sound ---------- */
+  const Sound = (function() {
+    let ctxA = null, enabled = true;
+    function ensure() {
+      if (!ctxA) { try { ctxA = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { ctxA = null; } }
+      if (ctxA && ctxA.state === "suspended") ctxA.resume();
+      return ctxA;
+    }
+    function tone(freq, dur, type, vol, when) {
+      if (type === undefined) type = "sine";
+      if (vol === undefined) vol = 0.06;
+      if (when === undefined) when = 0;
+      if (!enabled) return;
+      const c = ensure(); if (!c) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    return {
+      spin() { tone(220, 0.1, "triangle", 0.05); tone(165, 0.14, "sine", 0.045, 0.05); },
+      win(small) {
+        const notes = small ? [523, 659, 784, 1047] : [523, 659, 784, 1047, 1319, 1568];
+        notes.forEach((f, i) => tone(f, 0.2, "sine", 0.08, i * 0.07));
+      },
+      bigWin() {
+        [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.24, "triangle", 0.09, i * 0.06));
+      },
+      click() { tone(880, 0.04, "triangle", 0.03); },
+      toggle() { enabled = !enabled; return enabled; }
+    };
+  })();
+
+  /* ---------- Auto spin ---------- */
+  function startAuto() {
+    if (state.autoActive) { stopAuto(); return; }
+    if (!GameEngine.canSpin()) { toast("Not enough credits to auto-spin."); return; }
+    state.autoActive = true;
+    state.autoSpinsLeft = state.autoSpinTarget || 25;
+    Sound.click(); updateUI(); doSpin();
+  }
+  function stopAuto(msg) {
+    state.autoActive = false;
+    state.autoSpinsLeft = 0;
+    if (msg) toast(msg);
+    updateUI();
+  }
+
+  /* ---------- Toast ---------- */
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    el("toasts").appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  /* ---------- Modals ---------- */
+  function openModal(id) { el(id).classList.add("on"); }
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove("on");
+    });
+  });
+
+  function buildPaytable() {
+    const grid = el("paytableGrid");
+    grid.innerHTML = "";
+    // coin card first
+    const coinCard = document.createElement("div");
+    coinCard.className = "sym-card coin";
+    coinCard.innerHTML =
+      '<div class="ic">☼</div>' +
+      '<div class="nm">Sun Coin</div>' +
+      '<div class="pay"><div>5+<small>TRIGGER</small></div><div>—</div><div>—</div></div>';
+    grid.appendChild(coinCard);
+    // regulars
+    ORDER.forEach(id => {
+      if (id === "coin") return;
+      const sym = SYMBOLS[id];
+      if (!sym) return;
+      const card = document.createElement("div");
+      card.className = "sym-card";
+      const ic = document.createElement("div"); ic.className = "ic";
+      const img = document.createElement("img");
+      img.src = SpriteLoader.dataUrl(sym.sprite, 96, 96);
+      img.alt = sym.name;
+      ic.appendChild(img); card.appendChild(ic);
+      const nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = sym.name;
+      card.appendChild(nm);
+      const py = document.createElement("div"); py.className = "pay";
+      py.innerHTML =
+        "<div>" + sym.pay3 + "<small>3×</small></div>" +
+        "<div>" + sym.pay4 + "<small>4×</small></div>" +
+        "<div>" + sym.pay5 + "<small>5×</small></div>";
+      card.appendChild(py);
+      grid.appendChild(card);
+    });
+
+    // coin values list
+    const list = el("coinValuesList");
+    list.innerHTML = "";
+    const ordered = CONFIG.holdWin.coinValues.slice().sort((a, b) => b.value - a.value);
+    ordered.forEach(cv => {
+      const li = document.createElement("li");
+      li.className = cv.type === "cash" ? "" : cv.type;
+      let label = "";
+      if (cv.type === "cash") label = cv.value + "× bet";
+      else if (cv.type === "mini") label = "MINI · " + cv.value + "× bet";
+      else if (cv.type === "minor") label = "MINOR · " + cv.value + "× bet";
+      else if (cv.type === "major") label = "MAJOR · " + cv.value + "× bet";
+      li.innerHTML = "<span>" + label + "</span><b>" + cv.weight + "</b>";
+      list.appendChild(li);
+    });
+    // grand
+    const grandLi = document.createElement("li");
+    grandLi.className = "grand";
+    grandLi.innerHTML = "<span>GRAND JACKPOT · fill all " +
+      (CONFIG.reels * CONFIG.rows) + " cells</span><b>" +
+      CONFIG.holdWin.grandJackpotMultiplier + "× bet</b>";
+    list.appendChild(grandLi);
+  }
+
+  function buildHistory() {
+    const list = el("historyList");
+    if (!ui.history.length) { list.innerHTML = '<li style="color:var(--text-dim)">No spins yet.</li>'; return; }
+    list.innerHTML = ui.history.map(h => {
+      const cls = h.win > 0 ? "" : "loss";
+      let tag = h.type === "holdwin" ? " ◆ HOLD" : "";
+      if (h.grand) tag += " ✦ GRAND";
+      else if (h.coins) tag += " · " + h.coins + " coins";
+      return '<li class="' + cls + '"><span>' + h.ts.toLocaleTimeString() + tag +
+        ' · Bet ' + h.bet +
+        '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+    }).join("");
+  }
+
+  /* ---------- Events ---------- */
+  ui.spin.addEventListener("click", () => { Sound.click(); doSpin(); });
+  ui.auto.addEventListener("click", startAuto);
+  ui.stop.addEventListener("click", () => stopAuto("Auto-spin stopped."));
+
+  el("betDown").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive || state.inHoldWin) return;
+    GameEngine.setBetIndex(state.betIndex - 1);
+    Sound.click(); updateUI(); updateJpValues();
+  });
+  el("betUp").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive || state.inHoldWin) return;
+    GameEngine.setBetIndex(state.betIndex + 1);
+    Sound.click(); updateUI(); updateJpValues();
+  });
+
+  document.querySelectorAll(".preset-row button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.phase !== "idle" || state.autoActive || state.inHoldWin) return;
+      const p = btn.dataset.preset;
+      if (p === "min") GameEngine.setBetIndex(0);
+      else if (p === "std") GameEngine.setBetIndex(Math.floor(CONFIG.betSteps.length / 2));
+      else if (p === "max") GameEngine.setBetIndex(CONFIG.betSteps.length - 1);
+      Sound.click(); updateUI(); updateJpValues();
+    });
+  });
+
+  document.querySelectorAll("#autoRow button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.autoActive) return;
+      state.autoSpinTarget = parseInt(btn.dataset.auto, 10);
+      document.querySelectorAll("#autoRow button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      Sound.click();
+      toast("Auto-spin target: " + state.autoSpinTarget);
+    });
+  });
+
+  el("paytableBtn").addEventListener("click", () => { buildPaytable(); openModal("paytableModal"); });
+  el("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  el("historyBtn").addEventListener("click", () => { buildHistory(); openModal("historyModal"); });
+
+  ui.sound.addEventListener("click", () => {
+    const on = Sound.toggle();
+    ui.sound.textContent = on ? "🔊" : "🔇";
+    ui.sound.classList.toggle("on", on);
+    if (on) Sound.click();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset the demo? Balance will return to " + CONFIG.startingBalance + ".")) return;
+    stopAuto();
+    state.balance = CONFIG.startingBalance;
+    state.betIndex = CONFIG.defaultBetIndex;
+    state.lastWin = 0;
+    state.lastNet = 0;
+    state.board = GameEngine.generateBoard();
+    state.inHoldWin = false;
+    state.coins = null;
+    state.respins = 0;
+    state.phase = "idle";
+    ui.history = [];
+    anim.winCells = {};
+    anim.winLines = [];
+    anim.particles = [];
+    anim.ripples = [];
+    anim.punch = {};
+    anim.bursts = {};
+    anim.coinAppear = {};
+    anim.banner = null;
+    ui.respinCounter.classList.remove("on");
+    ui.holdWinStatus.classList.remove("on");
+    ui.boardWrap.classList.remove("holdwin");
+    setBg("normal");
+    updateUI(true);
+    updateJpValues();
+    toast("Demo reset.");
+  });
+
+  document.addEventListener("keydown", e => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (!ui.spin.disabled && !state.inHoldWin) doSpin();
+    }
+    if (e.code === "Escape") document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on"));
+    if (e.key === "a" || e.key === "A") startAuto();
+    if (e.key === "s" || e.key === "S") stopAuto();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.autoActive) stopAuto("Auto-spin paused (tab inactive).");
+  });
+
+  /* ---------- Boot (IDENTICAL structure to working game) ---------- */
+  async function boot() {
+    setBg("normal");
+    await SpriteLoader.load();
+    state.board = GameEngine.generateBoard();
+    resize();
+    updateUI();
+    updateJpValues();
+    requestAnimationFrame(render);
+    setTimeout(() => toast("Welcome to Aztec Gold — press SPIN."), 500);
+  }
+  boot();
+})();
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

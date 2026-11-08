@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Pharaoh Real Reel & Particle Crash Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            background: #030108;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Dynamic Background Layer */
+        #bgLayer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: #000 center/cover no-repeat;
+            transition: background-image 0.8s ease, filter 0.5s ease;
+        }
+
+        /* Loading Screen */
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #000 center/cover no-repeat url('../../assets/loading&win.gif');
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 60px;
+            transition: opacity 0.6s ease;
+        }
+        .loading-bar-container {
+            width: min(400px, 80vw);
+            height: 18px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #FF00E5, #00F0FF, #FFD700);
+            transition: width 0.3s ease;
+        }
+        .loading-text {
+            font-family: 'Orbitron', sans-serif;
+            margin-top: 12px;
+            font-size: 0.95rem;
+            color: #FFD700;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #FFD700;
+        }
+
+        /* Glass Game Cabinet */
+        #gameContainer {
+            position: relative;
+            z-index: 10;
+            width: min(1080px, 96vw);
+            height: min(720px, 94vh);
+            background: rgba(10, 4, 18, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid var(--theme-color, #00F0FF);
+            border-radius: 28px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), inset 0 0 45px var(--theme-glow, rgba(0, 240, 255, 0.25));
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: border-color 0.5s ease;
+        }
+
+        /* Top Control Bar */
+        .top-bar {
+            height: 52px;
+            padding: 8px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.75);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .btn-theme-switch {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--theme-color, #00F0FF);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+        .btn-theme-switch:hover {
+            background: var(--theme-color, #00F0FF);
+            color: #000;
+            box-shadow: 0 0 15px var(--theme-color, #00F0FF);
+        }
+        .spin-tracker {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: #FFD700;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #FFD700;
+            padding: 5px 14px;
+            border-radius: 8px;
+        }
+
+        /* Main Game Area */
+        .main-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        /* Reel Window & Header Banner */
+        .reel-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        /* Dynamic Title Banner */
+        .board-title-banner {
+            position: relative;
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.75);
+            border: 2px solid var(--theme-color, #00F0FF);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 0 25px var(--theme-glow, rgba(0, 240, 255, 0.4)), inset 0 0 15px var(--theme-color, rgba(0, 240, 255, 0.3));
+            transition: all 0.4s ease;
+        }
+
+        .board-title-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transform: rotate(30deg);
+            animation: shineBeam 3s infinite linear;
+        }
+
+        @keyframes shineBeam {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+
+        .board-title-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #FFF, var(--theme-color, #00F0FF), #FFD700, var(--theme-color, #00F0FF), #FFF);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGradient 4s ease infinite, titlePulse 1.8s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 10px var(--theme-color, #00F0FF));
+            z-index: 2;
+        }
+
+        @keyframes titleGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes titlePulse {
+            0% { transform: scale(0.98); filter: drop-shadow(0 0 8px var(--theme-color, #00F0FF)); }
+            100% { transform: scale(1.03); filter: drop-shadow(0 0 22px #FFD700); }
+        }
+
+        .reel-container {
+            flex: 1;
+            position: relative;
+            background: rgba(0, 0, 0, 0.65);
+            border-radius: 20px;
+            border: 1.5px solid rgba(255, 255, 255, 0.18);
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.95);
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Dashboard Panel */
+        .dashboard {
+            width: 250px;
+            background: rgba(8, 4, 16, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .stat-box {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--theme-color, #00F0FF);
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: #FFF;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+            margin-top: 4px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .bet-adjust {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        .btn-bet {
+            width: 38px;
+            height: 38px;
+            background: var(--theme-color, #00F0FF);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-bet:hover { filter: brightness(1.25); }
+        .spin-btn {
+            height: 64px;
+            background: radial-gradient(circle, #FFE57F 0%, #FFD700 50%, #FF8F00 100%);
+            border: 2px solid #FFF;
+            border-radius: 16px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 0 35px rgba(255, 215, 0, 0.75);
+            transition: transform 0.1s, filter 0.2s;
+        }
+        .spin-btn:hover {
+            transform: scale(1.02);
+            filter: brightness(1.2);
+        }
+        .spin-btn:disabled {
+            filter: grayscale(0.8);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Overlays */
+        .overlay-gif {
+            position: absolute;
+            inset: 0;
+            z-index: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .overlay-gif.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #txOverlay {
+            background: #000 center/cover no-repeat url('../../assets/transaction.gif');
+            z-index: 800;
+        }
+        #winOverlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 900;
+        }
+        #winBox {
+            width: min(480px, 92%);
+            height: 290px;
+            background: #000 center/contain no-repeat url('../../assets/win.gif');
+            border: 3px solid #FFD700;
+            border-radius: 20px;
+            box-shadow: 0 0 80px rgba(255, 215, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .win-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 20px #FFD700;
+            background: rgba(0,0,0,0.65);
+            padding: 4px 22px;
+            border-radius: 12px;
+        }
+        .win-amount {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: #00F0FF;
+            text-shadow: 0 0 25px #00F0FF;
+            margin-top: 10px;
+            background: rgba(0,0,0,0.65);
+            padding: 6px 26px;
+            border-radius: 12px;
+        }
+    </style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+
+    <!-- Dynamic Background -->
+    <div id="bgLayer"></div>
+
+    <!-- Loading Screen -->
+    <div id="loadingOverlay">
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadBar"></div>
+        </div>
+        <div class="loading-text" id="loadText">LOADING SPRITES 0%</div>
+    </div>
+
+    <!-- Game Cabinet -->
+    <div id="gameContainer">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="btn-theme-switch" id="btnThemeSwitch">🔄 SWITCH THEME BOARD</button>
+            <div class="spin-tracker" id="scatterTracker">SCATTER IN: 15</div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="main-area">
+            <div class="reel-wrapper">
+                <div class="board-title-banner" id="boardTitleBanner">
+                    <div class="board-title-text" id="boardTitleText">👑 GOLDEN PHARAOH 👑</div>
+                </div>
+
+                <div class="reel-container">
+                    <canvas id="slotCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="dashboard">
+                <div class="stat-box">
+                    <div class="stat-label">BALANCE</div>
+                    <div class="stat-value" id="balanceVal">10,000</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">WIN AMOUNT</div>
+                    <div class="stat-value" id="winVal" style="color: #00FF88;">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">CASCADE MULTIPLIER</div>
+                    <div class="stat-value" id="multVal" style="color: #FF00E5;">×1</div>
+                </div>
+
+                <div class="controls">
+                    <div class="stat-label">BET AMOUNT</div>
+                    <div class="bet-adjust">
+                        <button class="btn-bet" id="btnBetDown">-</button>
+                        <div class="stat-value" id="betVal" style="font-size:1.1rem;">20</div>
+                        <button class="btn-bet" id="btnBetUp">+</button>
+                    </div>
+                    <button class="spin-btn" id="spinBtn">SPIN</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlays -->
+        <div class="overlay-gif" id="txOverlay"></div>
+        <div class="overlay-gif" id="winOverlay">
+            <div id="winBox">
+                <div class="win-title" id="winTierText">CASCADE WIN!</div>
+                <div class="win-amount" id="winAmountText">+0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SYMBOL_MANIFEST = {
+            "Gemini_Generated_Image_i35z31i35z31i35z.jpg": [
+                {"x": 91, "y": 78, "width": 226, "height": 295},
+                {"x": 347, "y": 78, "width": 226, "height": 292},
+                {"x": 604, "y": 78, "width": 224, "height": 292},
+                {"x": 859, "y": 77, "width": 226, "height": 295},
+                {"x": 859, "y": 412, "width": 226, "height": 308},
+                {"x": 603, "y": 411, "width": 225, "height": 309}
+            ],
+            "Gemini_Generated_Image_qkhh8pqkhh8pqkhh.jpg": [
+                {"x": 11, "y": 19, "width": 316, "height": 322},
+                {"x": 348, "y": 18, "width": 311, "height": 323},
+                {"x": 12, "y": 366, "width": 315, "height": 322},
+                {"x": 347, "y": 366, "width": 317, "height": 320},
+                {"x": 13, "y": 702, "width": 312, "height": 328},
+                {"x": 346, "y": 703, "width": 316, "height": 324}
+            ],
+            "ultimate_multi_slot_sprite.jpg": [
+                {"x": 25, "y": 402, "width": 82, "height": 64},
+                {"x": 115, "y": 401, "width": 78, "height": 67},
+                {"x": 199, "y": 403, "width": 78, "height": 61},
+                {"x": 287, "y": 402, "width": 75, "height": 66},
+                {"x": 376, "y": 401, "width": 73, "height": 69},
+                {"x": 25, "y": 477, "width": 79, "height": 58}
+            ]
+        };
+
+        const THEME_SETS = [
+            {
+                name: "👑 GOLDEN PHARAOH 👑",
+                bg: "../../assets/bg10.gif",
+                color: "#FFD700",
+                glow: "rgba(255, 215, 0, 0.4)",
+                file: "Gemini_Generated_Image_qkhh8pqkhh8pqkhh.jpg"
+            },
+            {
+                name: "🏴‍☠️ PIRATE MYSTERY 🏴‍☠️",
+                bg: "../../assets/bg4_piret1.gif",
+                color: "#00F0FF",
+                glow: "rgba(0, 240, 255, 0.4)",
+                file: "Gemini_Generated_Image_i35z31i35z31i35z.jpg"
+            },
+            {
+                name: "🔮 MAGIC ULTIMATE 🔮",
+                bg: "../../assets/bg6_magic1.gif",
+                color: "#FF00E5",
+                glow: "rgba(255, 0, 229, 0.4)",
+                file: "ultimate_multi_slot_sprite.jpg"
+            }
+        ];
+
+        const COLS = 5;
+        const ROWS = 3;
+        const MIN_BET = 10;
+        const MAX_BET = 1000;
+        const BET_STEP = 10;
+        const SCATTER_CYCLE = 15;
+
+        let activeThemeIdx = 0;
+        let balance = 10000;
+        let bet = 20;
+        let lastWin = 0;
+        let cascadeMultiplier = 1;
+        let spinCount = 0;
+        let isSpinning = false;
+        let assetsReady = false;
+
+        let board = [];
+        let reelsState = [];
+        let glowingCells = [];
+        let crashingCells = [];
+
+        const loadedSprites = {};
+        const parsedSymbolsByTheme = [];
+
+        function loadSpriteAssets(onComplete) {
+            const files = Object.keys(SYMBOL_MANIFEST);
+            let loaded = 0;
+
+            files.forEach(file => {
+                const img = new Image();
+                img.onload = () => {
+                    loadedSprites[file] = img;
+                    loaded++;
+                    updateProgress(loaded, files.length, onComplete);
+                };
+                img.onerror = () => {
+                    loaded++;
+                    updateProgress(loaded, files.length, onComplete);
+                };
+                img.src = '../../assets/' + file;
+            });
+        }
+
+        function updateProgress(curr, total, onComplete) {
+            const pct = Math.round((curr / total) * 100);
+            document.getElementById('loadBar').style.width = pct + '%';
+            document.getElementById('loadText').textContent = `LOADING SPRITES ${pct}%`;
+            if (curr >= total) {
+                setupThemeSymbolGroups();
+                setTimeout(() => {
+                    const overlay = document.getElementById('loadingOverlay');
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 600);
+                    assetsReady = true;
+                    onComplete();
+                }, 400);
+            }
+        }
+
+        function setupThemeSymbolGroups() {
+            THEME_SETS.forEach((theme, tIdx) => {
+                const file = theme.file;
+                const coords = SYMBOL_MANIFEST[file] || [];
+                const img = loadedSprites[file];
+
+                const group = coords.map((crop, idx) => ({
+                    id: `${tIdx}_${idx}`,
+                    img: img,
+                    crop: crop,
+                    payout: (idx + 2) * 2,
+                    isWild: (idx === 0),
+                    isScatter: (idx === coords.length - 1)
+                }));
+                parsedSymbolsByTheme.push(group);
+            });
+        }
+
+        const canvas = document.getElementById('slotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const parent = canvas.parentElement;
+            canvas.width = Math.max(1, parent.clientWidth);
+            canvas.height = Math.max(1, parent.clientHeight);
+            drawBoard();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function initBoard() {
+            board = [];
+            reelsState = [];
+            for (let c = 0; c < COLS; c++) {
+                const col = [];
+                for (let r = 0; r < ROWS; r++) {
+                    col.push(getRandomSymbolIndex());
+                }
+                board.push(col);
+
+                reelsState.push({
+                    offsetY: 0,
+                    speed: 0,
+                    isSpinning: false,
+                    targetSymbols: [...col]
+                });
+            }
+        }
+
+        function getRandomSymbolIndex(forceScatter = false) {
+            const currentSymbols = parsedSymbolsByTheme[activeThemeIdx] || [];
+            if (currentSymbols.length === 0) return 0;
+
+            if (forceScatter) {
+                const scatIdx = currentSymbols.findIndex(s => s.isScatter);
+                if (scatIdx !== -1) return scatIdx;
+            }
+            return Math.floor(Math.random() * currentSymbols.length);
+        }
+
+        // Draw Board with Particle Explosion Crash Animation
+        function drawBoard() {
+            if (!board || board.length === 0) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cellW = canvas.width / COLS;
+            const cellH = canvas.height / ROWS;
+            const currentSymbols = parsedSymbolsByTheme[activeThemeIdx] || [];
+
+            for (let c = 0; c < COLS; c++) {
+                const reel = reelsState[c];
+                const offsetY = reel ? reel.offsetY : 0;
+
+                for (let r = 0; r < ROWS; r++) {
+                    const x = c * cellW;
+                    const y = r * cellH + offsetY;
+                    const symIdx = board[c][r];
+
+                    const isGlowing = glowingCells.some(cell => cell.c === c && cell.r === r);
+                    const isCrashing = crashingCells.some(cell => cell.c === c && cell.r === r);
+
+                    if (isCrashing) {
+                        // Dynamic Particle Blast & Shattering Icon Explosion
+                        ctx.save();
+                        const centerX = x + cellW / 2;
+                        const centerY = y + cellH / 2;
+
+                        // 1. Exploding Shockwave Ring
+                        ctx.strokeStyle = '#FFD700';
+                        ctx.lineWidth = 4;
+                        ctx.shadowColor = '#FF00E5';
+                        ctx.shadowBlur = 25;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, cellW / 2.6, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // 2. Bursting Debris Sparks
+                        const particleCount = 14;
+                        for (let p = 0; p < particleCount; p++) {
+                            const angle = (p * Math.PI * 2) / particleCount;
+                            const dist = (cellW / 2.8) * (0.6 + Math.random() * 0.5);
+                            const px = centerX + Math.cos(angle) * dist;
+                            const py = centerY + Math.sin(angle) * dist;
+                            const pSize = Math.random() * 6 + 3;
+
+                            ctx.fillStyle = (p % 2 === 0) ? '#FFD700' : '#FF00E5';
+                            ctx.shadowColor = '#FFD700';
+                            ctx.shadowBlur = 15;
+                            ctx.beginPath();
+                            ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+
+                        // 3. Icon Vibration & Dissolve Shatter Effect
+                        const sym = currentSymbols[symIdx];
+                        if (sym && sym.img) {
+                            ctx.globalAlpha = 0.5; // Fading
+                            const shakeX = (Math.random() - 0.5) * 10;
+                            const shakeY = (Math.random() - 0.5) * 10;
+
+                            ctx.drawImage(
+                                sym.img,
+                                sym.crop.x, sym.crop.y, sym.crop.width, sym.crop.height,
+                                x + 12 + shakeX, y + 12 + shakeY, cellW - 24, cellH - 24
+                            );
+                        }
+
+                        ctx.restore();
+                        continue;
+                    }
+
+                    // Background Cell Plate
+                    ctx.save();
+                    if (isGlowing) {
+                        ctx.fillStyle = 'rgba(255, 215, 0, 0.38)';
+                        ctx.strokeStyle = '#FFD700';
+                        ctx.lineWidth = 3;
+                        ctx.shadowColor = '#FFD700';
+                        ctx.shadowBlur = 25;
+                    } else {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                        ctx.strokeStyle = THEME_SETS[activeThemeIdx].color + '44';
+                        ctx.lineWidth = 1.5;
+                    }
+
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(x + 5, y + 5, cellW - 10, cellH - 10, 12);
+                    else ctx.rect(x + 5, y + 5, cellW - 10, cellH - 10);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // Render Symbol Sprite
+                    const sym = currentSymbols[symIdx];
+                    if (sym && sym.img) {
+                        try {
+                            ctx.save();
+                            if (isGlowing) {
+                                ctx.shadowColor = '#FFD700';
+                                ctx.shadowBlur = 25;
+                            } else if (sym.isWild || sym.isScatter) {
+                                ctx.shadowColor = sym.isScatter ? '#FFD700' : '#00F0FF';
+                                ctx.shadowBlur = 14;
+                            }
+
+                            if (reel && reel.isSpinning) {
+                                ctx.filter = 'blur(2px)';
+                            }
+
+                            ctx.drawImage(
+                                sym.img,
+                                sym.crop.x, sym.crop.y, sym.crop.width, sym.crop.height,
+                                x + 12, y + 12, cellW - 24, cellH - 24
+                            );
+
+                            ctx.restore();
+                        } catch (e) {}
+                    }
+                }
+            }
+        }
+
+        function triggerTitleHitEffect() {
+            const banner = document.getElementById('boardTitleBanner');
+            const titleText = document.getElementById('boardTitleText');
+            
+            const colors = ['#FFD700', '#00F0FF', '#FF00E5', '#00FF88', '#FF3366', '#A855F7'];
+            const c1 = colors[Math.floor(Math.random() * colors.length)];
+            const c2 = colors[Math.floor(Math.random() * colors.length)];
+
+            banner.style.boxShadow = `0 0 45px ${c1}, inset 0 0 25px ${c2}`;
+            banner.style.borderColor = c1;
+            titleText.style.filter = `drop-shadow(0 0 20px ${c1})`;
+            titleText.style.transform = `scale(1.06)`;
+
+            setTimeout(() => {
+                titleText.style.transform = `scale(1)`;
+            }, 300);
+        }
+
+        function applyTheme(themeIdx) {
+            activeThemeIdx = themeIdx;
+            const theme = THEME_SETS[themeIdx];
+            document.documentElement.style.setProperty('--theme-color', theme.color);
+            document.documentElement.style.setProperty('--theme-glow', theme.glow);
+            document.getElementById('boardTitleText').textContent = theme.name;
+            document.getElementById('bgLayer').style.backgroundImage = `url('${theme.bg}')`;
+
+            initBoard();
+            drawBoard();
+            triggerTitleHitEffect();
+        }
+
+        function startSpin() {
+            if (isSpinning || !assetsReady) return;
+            if (balance < bet) balance = 10000;
+
+            isSpinning = true;
+            balance -= bet;
+            lastWin = 0;
+            cascadeMultiplier = 1;
+            spinCount++;
+
+            triggerTitleHitEffect();
+
+            if (spinCount % 10 === 0) {
+                applyTheme((activeThemeIdx + 1) % THEME_SETS.length);
+            }
+
+            updateUI();
+
+            const isGuaranteedScatter = (spinCount % SCATTER_CYCLE === 0);
+
+            const finalBoard = [];
+            for (let c = 0; c < COLS; c++) {
+                const col = [];
+                for (let r = 0; r < ROWS; r++) {
+                    col.push(getRandomSymbolIndex());
+                }
+                finalBoard.push(col);
+            }
+
+            if (isGuaranteedScatter) {
+                finalBoard[0][1] = getRandomSymbolIndex(true);
+                finalBoard[2][1] = getRandomSymbolIndex(true);
+                finalBoard[4][1] = getRandomSymbolIndex(true);
+            }
+
+            for (let c = 0; c < COLS; c++) {
+                reelsState[c].isSpinning = true;
+                reelsState[c].speed = 28 + c * 2;
+                reelsState[c].targetSymbols = finalBoard[c];
+            }
+
+            let lastTime = performance.now();
+
+            function animateReels(now) {
+                const dt = (now - lastTime) / 1000;
+                lastTime = now;
+
+                let anySpinning = false;
+                const cellH = canvas.height / ROWS;
+
+                for (let c = 0; c < COLS; c++) {
+                    const reel = reelsState[c];
+                    if (reel.isSpinning) {
+                        anySpinning = true;
+                        reel.offsetY += reel.speed;
+
+                        if (reel.offsetY >= cellH) {
+                            reel.offsetY %= cellH;
+                            for (let r = ROWS - 1; r > 0; r--) {
+                                board[c][r] = board[c][r - 1];
+                            }
+                            board[c][0] = getRandomSymbolIndex();
+                        }
+                    }
+                }
+
+                drawBoard();
+
+                if (anySpinning) {
+                    requestAnimationFrame(animateReels);
+                }
+            }
+
+            requestAnimationFrame(animateReels);
+
+            for (let c = 0; c < COLS; c++) {
+                const stopDelay = 500 + (c * 300);
+
+                setTimeout(() => {
+                    reelsState[c].isSpinning = false;
+                    reelsState[c].offsetY = 0;
+                    board[c] = reelsState[c].targetSymbols;
+                    drawBoard();
+
+                    if (c === COLS - 1) {
+                        setTimeout(processCascades, 200);
+                    }
+                }, stopDelay);
+            }
+        }
+
+        // Cascading Cycle Engine with Animated Crash Burst
+        function processCascades() {
+            const winData = evaluateBoard();
+
+            if (winData.winningCells.length > 0 || winData.scatterCount >= 3) {
+                triggerTitleHitEffect();
+
+                let currentStepWin = winData.payout * bet * cascadeMultiplier;
+                
+                if (winData.scatterCount >= 3) {
+                    currentStepWin += bet * 25;
+                }
+
+                lastWin += currentStepWin;
+                balance += currentStepWin;
+
+                // STAGE 1: Glowing Matched Icons
+                glowingCells = winData.winningCells;
+                crashingCells = [];
+                drawBoard();
+
+                // STAGE 2: Particle Shatter Crash
+                setTimeout(() => {
+                    glowingCells = [];
+                    crashingCells = winData.winningCells;
+
+                    // Continuously redraw during crash frame to vibrate icon
+                    let crashInterval = setInterval(() => {
+                        drawBoard();
+                    }, 40);
+
+                    // STAGE 3: Refill & Cascade Drop
+                    setTimeout(() => {
+                        clearInterval(crashInterval);
+                        crashingCells = [];
+                        dropAndRefillSymbols(winData.winningCells);
+                        cascadeMultiplier++;
+                        updateUI();
+                        drawBoard();
+
+                        setTimeout(processCascades, 350);
+                    }, 450); // Crash Burst Duration
+                }, 500); // Glow Duration
+
+            } else {
+                glowingCells = [];
+                crashingCells = [];
+                if (lastWin >= bet * 10) {
+                    showTransactionThenWin(lastWin);
+                } else if (lastWin > 0) {
+                    showWinOverlay(lastWin);
+                    isSpinning = false;
+                    updateUI();
+                } else {
+                    isSpinning = false;
+                    updateUI();
+                }
+            }
+        }
+
+        function dropAndRefillSymbols(crashed) {
+            for (let c = 0; c < COLS; c++) {
+                const colRemaining = [];
+                for (let r = 0; r < ROWS; r++) {
+                    const wasCrashed = crashed.some(cell => cell.c === c && cell.r === r);
+                    if (!wasCrashed) {
+                        colRemaining.push(board[c][r]);
+                    }
+                }
+
+                while (colRemaining.length < ROWS) {
+                    colRemaining.unshift(getRandomSymbolIndex());
+                }
+
+                for (let r = 0; r < ROWS; r++) {
+                    board[c][r] = colRemaining[r];
+                }
+            }
+        }
+
+        function evaluateBoard() {
+            const currentSymbols = parsedSymbolsByTheme[activeThemeIdx] || [];
+            const winningCells = [];
+            let payout = 0;
+            let scatterCount = 0;
+
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    const sym = currentSymbols[board[c][r]];
+                    if (sym && sym.isScatter) {
+                        scatterCount++;
+                        winningCells.push({ c, r });
+                    }
+                }
+            }
+
+            for (let r = 0; r < ROWS; r++) {
+                let matchCount = 1;
+                const line = [{ c: 0, r }];
+                
+                let baseSymIdx = board[0][r];
+                let baseSym = currentSymbols[baseSymIdx];
+
+                for (let c = 1; c < COLS; c++) {
+                    const curSymIdx = board[c][r];
+                    const curSym = currentSymbols[curSymIdx];
+
+                    if (curSym && baseSym && (curSym.isWild || baseSym.isWild || curSymIdx === baseSymIdx)) {
+                        matchCount++;
+                        line.push({ c, r });
+                        if (baseSym.isWild && !curSym.isWild) {
+                            baseSym = curSym;
+                            baseSymIdx = curSymIdx;
+                        }
+                    } else break;
+                }
+
+                if (matchCount >= 3) {
+                    payout += (baseSym ? baseSym.payout : 4) * matchCount;
+                    line.forEach(cell => {
+                        if (!winningCells.some(w => w.c === cell.c && w.r === cell.r)) {
+                            winningCells.push(cell);
+                        }
+                    });
+                }
+            }
+
+            return { winningCells, payout, scatterCount };
+        }
+
+        function showTransactionThenWin(amount) {
+            const tx = document.getElementById('txOverlay');
+            tx.classList.add('active');
+            setTimeout(() => {
+                tx.classList.remove('active');
+                showWinOverlay(amount);
+                isSpinning = false;
+                updateUI();
+            }, 1400);
+        }
+
+        function showWinOverlay(amount) {
+            const winOverlay = document.getElementById('winOverlay');
+            document.getElementById('winTierText').textContent = amount >= bet * 20 ? '🔥 MEGA CASCADE WIN!' : '✨ CASCADE WIN!';
+            document.getElementById('winAmountText').textContent = '+' + amount.toLocaleString();
+            winOverlay.classList.add('active');
+            setTimeout(() => {
+                winOverlay.classList.remove('active');
+            }, 2200);
+        }
+
+        function updateUI() {
+            document.getElementById('balanceVal').textContent = balance.toLocaleString();
+            document.getElementById('betVal').textContent = bet.toLocaleString();
+            document.getElementById('winVal').textContent = lastWin.toLocaleString();
+            document.getElementById('multVal').textContent = '×' + cascadeMultiplier;
+
+            const remainingSpins = SCATTER_CYCLE - (spinCount % SCATTER_CYCLE);
+            document.getElementById('scatterTracker').textContent = `SCATTER IN: ${remainingSpins === 0 ? SCATTER_CYCLE : remainingSpins}`;
+
+            const spinBtn = document.getElementById('spinBtn');
+            if (isSpinning) {
+                spinBtn.textContent = 'SPINNING…';
+                spinBtn.disabled = true;
+            } else {
+                spinBtn.textContent = 'SPIN';
+                spinBtn.disabled = false;
+            }
+        }
+
+        document.getElementById('spinBtn').addEventListener('click', startSpin);
+        document.getElementById('btnThemeSwitch').addEventListener('click', () => {
+            if (!isSpinning) {
+                applyTheme((activeThemeIdx + 1) % THEME_SETS.length);
+            }
+        });
+
+        document.getElementById('btnBetUp').addEventListener('click', () => {
+            if (!isSpinning && bet < MAX_BET) { bet += BET_STEP; updateUI(); }
+        });
+        document.getElementById('btnBetDown').addEventListener('click', () => {
+            if (!isSpinning && bet > MIN_BET) { bet -= BET_STEP; updateUI(); }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                startSpin();
+            }
+        });
+
+        loadSpriteAssets(() => {
+            applyTheme(0);
+            resizeCanvas();
+        });
+    </script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

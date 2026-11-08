@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b1c">
+  <meta name="description" content="Explore 39 free-play slot-style browser game demos in the Spin Palace static showcase.">
+  <link rel="icon" type="image/png" href="assets/spin-palace-icon-80x80.png">
+  <link rel="stylesheet" href="static/demo.css">
+  <title>Spin Palace — Static Game Demo</title>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Spin Palace home">
+      <img src="assets/spin-palace-icon-80x80.png" alt="" width="42" height="42">
+      <span>SPIN <b>PALACE</b></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#games">Games</a>
+      <a href="admin.html">Admin Preview</a>
+      <span class="demo-pill"><i></i> STATIC DEMO</span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Spin Palace demo">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> BROWSER ARCADE SHOWCASE</p>
+        <h1>Spin into a world<br>of <em>bright ideas.</em></h1>
+        <p class="intro">Explore a collection of 39 colorful slot-style game demos. One click opens each game right in your browser.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#games">Explore the games <span>↓</span></a>
+          <a class="button button-quiet" href="admin.html">View admin preview <span>↗</span></a>
+        </div>
+        <p class="demo-note">FREE PLAY <span>•</span> VIRTUAL CREDITS <span>•</span> NO REAL-MONEY PLAY</p>
+      </div>
+      <a class="banner-link" href="#games" aria-label="Explore the Spin Palace game demo">
+        <img src="assets/spin-palace-banner-590x300.png" alt="Spin Palace Slot Arcade — a collection of 39 browser game demos">
+      </a>
+    </section>
+
+    <section class="game-section" id="games">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">THE COLLECTION</p>
+          <h2>Find your next favorite</h2>
+        </div>
+        <label class="search">
+          <span aria-hidden="true">⌕</span>
+          <input id="gameSearch" type="search" placeholder="Search games..." autocomplete="off">
+        </label>
+      </div>
+      <div class="chips" aria-label="Filter games">
+        <button class="chip active" data-filter="all">All games</button>
+        <button class="chip" data-filter="popular">Featured</button>
+      </div>
+      <div class="game-grid" id="gameGrid" aria-live="polite">
+        <p class="loading">Loading the game collection…</p>
+      </div>
+      <p class="empty-state" id="emptyState" hidden>No games match your search.</p>
+    </section>
+
+    <section class="notice">
+      <span class="notice-icon" aria-hidden="true">ⓘ</span>
+      <p><b>Demo only.</b> This static GitHub Pages showcase has no backend, accounts, deposits, or withdrawals. Credits and game outcomes are for demonstration and entertainment only.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand footer-brand" href="./"><img src="assets/spin-palace-icon-80x80.png" alt="" width="28" height="28"><span>SPIN <b>PALACE</b></span></a>
+    <span>Static browser demo · Virtual credits only</span>
+    <a href="admin.html">Admin preview</a>
+  </footer>
+  <script src="static/demo.js" defer></script>
+</body>
+</html>
+

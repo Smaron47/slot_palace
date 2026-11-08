@@ -1,0 +1,995 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHARAOH'S SOLAR NOVA - MULTI-SPRITE CRASH ENGINE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            background: #030005;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animated GIF Background Layer */
+        #bgLayer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: url('../../assets/bg1.gif');
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.55) contrast(1.1);
+            transition: background-image 0.8s ease-in-out;
+        }
+
+        #sunPulse {
+            position: fixed;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(255, 0, 85, 0.08) 50%, transparent 75%);
+            border-radius: 50%;
+            animation: pulseGlow 5s ease-in-out infinite alternate;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.5; }
+            100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
+        }
+
+        /* Screen Shake Effect during Crash/Blast */
+        .shake {
+            animation: screenShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes screenShake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, -3px, 0); }
+            40%, 60% { transform: translate3d(6px, 3px, 0); }
+        }
+
+        /* Loading Screen Overlay */
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #05020a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .loading-gif-preview {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 15px;
+            border-radius: 50%;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+            object-fit: cover;
+        }
+        .loading-bar-container {
+            width: min(380px, 80vw);
+            height: 16px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #FF0055, #FFD700, #00FFCC);
+            transition: width 0.3s ease;
+        }
+        .loading-text {
+            font-family: 'Cinzel Decorative', serif;
+            margin-top: 14px;
+            font-size: 0.85rem;
+            color: #FFD700;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #FFD700;
+        }
+
+        /* Main Game Container */
+        #gameContainer {
+            position: relative;
+            z-index: 10;
+            width: min(1080px, 95vw);
+            height: min(740px, 92vh);
+            background: rgba(10, 4, 14, 0.82);
+            backdrop-filter: blur(22px);
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.3), inset 0 0 40px rgba(255, 0, 85, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .top-bar {
+            height: 72px;
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(25, 6, 16, 0.95), rgba(8, 2, 5, 0.9));
+            border-bottom: 1.5px solid rgba(255, 215, 0, 0.35);
+        }
+
+        .gradient-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #FFD700 0%, #FFF 25%, #FF0055 50%, #00FFCC 75%, #FFD700 100%);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: goldFlow 6s linear infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+        }
+
+        @keyframes goldFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bg-selector {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #FFD700;
+            color: #FFD700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .theme-badge {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.7rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid #FFD700;
+            color: #FFD700;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Main Game Layout */
+        .main-area {
+            flex: 1;
+            display: flex;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        /* Character Portrait Side Panel */
+        .char-panel {
+            width: 110px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .char-card {
+            flex: 1;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+        .char-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.9) contrast(1.1);
+            transition: transform 0.3s;
+        }
+        .char-card:hover img {
+            transform: scale(1.08);
+        }
+
+        .reel-container {
+            flex: 1;
+            position: relative;
+            background: rgba(4, 1, 6, 0.88);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.95);
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Control Panel Dashboard */
+        .dashboard {
+            width: 240px;
+            background: rgba(10, 3, 12, 0.92);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #FFD700;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+        .stat-value {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #FFF;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .bet-adjust {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.65);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .btn-bet {
+            width: 36px;
+            height: 36px;
+            background: #FFD700;
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .spin-btn {
+            height: 60px;
+            background: linear-gradient(135deg, #FFD700, #FF0055);
+            border: 2px solid #FFF;
+            border-radius: 12px;
+            color: #FFF;
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.15rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+            transition: 0.2s;
+        }
+        .spin-btn:hover {
+            transform: scale(1.02);
+            filter: brightness(1.2);
+        }
+        .spin-btn:disabled {
+            filter: grayscale(0.8);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Win Celebration Modal Overlay */
+        #winModal {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            animation: fadeIn 0.3s ease;
+        }
+        #winModal.active { display: flex; }
+        .win-gif-banner {
+            max-width: 280px;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 0 40px #FFD700;
+        }
+        .win-banner-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 2.2rem;
+            color: #FFD700;
+            margin-top: 15px;
+            text-shadow: 0 0 20px #FF0055;
+        }
+        .win-banner-amount {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 2.8rem;
+            color: #00FFCC;
+            text-shadow: 0 0 25px #00FFCC;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+
+    <div id="bgLayer"></div>
+    <div id="sunPulse"></div>
+
+    <!-- Loader with Animated GIF -->
+    <div id="loadingOverlay">
+        <img src="../../assets/loading&win.gif" class="loading-gif-preview" alt="Loading...">
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadBar"></div>
+        </div>
+        <div class="loading-text" id="loadText">LOADING SPRITES & GIFS 0%</div>
+    </div>
+
+    <!-- Main Game Frame -->
+    <div id="gameContainer">
+        <div id="winModal">
+            <img src="../../assets/win.gif" class="win-gif-banner" alt="Big Win!">
+            <div class="win-banner-title">SOLAR SUPERNOVA WIN!</div>
+            <div class="win-banner-amount" id="winModalAmount">+1,000</div>
+        </div>
+
+        <div class="top-bar">
+            <div class="gradient-title">☀️ PHARAOH'S CRASH ENGINE ☀️</div>
+            <div class="header-controls">
+                <select class="bg-selector" id="bgSelect" title="Select GIF Background">
+                    <option value="bg1.gif">BG 1: Solar Temple</option>
+                    <option value="bg2.gif">BG 2: Cosmic Rift</option>
+                    <option value="bg6_magic1.gif">BG 3: Magic Portal</option>
+                    <option value="bg7.gif">BG 4: Golden Galaxy</option>
+                    <option value="bg10.gif">BG 5: Solar Burst</option>
+                    <option value="bg11.gif">BG 6: Dark Nova</option>
+                </select>
+                <div class="theme-badge">3D CRASH & FADE ENGINE</div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <!-- Left Side Characters Panel -->
+            <div class="char-panel">
+                <div class="char-card">
+                    <img src="../../assets/character1.jpg" alt="Pharaoh Guardian">
+                </div>
+                <div class="char-card">
+                    <img src="../../assets/char2.jpg" alt="Solar Priestess">
+                </div>
+            </div>
+
+            <div class="reel-container">
+                <canvas id="slotCanvas"></canvas>
+            </div>
+
+            <!-- Dashboard Controls -->
+            <div class="dashboard">
+                <div class="stat-box">
+                    <div class="stat-label">SACRED TREASURE</div>
+                    <div class="stat-value" id="balanceVal">10,000</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">SOLAR PAYOUT</div>
+                    <div class="stat-value" id="winVal" style="color: #00FFCC;">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">GOD MULTIPLIER</div>
+                    <div class="stat-value" id="multVal" style="color: #FF0055;">×1</div>
+                </div>
+
+                <div class="controls">
+                    <div class="stat-label">GOLD OFFERING</div>
+                    <div class="bet-adjust">
+                        <button class="btn-bet" id="btnBetDown">-</button>
+                        <div class="stat-value" id="betVal" style="font-size:1.1rem;">20</div>
+                        <button class="btn-bet" id="btnBetUp">+</button>
+                    </div>
+                    <button class="spin-btn" id="spinBtn">INVOKE SUN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sprite Manifest
+        const SYMBOL_MANIFEST = {
+            "Gemini_Generated_Image_i35z31i35z31i35z.jpg": [
+                {"x": 91, "y": 78, "width": 226, "height": 295},
+                {"x": 347, "y": 78, "width": 226, "height": 292},
+                {"x": 604, "y": 78, "width": 224, "height": 292},
+                {"x": 859, "y": 77, "width": 226, "height": 295}
+            ],
+            "Gemini_Generated_Image_qkhh8pqkhh8pqkhh.jpg": [
+                {"x": 11, "y": 19, "width": 316, "height": 322},
+                {"x": 348, "y": 18, "width": 311, "height": 323},
+                {"x": 12, "y": 366, "width": 315, "height": 322},
+                {"x": 347, "y": 366, "width": 317, "height": 320}
+            ],
+            "ultimate_multi_slot_sprite.jpg": [
+                {"x": 25, "y": 402, "width": 82, "height": 64},
+                {"x": 115, "y": 401, "width": 78, "height": 67},
+                {"x": 199, "y": 403, "width": 78, "height": 61},
+                {"x": 287, "y": 402, "width": 75, "height": 66}
+            ]
+        };
+
+        const COLS = 5;
+        const ROWS = 4;
+        let balance = 10000;
+        let bet = 20;
+        let lastWin = 0;
+        let cascadeMultiplier = 1;
+        let isSpinning = false;
+        let assetsReady = false;
+
+        const loadedSprites = {};
+        const allLoadedSymbols = [];
+
+        let board = [];
+        let renderState = [];
+        let blastState = []; 
+        let activeParticles = [];
+
+        // Dynamic Background Gif Selector
+        document.getElementById('bgSelect').addEventListener('change', (e) => {
+            document.getElementById('bgLayer').style.backgroundImage = `url('../../assets/${e.target.value}')`;
+        });
+
+        // Asset Loader
+        function loadSpriteAssets(onComplete) {
+            const files = Object.keys(SYMBOL_MANIFEST);
+            let loaded = 0;
+
+            files.forEach(file => {
+                const img = new Image();
+                img.onload = () => {
+                    loadedSprites[file] = img;
+                    loaded++;
+                    updateProgress(loaded, files.length, onComplete);
+                };
+                img.onerror = () => {
+                    loaded++;
+                    updateProgress(loaded, files.length, onComplete);
+                };
+                img.src = '../../assets/' + file;
+            });
+        }
+
+        function updateProgress(curr, total, onComplete) {
+            const pct = Math.round((curr / total) * 100);
+            document.getElementById('loadBar').style.width = pct + '%';
+            document.getElementById('loadText').textContent = `LOADING SPRITES & GIFS ${pct}%`;
+            if (curr >= total) {
+                parseAndMixSymbols();
+                setTimeout(() => {
+                    const overlay = document.getElementById('loadingOverlay');
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 500);
+                    assetsReady = true;
+                    onComplete();
+                }, 400);
+            }
+        }
+
+        function parseAndMixSymbols() {
+            Object.keys(SYMBOL_MANIFEST).forEach(file => {
+                const coords = SYMBOL_MANIFEST[file];
+                const img = loadedSprites[file];
+
+                coords.forEach((crop, idx) => {
+                    allLoadedSymbols.push({
+                        img: img,
+                        crop: crop,
+                        payout: (idx + 2) * 4,
+                        isWild: (idx === 0)
+                    });
+                });
+            });
+        }
+
+        const canvas = document.getElementById('slotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const parent = canvas.parentElement;
+            canvas.width = Math.max(1, parent.clientWidth);
+            canvas.height = Math.max(1, parent.clientHeight);
+            drawBoard();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function initBoard() {
+            board = [];
+            renderState = [];
+            for (let c = 0; c < COLS; c++) {
+                const col = [];
+                const renderCol = [];
+                for (let r = 0; r < ROWS; r++) {
+                    col.push(getRandomSymbolIndex());
+                    renderCol.push({ flipY: 1, scale: 1, angle: 0, opacity: 1, offsetY: 0 });
+                }
+                board.push(col);
+                renderState.push(renderCol);
+            }
+        }
+
+        function getRandomSymbolIndex() {
+            if (allLoadedSymbols.length === 0) return 0;
+            return Math.floor(Math.random() * allLoadedSymbols.length);
+        }
+
+        // Draw Canvas Board with Crash / Fade / Disintegration Animations
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cellW = canvas.width / COLS;
+            const cellH = canvas.height / ROWS;
+
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    const render = renderState[c][r];
+                    const x = c * cellW;
+                    const y = r * cellH + render.offsetY;
+                    const symIdx = board[c][r];
+                    const sym = allLoadedSymbols[symIdx];
+
+                    const blastData = blastState.find(b => b.c === c && b.r === r);
+
+                    ctx.save();
+
+                    // Tile Container Slab
+                    ctx.fillStyle = 'rgba(8, 3, 10, 0.75)';
+                    ctx.strokeStyle = blastData ? '#FFD700' : 'rgba(255, 215, 0, 0.2)';
+                    ctx.lineWidth = blastData ? 2.5 : 1;
+                    
+                    if (blastData) {
+                        ctx.shadowColor = '#FFD700';
+                        ctx.shadowBlur = 20 * (1 - blastData.progress);
+                    }
+
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(x + 5, y + 5, cellW - 10, cellH - 10, 12);
+                    else ctx.rect(x + 5, y + 5, cellW - 10, cellH - 10);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    const centerX = x + cellW / 2;
+                    const centerY = y + cellH / 2;
+
+                    if (sym && sym.img) {
+                        if (blastData) {
+                            // CRASH & DISINTEGRATION ANIMATION PHASE
+                            const p = blastData.progress;
+
+                            ctx.translate(centerX, centerY);
+                            
+                            // Scale implosion then explosion shatter effect
+                            const scale = (1 + Math.sin(p * Math.PI) * 0.45) * (1 - p * 0.3);
+                            const rotateAngle = (p * Math.PI * 0.5) * (c % 2 === 0 ? 1 : -1);
+                            
+                            ctx.scale(scale, scale);
+                            ctx.rotate(rotateAngle);
+                            
+                            // Crash Alpha Fade Out
+                            ctx.globalAlpha = Math.max(0, 1 - p * 1.2);
+
+                            // Solar Shockwave Explosion Ring
+                            ctx.save();
+                            ctx.strokeStyle = `rgba(255, 215, 0, ${1 - p})`;
+                            ctx.lineWidth = 4 * (1 - p);
+                            ctx.beginPath();
+                            ctx.arc(0, 0, p * (cellW * 0.8), 0, Math.PI * 2);
+                            ctx.stroke();
+                            ctx.restore();
+
+                            ctx.shadowColor = '#FF0055';
+                            ctx.shadowBlur = 30 * p;
+
+                            ctx.drawImage(
+                                sym.img,
+                                sym.crop.x, sym.crop.y, sym.crop.width, sym.crop.height,
+                                -cellW / 2 + 10, -cellH / 2 + 10, cellW - 20, cellH - 20
+                            );
+
+                        } else {
+                            // NORMAL 3D SOLAR FLIP & TUMBLE
+                            ctx.translate(centerX, centerY);
+                            ctx.globalAlpha = render.opacity;
+                            ctx.scale(render.scale, render.flipY * render.scale);
+                            ctx.rotate(render.angle);
+
+                            if (sym.isWild) {
+                                ctx.shadowColor = '#FFD700';
+                                ctx.shadowBlur = 20;
+                            }
+
+                            ctx.drawImage(
+                                sym.img,
+                                sym.crop.x, sym.crop.y, sym.crop.width, sym.crop.height,
+                                -cellW / 2 + 10, -cellH / 2 + 10, cellW - 20, cellH - 20
+                            );
+                        }
+                    }
+
+                    ctx.restore();
+                }
+            }
+
+            // CRASH SHATTER PARTICLES & SPARKS ENGINE
+            for (let i = activeParticles.length - 1; i >= 0; i--) {
+                const p = activeParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity || 0.15; // Gravity pull on crash shards
+                p.alpha -= p.fade || 0.025;
+
+                if (p.alpha <= 0) {
+                    activeParticles.splice(i, 1);
+                } else {
+                    ctx.save();
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        // 3D Flip Spin Engine
+        function startSpin() {
+            if (isSpinning || !assetsReady) return;
+            if (balance < bet) balance = 10000;
+
+            hideWinModal();
+            isSpinning = true;
+            balance -= bet;
+            lastWin = 0;
+            cascadeMultiplier = 1;
+            updateUI();
+
+            const startTime = performance.now();
+            const spinDuration = 900;
+
+            function animate3DFlip(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / spinDuration);
+
+                for (let c = 0; c < COLS; c++) {
+                    for (let r = 0; r < ROWS; r++) {
+                        const render = renderState[c][r];
+                        render.flipY = Math.cos((progress * Math.PI * 4) + (c * 0.25));
+                        render.angle = (1 - progress) * (c % 2 === 0 ? 0.35 : -0.35);
+                        render.scale = 0.5 + (Math.sin(progress * Math.PI) * 0.5);
+                    }
+                }
+
+                drawBoard();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate3DFlip);
+                } else {
+                    for (let c = 0; c < COLS; c++) {
+                        for (let r = 0; r < ROWS; r++) {
+                            board[c][r] = getRandomSymbolIndex();
+                            renderState[c][r] = { flipY: 1, scale: 1, angle: 0, opacity: 1, offsetY: 0 };
+                        }
+                    }
+                    drawBoard();
+                    setTimeout(processCascades, 150);
+                }
+            }
+
+            requestAnimationFrame(animate3DFlip);
+        }
+
+        // Cascade Engine with Triggered Crash, Shake & Particle Shatter
+        function processCascades() {
+            const winningCells = evaluateBoard();
+
+            if (winningCells.length > 0) {
+                triggerScreenShake();
+
+                let stepWin = winningCells.length * bet * 0.6 * cascadeMultiplier;
+                lastWin += stepWin;
+                balance += stepWin;
+
+                blastState = winningCells.map(cell => ({ c: cell.c, r: cell.r, progress: 0 }));
+
+                // Spawn Crash Shard Particles
+                const cellW = canvas.width / COLS;
+                const cellH = canvas.height / ROWS;
+                winningCells.forEach(cell => {
+                    const cx = cell.c * cellW + cellW / 2;
+                    const cy = cell.r * cellH + cellH / 2;
+                    
+                    // High-density Shard Explosion
+                    for (let i = 0; i < 20; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 9 + 3;
+                        activeParticles.push({
+                            x: cx,
+                            y: cy,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            gravity: 0.2,
+                            size: Math.random() * 4.5 + 2,
+                            color: Math.random() > 0.4 ? '#FFD700' : '#FF0055',
+                            alpha: 1,
+                            fade: Math.random() * 0.02 + 0.02
+                        });
+                    }
+                });
+
+                let blastStart = performance.now();
+                const blastDuration = 550;
+
+                function animateBlast(now) {
+                    const elapsed = now - blastStart;
+                    const p = Math.min(1, elapsed / blastDuration);
+
+                    blastState.forEach(b => b.progress = p);
+                    drawBoard();
+
+                    if (p < 1 || activeParticles.length > 0) {
+                        requestAnimationFrame(animateBlast);
+                    } else {
+                        blastState = [];
+                        refillMatrixWithTumble(winningCells);
+                        cascadeMultiplier++;
+                        updateUI();
+                        drawBoard();
+
+                        setTimeout(processCascades, 260);
+                    }
+                }
+
+                requestAnimationFrame(animateBlast);
+
+            } else {
+                isSpinning = false;
+                if (lastWin >= bet * 3) {
+                    showWinModal(lastWin);
+                }
+                updateUI();
+            }
+        }
+
+        function triggerScreenShake() {
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.classList.remove('shake');
+            void gameContainer.offsetWidth; // Trigger reflow
+            gameContainer.classList.add('shake');
+            setTimeout(() => gameContainer.classList.remove('shake'), 400);
+        }
+
+        function refillMatrixWithTumble(crashed) {
+            crashed.forEach(cell => {
+                board[cell.c][cell.r] = getRandomSymbolIndex();
+            });
+        }
+
+        function evaluateBoard() {
+            const winningCells = [];
+
+            for (let r = 0; r < ROWS; r++) {
+                let matchLength = 1;
+                let currentLine = [{ c: 0, r }];
+
+                for (let c = 1; c < COLS; c++) {
+                    const prevSym = allLoadedSymbols[board[c - 1][r]];
+                    const curSym = allLoadedSymbols[board[c][r]];
+
+                    if ((curSym && prevSym) && (curSym.isWild || prevSym.isWild || board[c][r] === board[c - 1][r])) {
+                        matchLength++;
+                        currentLine.push({ c, r });
+                    } else {
+                        if (matchLength >= 3) {
+                            currentLine.forEach(cell => winningCells.push(cell));
+                        }
+                        matchLength = 1;
+                        currentLine = [{ c, r }];
+                    }
+                }
+                if (matchLength >= 3) {
+                    currentLine.forEach(cell => winningCells.push(cell));
+                }
+            }
+
+            const uniqueCells = [];
+            winningCells.forEach(cell => {
+                if (!uniqueCells.some(u => u.c === cell.c && u.r === cell.r)) {
+                    uniqueCells.push(cell);
+                }
+            });
+
+            return uniqueCells;
+        }
+
+        function showWinModal(amount) {
+            const modal = document.getElementById('winModal');
+            document.getElementById('winModalAmount').textContent = '+' + Math.round(amount).toLocaleString();
+            modal.classList.add('active');
+            setTimeout(hideWinModal, 2800);
+        }
+
+        function hideWinModal() {
+            document.getElementById('winModal').classList.remove('active');
+        }
+
+        function updateUI() {
+            document.getElementById('balanceVal').textContent = balance.toLocaleString();
+            document.getElementById('betVal').textContent = bet.toLocaleString();
+            document.getElementById('winVal').textContent = Math.round(lastWin).toLocaleString();
+            document.getElementById('multVal').textContent = '×' + cascadeMultiplier;
+
+            const spinBtn = document.getElementById('spinBtn');
+            if (isSpinning) {
+                spinBtn.textContent = 'INVOKING…';
+                spinBtn.disabled = true;
+            } else {
+                spinBtn.textContent = 'INVOKE SUN';
+                spinBtn.disabled = false;
+            }
+        }
+
+        document.getElementById('spinBtn').addEventListener('click', startSpin);
+
+        document.getElementById('btnBetUp').addEventListener('click', () => {
+            if (!isSpinning && bet < 1000) { bet += 10; updateUI(); }
+        });
+        document.getElementById('btnBetDown').addEventListener('click', () => {
+            if (!isSpinning && bet > 10) { bet -= 10; updateUI(); }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                startSpin();
+            }
+        });
+
+        loadSpriteAssets(() => {
+            initBoard();
+            resizeCanvas();
+        });
+    </script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

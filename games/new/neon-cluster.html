@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neon Cluster — Synthwave Slot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-deep:#0a0316;
+  --bg-panel:rgba(24,4,52,.78);
+  --cyan:#00f0ff;
+  --cyan-2:#a5f3ff;
+  --pink:#ff2fb9;
+  --pink-2:#ffd1f1;
+  --purple:#8b3dff;
+  --purple-2:#dcc7ff;
+  --orange:#ff7a3d;
+  --yellow:#ffd24a;
+  --green:#22ff88;
+  --red:#ff5577;
+  --text:#f3e8ff;
+  --text-dim:#a994d4;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Rajdhani',system-ui,sans-serif;
+  background:var(--bg-deep);color:var(--text);
+  overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;user-select:none;
+}
+
+/* ---------- synthwave background ---------- */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#0a0316 center/cover no-repeat url('../../assets/bg9.gif');
+  filter:brightness(.45) saturate(1.4) hue-rotate(-30deg);
+  opacity:.92;transition:filter .6s ease,opacity .6s ease;
+}
+#bgLayer.free{filter:brightness(.58) saturate(1.5) hue-rotate(80deg)}
+#bgLayer.big{filter:brightness(.68) saturate(1.55) hue-rotate(-60deg)}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 65%,rgba(255,47,185,.28),transparent 55%),
+    radial-gradient(ellipse at 50% 30%,rgba(139,61,255,.25),transparent 60%),
+    linear-gradient(180deg,rgba(10,3,22,.4) 0%,rgba(10,3,22,.7) 55%,rgba(10,3,22,.95) 100%);
+}
+
+/* synthwave sun */
+#sun{
+  position:fixed;left:50%;top:52%;transform:translate(-50%,-50%);
+  width:min(420px,60vw);aspect-ratio:1;border-radius:50%;
+  background:linear-gradient(180deg,#ffe066 0%,#ff8a3d 40%,#ff2fb9 78%,#8b3dff 100%);
+  z-index:1;pointer-events:none;
+  filter:blur(.5px);
+  opacity:.55;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 55%,transparent 58%,#000 58%,#000 62%,transparent 62%,transparent 66%,#000 66%,#000 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 55%,transparent 58%,#000 58%,#000 62%,transparent 62%,transparent 66%,#000 66%,#000 100%);
+  animation:sunPulse 6s ease-in-out infinite;
+}
+@keyframes sunPulse{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:.68;transform:translate(-50%,-50%) scale(1.03)}}
+
+/* horizon grid */
+#grid{
+  position:fixed;left:-10%;right:-10%;bottom:0;height:42vh;z-index:1;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 55px,rgba(0,240,255,.12) 55px 56px),
+    repeating-linear-gradient(0deg,transparent 0 40px,rgba(255,47,185,.10) 40px 41px);
+  transform:perspective(360px) rotateX(58deg);
+  transform-origin:center bottom;
+  opacity:.75;
+  animation:gridScroll 12s linear infinite;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 55%,#000 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,#000 55%,#000 100%);
+}
+@keyframes gridScroll{0%{background-position:0 0,0 0}100%{background-position:0 0,0 40px}}
+
+/* scanlines */
+#scan{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,240,255,.025) 0 1px,transparent 1px 4px);
+  mix-blend-mode:screen;opacity:.65;
+}
+
+/* ---------- shell ---------- */
+#app{position:relative;z-index:5;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+#game{
+  width:min(1200px,97vw);height:min(780px,96vh);
+  background:linear-gradient(155deg,rgba(24,4,52,.82),rgba(10,3,22,.92));
+  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,47,185,.45);border-radius:24px;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.85),
+    0 0 60px rgba(255,47,185,.16),
+    0 0 100px rgba(0,240,255,.12),
+    inset 0 0 80px rgba(139,61,255,.08);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:60;
+  background:linear-gradient(120deg,transparent 42%,rgba(255,47,185,.09) 50%,transparent 58%);
+  transform:translateX(-130%) skewX(-14deg);
+  animation:shine 9s ease-in-out infinite;
+}
+@keyframes shine{0%,58%{transform:translateX(-130%) skewX(-14deg)}85%,100%{transform:translateX(130%) skewX(-14deg)}}
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 22px;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(10,3,22,.7),transparent);
+  border-bottom:1px solid rgba(255,47,185,.25);
+  position:relative;z-index:2;
+}
+.brand{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.3rem;letter-spacing:3.5px;
+  display:flex;align-items:center;gap:10px;text-transform:uppercase;
+  background:linear-gradient(180deg,#00f0ff 0%,#ffffff 45%,#ff2fb9 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  filter:drop-shadow(0 0 12px rgba(0,240,255,.6)) drop-shadow(0 0 20px rgba(255,47,185,.5));
+}
+.brand .dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 12px var(--cyan);
+  animation:blink 1.3s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.5);
+  border:1px solid rgba(0,240,255,.5);color:var(--cyan-2);
+  font-size:.68rem;font-weight:700;letter-spacing:1.4px;cursor:pointer;
+  transition:.2s;font-family:'Orbitron',sans-serif;text-transform:uppercase;
+}
+.pill:hover{background:rgba(0,240,255,.2);color:#fff;transform:translateY(-1px);
+  box-shadow:0 0 14px rgba(0,240,255,.5)}
+.pill.on{background:rgba(255,47,185,.3);border-color:var(--pink);color:#fff;
+  box-shadow:0 0 14px var(--pink)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--cyan-2) 50%),
+    linear-gradient(135deg,var(--cyan-2) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+  background-size:5px 5px;background-repeat:no-repeat}
+
+/* ---------- main ---------- */
+.main{
+  flex:1;display:grid;grid-template-columns:1fr 280px;
+  gap:14px;padding:14px;min-height:0;position:relative;z-index:2;
+}
+.board-wrap{
+  position:relative;border-radius:16px;
+  background:linear-gradient(160deg,rgba(24,4,52,.5),rgba(10,3,22,.86));
+  border:1px solid rgba(255,47,185,.35);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.75),
+    0 0 44px rgba(255,47,185,.22),
+    0 0 30px rgba(0,240,255,.14);
+  overflow:hidden;min-height:0;
+}
+canvas#board{display:block;width:100%;height:100%;position:relative;z-index:2}
+
+#cascadeBadge{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:22;
+  padding:6px 20px;border-radius:20px;white-space:nowrap;
+  background:linear-gradient(160deg,rgba(0,240,255,.95),rgba(255,47,185,.9));
+  border:2px solid #fff;color:#fff;
+  font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2.5px;font-size:.8rem;
+  text-shadow:0 0 10px #fff,0 0 20px var(--cyan);
+  box-shadow:0 0 30px var(--cyan),0 0 50px var(--pink);
+  display:none;animation:pulse 1.1s ease-in-out infinite;
+}
+#cascadeBadge.on{display:block}
+@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.08)}}
+
+#roamBadge{
+  position:absolute;top:12px;left:14px;z-index:22;
+  padding:6px 14px;border-radius:20px;
+  background:rgba(139,61,255,.85);border:1px solid var(--purple-2);color:#fff;
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:.62rem;letter-spacing:1.5px;
+  box-shadow:0 0 18px rgba(139,61,255,.7);
+}
+
+#fsBadge{
+  position:absolute;top:12px;right:14px;z-index:22;
+  padding:6px 14px;border-radius:20px;
+  background:rgba(6,78,59,.9);border:1px solid var(--green);color:#d1fae5;
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:.62rem;letter-spacing:1.5px;
+  box-shadow:0 0 18px rgba(34,255,136,.6);display:none;
+}
+#fsBadge.on{display:block;animation:pulse 1.4s ease-in-out infinite}
+
+/* ---------- dashboard ---------- */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0}
+.stat{
+  background:linear-gradient(160deg,rgba(24,4,52,.78),rgba(10,3,22,.9));
+  border:1px solid rgba(255,47,185,.3);
+  border-radius:14px;padding:10px 14px;position:relative;overflow:hidden;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(0,240,255,.12) 50%,transparent 60%);
+  animation:shine 6s ease-in-out infinite;
+}
+.stat .lbl{font-size:.58rem;letter-spacing:2.2px;color:var(--text-dim);
+  font-weight:700;text-transform:uppercase;font-family:'Orbitron',sans-serif}
+.stat .val{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.35rem;
+  margin-top:3px;font-variant-numeric:tabular-nums}
+.stat.balance .val{color:var(--cyan);text-shadow:0 0 14px var(--cyan)}
+.stat.win .val{color:var(--green);text-shadow:0 0 14px var(--green)}
+.stat.net .val{color:var(--pink);text-shadow:0 0 14px var(--pink)}
+.stat .val.pop{animation:pop .5s cubic-bezier(.2,.7,.3,1.6)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.28);filter:brightness(1.8)}100%{transform:scale(1)}}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);
+  border:1px solid rgba(255,47,185,.4);border-radius:12px;padding:6px;
+}
+.bet-row .btn{
+  width:36px;height:36px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--cyan-2),var(--cyan));
+  border:none;border-radius:50%;color:#06222a;font-weight:900;font-size:1.1rem;
+  cursor:pointer;transition:.15s;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.6),0 0 12px rgba(0,240,255,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7);box-shadow:none}
+.bet-row .amt{
+  flex:1;text-align:center;font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:1.05rem;color:#fff;font-variant-numeric:tabular-nums;
+}
+.bet-row .amt small{display:block;font-size:.52rem;color:var(--text-dim);
+  letter-spacing:1.6px;font-weight:700;margin-top:2px}
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:9px 6px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(0,240,255,.15),rgba(139,61,255,.08));
+  border:1px solid rgba(0,240,255,.42);color:var(--cyan-2);
+  font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1.2px;cursor:pointer;transition:.15s;
+}
+.mini:hover{background:rgba(0,240,255,.25);color:#fff;box-shadow:0 0 14px rgba(0,240,255,.6)}
+.mini.on{background:linear-gradient(160deg,var(--pink),#7a1f66);
+  color:#fff;border-color:#fff;box-shadow:0 0 22px var(--pink);
+  animation:pulse 1.3s ease-in-out infinite}
+.spin{
+  padding:20px 10px;border-radius:18px;border:none;cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:4px;
+  color:#06222a;text-transform:uppercase;
+  background:radial-gradient(circle at 32% 28%,#e0f9ff 0%,var(--cyan) 42%,#0891b2 100%);
+  box-shadow:
+    0 6px 0 rgba(0,0,0,.5),
+    0 0 45px rgba(0,240,255,.6),
+    inset 0 2px 0 rgba(255,255,255,.7);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(var(--cyan),#fff,var(--pink),var(--cyan));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spinGlow 3s linear infinite;opacity:.75;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.spin:hover:not(:disabled){transform:translateY(-2px);
+  box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 70px var(--cyan),
+  0 0 110px var(--pink),inset 0 2px 0 rgba(255,255,255,.7)}
+.spin:active:not(:disabled){transform:translateY(3px)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+.spin .autocnt{display:block;font-size:.56rem;letter-spacing:2px;
+  color:rgba(0,0,0,.6);margin-top:3px;font-weight:700;min-height:12px}
+
+/* ---------- modals ---------- */
+.modal{
+  position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
+  background:rgba(2,1,10,.92);backdrop-filter:blur(10px);padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  width:min(880px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(24,4,52,.98),rgba(10,3,22,.98));
+  border:2px solid rgba(255,47,185,.55);border-radius:20px;padding:22px 26px;
+  box-shadow:0 0 60px rgba(255,47,185,.35),0 0 90px rgba(0,240,255,.25);
+}
+.modal-card h2{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:3px;
+  margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  text-transform:uppercase;
+  background:linear-gradient(180deg,#00f0ff 0%,#ffffff 45%,#ff2fb9 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 10px rgba(0,240,255,.5));
+}
+.modal-card h2 button{
+  background:rgba(0,240,255,.15);border:1px solid var(--cyan);
+  color:var(--cyan-2);padding:6px 14px;border-radius:10px;cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:1px;
+  -webkit-text-fill-color:var(--cyan-2);
+}
+.modal-card h2 button:hover{background:rgba(0,240,255,.3);color:#fff}
+.modal-card p{line-height:1.7;color:#d6def0;font-size:.9rem;margin:8px 0}
+.modal-card .rules{color:#c3cee5;font-size:.87rem}
+.modal-card .rules b{color:var(--cyan-2)}
+.modal-card .sect{
+  color:var(--pink);font-family:'Orbitron',sans-serif;font-weight:700;
+  font-size:.78rem;letter-spacing:1.8px;margin:14px 0 4px;text-transform:uppercase;
+}
+.modal-card .note{color:var(--text-dim);font-size:.8rem;margin-top:16px;
+  padding-top:12px;border-top:1px solid rgba(255,47,185,.2)}
+.grid-sym{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));
+  gap:10px;margin:14px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.42);border:1px solid rgba(0,240,255,.3);
+  border-radius:14px;padding:10px;text-align:center;
+}
+.sym-card .ic{
+  width:72px;height:72px;margin:0 auto 6px;border-radius:10px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.5);border:1px solid rgba(0,240,255,.28);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;display:block}
+.sym-card .nm{font-size:.62rem;color:#b9c7e0;letter-spacing:1.1px;
+  text-transform:uppercase;font-weight:700}
+.sym-card .py{font-family:'Orbitron',sans-serif;font-size:.64rem;
+  color:var(--cyan-2);font-weight:700;margin-top:3px}
+.sym-card.wild .ic{border-color:var(--pink);box-shadow:0 0 16px rgba(255,47,185,.55)}
+.sym-card.wild .py{color:var(--pink)}
+.sym-card.scatter .ic{border-color:var(--green);box-shadow:0 0 16px rgba(34,255,136,.55)}
+.sym-card.scatter .py{color:var(--green)}
+.history{list-style:none;font-size:.78rem}
+.history li{display:flex;justify-content:space-between;gap:10px;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.history li b{color:var(--cyan-2);font-family:'Orbitron',sans-serif}
+.history li.loss b{color:#f87171}
+.history li.empty{justify-content:center;color:var(--text-dim);padding:20px}
+
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(10,3,22,.5),rgba(10,3,22,.92));
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+#winOv.on{display:flex;animation:fadeIn .25s ease}
+#winOv .box{
+  text-align:center;padding:28px 48px;border-radius:26px;
+  background:linear-gradient(160deg,rgba(24,4,52,.96),rgba(10,3,22,.96));
+  border:3px solid var(--cyan);
+  box-shadow:0 0 90px var(--cyan),0 0 130px var(--pink),
+    inset 0 0 50px rgba(255,47,185,.2);
+  animation:winPop .6s cubic-bezier(.2,.7,.3,1.5);
+  position:relative;overflow:hidden;
+}
+#winOv .box::before{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(transparent 30%,rgba(0,240,255,.4) 50%,transparent 70%);
+  animation:spinGlow 3s linear infinite;
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.65rem;letter-spacing:6px;
+  color:#fff;text-shadow:0 0 30px var(--cyan),0 0 60px var(--pink);
+  position:relative;z-index:2;
+}
+#winOv .amt{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:2.3rem;
+  color:var(--cyan-2);text-shadow:0 0 30px var(--cyan),0 0 60px #fff;
+  margin-top:8px;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+}
+#winOv .sub{font-size:.7rem;color:var(--text-dim);letter-spacing:3px;
+  margin-top:10px;font-weight:700;text-transform:uppercase;position:relative;z-index:2}
+
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:950;
+  display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(24,4,52,.96),rgba(10,3,22,.96));
+  border:1px solid var(--cyan);color:var(--cyan-2);
+  font-size:.8rem;font-weight:700;letter-spacing:1.2px;
+  box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(0,240,255,.5);
+  animation:toastIn .3s ease,toastOut .3s ease 2.6s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+@media (max-width:900px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .dash .stat{padding:8px 10px}
+  .dash .stat .val{font-size:1rem}
+  .controls{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .bet-row{grid-column:1 / -1}
+  .mini-row{grid-column:1 / -1}
+  .spin{grid-column:1 / -1;padding:14px;font-size:1rem}
+  .brand{font-size:.9rem;letter-spacing:1.5px}
+  .topbar{padding:8px 12px}
+  .pill{padding:5px 10px;font-size:.58rem}
+  #cascadeBadge{font-size:.6rem;padding:5px 12px}
+  #sun{width:70vw;top:55%}
+}
+@media (max-width:480px){
+  .stat .lbl{font-size:.5rem}
+  .stat .val{font-size:.9rem}
+  .mini{font-size:.56rem;padding:7px}
+  #grid{height:35vh}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  #sun,#grid{animation:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="sun"></div>
+<div id="grid"></div>
+<div id="scan"></div>
+
+<div id="app">
+  <div id="game">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <span>NEON CLUSTER</span>
+      </div>
+      <div class="topbar-right">
+        <select id="speedSel" class="pill" title="Animation speed">
+          <option value="0.7">🐢 Slow</option>
+          <option value="1" selected>⚡ Normal</option>
+          <option value="1.8">🚀 Fast</option>
+          <option value="3">💨 Turbo</option>
+        </select>
+        <button class="pill" id="paytableBtn">📜 Paytable</button>
+        <button class="pill" id="helpBtn">❓ Rules</button>
+        <button class="pill" id="historyBtn">🕘 History</button>
+        <button class="pill" id="soundBtn">🔇 Sound</button>
+        <button class="pill" id="resetBtn">♻ Reset</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="board-wrap">
+        <div id="cascadeBadge">💥 CASCADE ×<span id="cascadeMult">1</span></div>
+        <div id="roamBadge">🧭 ROAMING WILD</div>
+        <div id="fsBadge">⚡ FREE SPINS: <span id="fsCount">0</span></div>
+        <canvas id="board"></canvas>
+      </div>
+
+      <aside class="dash">
+        <div class="stat balance">
+          <div class="lbl">Credits</div>
+          <div class="val" id="balanceVal">1,000</div>
+        </div>
+        <div class="stat win">
+          <div class="lbl">Last Win</div>
+          <div class="val" id="winVal">0</div>
+        </div>
+        <div class="stat net">
+          <div class="lbl">Session Net</div>
+          <div class="val" id="netVal">0</div>
+        </div>
+
+        <div class="controls">
+          <div class="bet-row">
+            <button class="btn" id="betDown">−</button>
+            <div class="amt">
+              <span id="betVal">10</span>
+              <small>BET / SPIN</small>
+            </div>
+            <button class="btn" id="betUp">+</button>
+          </div>
+
+          <div class="mini-row">
+            <button class="mini" id="autoBtn">🔁 AUTO</button>
+            <button class="mini" id="stopBtn">⏹ STOP</button>
+          </div>
+
+          <button class="spin" id="spinBtn">
+            SPIN
+            <span class="autocnt" id="autoCnt"></span>
+          </button>
+        </div>
+      </aside>
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>📜 Paytable <button data-close>✕ Close</button></h2>
+    <p class="rules">
+      <b>CLUSTER PAYS:</b> Symbols win when <b>5 or more identical symbols</b> touch
+      each other on the 6×6 grid (up, down, left or right). Bigger clusters pay
+      exponentially more. Clusters explode and new symbols fall in — cascades chain
+      and multiply your win.
+    </p>
+    <div class="grid-sym" id="paytableGrid"></div>
+    <p class="rules">
+      <b>WILD</b> counts as any regular symbol in a cluster. <b>SCATTER</b> pays
+      anywhere: 3 → 8 free spins, 4 → 12, 5+ → 20. All free-spin wins are ×2.
+    </p>
+  </div>
+</div>
+
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>❓ How To Play <button data-close>✕ Close</button></h2>
+    <p><b>1.</b> Set your bet with the + / − buttons.</p>
+    <p><b>2.</b> Press <b>SPIN</b> or <b>SPACE</b>. Use <b>AUTO</b> for up to 25 spins.</p>
+
+    <p class="sect">🔷 Cluster Pays</p>
+    <p>No paylines. A cluster is 5 or more matching symbols that touch each other
+      (top, bottom, left, right — never diagonally). Wilds count as any symbol.
+      Cluster payouts scale steeply with size.</p>
+
+    <p class="sect">💥 Cascade</p>
+    <p>After every cluster wins, its symbols explode. Symbols above fall down, new
+      symbols drop in from the top, and the board is re-evaluated. Each cascade step
+      raises the multiplier — up to ×100 on a deep chain.</p>
+
+    <p class="sect">🧭 Roaming Wild</p>
+    <p>A special Wild lives on the board and <b>walks one cell per spin</b> — up,
+      down, left or right. It stays on the board during the whole cascade chain
+      (it can't be destroyed). The purple badge shows you it's always active.</p>
+
+    <p class="sect">⚡ Free Spins</p>
+    <p>3 Scatters = 8 spins, 4 = 12 spins, 5+ = 20 spins. All wins ×2 during free
+      spins. Scatters can retrigger for +5 more spins.</p>
+
+    <p class="note">🎮 Virtual-credit demo — for entertainment and template
+      demonstration only. Not a real-money gambling product.</p>
+  </div>
+</div>
+
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>🕘 Session History <button data-close>✕ Close</button></h2>
+    <ul class="history" id="historyList"><li class="empty">No spins yet.</li></ul>
+  </div>
+</div>
+
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   NEON CLUSTER — Cluster Pays slot engine
+   Distinctive mechanics:
+     - 6×6 grid (36 cells) — biggest board so far
+     - CLUSTER PAYS: 5+ orthogonally-adjacent identical symbols
+     - Flood-fill cluster detection
+     - Cascade / tumble with escalating multiplier
+     - ROAMING WILD: a wild that walks one cell per spin, indestructible
+     - Vaporwave / synthwave aesthetic
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   CONFIG
+   --------------------------------------------------------------------- */
+const CONFIG = {
+  title: 'NEON CLUSTER',
+  cols: 6,
+  rows: 6,
+  minCluster: 5,
+  startingBalance: 1000,
+  betSteps: [1, 2, 5, 10, 20, 50, 100],
+  defaultBetIndex: 3,             // 10
+  autoSpinMax: 25,
+  freeSpinMultiplier: 2,
+  cascadeMaxSteps: 10,
+  cascadeMults: [1, 2, 3, 5, 8, 15, 25, 50, 100, 200],
+  scatterThresholds: [
+    { min: 5, freeSpins: 20 },
+    { min: 4, freeSpins: 12 },
+    { min: 3, freeSpins: 8 }
+  ],
+  scatterRetriggerAdd: 5
+};
+
+/* Size tiers — bigger cluster = exponentially bigger multiplier */
+const SIZE_TIERS = [
+  { min: 30, mult: 75 },
+  { min: 22, mult: 30 },
+  { min: 17, mult: 15 },
+  { min: 13, mult: 8 },
+  { min: 10, mult: 4 },
+  { min: 7,  mult: 2 },
+  { min: 5,  mult: 1 }
+];
+function sizeMultiplier(n){
+  for (let i = 0; i < SIZE_TIERS.length; i++){
+    if (n >= SIZE_TIERS[i].min) return SIZE_TIERS[i].mult;
+  }
+  return 0;
+}
+
+/* ---------------------------------------------------------------------
+   SPRITE SHEET
+   --------------------------------------------------------------------- */
+const SPRITE_URL = '../../assets/ultimate_multi_slot_sprite.jpg';
+const SPRITE_COORDS = [
+  {x:25,  y:402, w:82,  h:64},  // 0
+  {x:115, y:401, w:78,  h:67},  // 1
+  {x:199, y:403, w:78,  h:61},  // 2
+  {x:287, y:402, w:75,  h:66},  // 3
+  {x:376, y:401, w:73,  h:69},  // 4
+  {x:25,  y:477, w:79,  h:58},  // 5
+  {x:116, y:474, w:77,  h:60},  // 6
+  {x:202, y:474, w:75,  h:60},  // 7
+  {x:289, y:481, w:66,  h:46},  // 8
+  {x:372, y:477, w:79,  h:60},  // 9
+  {x:27,  y:569, w:69,  h:84},  // 10
+  {x:112, y:568, w:66,  h:85},  // 11
+  {x:197, y:569, w:65,  h:84},  // 12
+  {x:280, y:569, w:65,  h:84},  // 13
+  {x:479, y:125, w:67,  h:68},  // 14
+  {x:562, y:207, w:66,  h:67},  // 15
+  {x:716, y:205, w:68,  h:66},  // 16
+  {x:799, y:207, w:63,  h:62},  // 17
+  {x:881, y:204, w:58,  h:70},  // 18
+  {x:973, y:125, w:76,  h:69},  // 19
+  {x:1058,y:126, w:71,  h:71},  // 20
+  {x:1141,y:126, w:71,  h:69},  // 21
+  {x:1224,y:130, w:71,  h:64},  // 22
+  {x:1304,y:126, w:76,  h:68}   // 23
+];
+
+const SpriteSheet = (function(){
+  const img = new Image();
+  let ready = false, failed = false;
+  function load(){
+    return new Promise(resolve => {
+      let done = false;
+      const finish = (ok) => { if (done) return; done = true; ready = ok; resolve(ok); };
+      img.onload  = () => finish(true);
+      img.onerror = () => { console.warn('[sprite] missing ' + SPRITE_URL); failed = true; finish(false); };
+      img.src = SPRITE_URL;
+      setTimeout(() => finish(false), 8000);
+    });
+  }
+  function draw(ctx, idx, dx, dy, dw, dh, alpha){
+    const c = SPRITE_COORDS[idx];
+    if (!c) return false;
+    ctx.save();
+    ctx.globalAlpha = (alpha === undefined) ? 1 : alpha;
+    if (ready && !failed){
+      const srcAspect = c.w / c.h;
+      const dstAspect = dw / dh;
+      let w = dw, h = dh, ox = 0, oy = 0;
+      if (srcAspect > dstAspect){ h = dw / srcAspect; oy = (dh - h) / 2; }
+      else { w = dh * srcAspect; ox = (dw - w) / 2; }
+      try {
+        ctx.drawImage(img, c.x, c.y, c.w, c.h, dx + ox, dy + oy, w, h);
+        ctx.restore(); return true;
+      } catch (e){ /* fall through */ }
+    }
+    ctx.fillStyle = '#8b3dff';
+    ctx.fillRect(dx, dy, dw, dh);
+    ctx.fillStyle = '#fff';
+    ctx.font = '900 ' + Math.floor(Math.min(dw, dh) * 0.4) + 'px Orbitron, Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(idx + 1), dx + dw / 2, dy + dh / 2);
+    ctx.restore(); return false;
+  }
+  function preview(idx, size){
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, 0, size, size);
+    draw(g, idx, 2, 2, size - 4, size - 4, 1);
+    return c.toDataURL();
+  }
+  return { load, draw, preview, isReady: () => ready };
+})();
+
+/* ---------------------------------------------------------------------
+   RNG
+   --------------------------------------------------------------------- */
+const RNG = (function(){
+  const buf = new Uint32Array(1);
+  const hasCrypto = (typeof crypto !== 'undefined' && crypto.getRandomValues);
+  function uint32(){
+    if (hasCrypto){ crypto.getRandomValues(buf); return buf[0] >>> 0; }
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  function int(n){
+    if (!Number.isInteger(n) || n <= 0) throw new Error('RNG.int invalid: ' + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;
+    let r;
+    do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  function weighted(items){
+    const total = items.reduce((s,x) => s + x.weight, 0);
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++){
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted };
+})();
+
+/* ---------------------------------------------------------------------
+   SYMBOLS — 6 regulars + wild + scatter
+   basePay = base value per cluster (before size multiplier)
+   color   = for cluster highlight + particle FX
+   --------------------------------------------------------------------- */
+const SYMBOLS = {
+  A: { id:'A', name:'Cherry',  sprite:0,  weight:18, basePay:0.3, color:'#ff5577' },
+  B: { id:'B', name:'Lemon',   sprite:1,  weight:15, basePay:0.4, color:'#ffd24a' },
+  C: { id:'C', name:'Plum',    sprite:2,  weight:12, basePay:0.5, color:'#c084fc' },
+  D: { id:'D', name:'Bell',    sprite:4,  weight:10, basePay:0.8, color:'#ff9f3d' },
+  E: { id:'E', name:'Clover',  sprite:6,  weight:7,  basePay:1.2, color:'#22ff88' },
+  F: { id:'F', name:'Star',    sprite:8,  weight:5,  basePay:2.0, color:'#00f0ff' },
+
+  WILD:    { id:'WILD',    name:'Wild',    sprite:10, weight:8, special:'wild' },
+  SCATTER: { id:'SCATTER', name:'Scatter', sprite:11, weight:3, special:'scatter' }
+};
+
+const REGULARS = ['A','B','C','D','E','F'];
+const SYMBOL_ORDER = Object.keys(SYMBOLS);
+const POOL = SYMBOL_ORDER.map(k => SYMBOLS[k]);
+
+/* ---------------------------------------------------------------------
+   CLUSTER ENGINE — flood fill on 6×6 grid
+   --------------------------------------------------------------------- */
+const ClusterEngine = (function(){
+  const N = CONFIG.cols * CONFIG.rows;
+
+  function neighbors(idx){
+    const r = Math.floor(idx / CONFIG.cols);
+    const c = idx % CONFIG.cols;
+    const out = [];
+    if (r > 0) out.push(idx - CONFIG.cols);
+    if (r < CONFIG.rows - 1) out.push(idx + CONFIG.cols);
+    if (c > 0) out.push(idx - 1);
+    if (c < CONFIG.cols - 1) out.push(idx + 1);
+    return out;
+  }
+
+  /* Find candidate clusters for a given symbol type.
+     A cell is eligible if it is either the symbol or a Wild. */
+  function findForSymbol(board, sym){
+    const visited = new Set();
+    const clusters = [];
+    for (let i = 0; i < N; i++){
+      if (visited.has(i)) continue;
+      const s = board[i];
+      if (s !== sym && s !== 'WILD') continue;
+      /* BFS */
+      const cluster = [i];
+      const q = [i];
+      visited.add(i);
+      let hasReal = (s === sym);
+      while (q.length){
+        const cur = q.shift();
+        for (const n of neighbors(cur)){
+          if (visited.has(n)) continue;
+          const ns = board[n];
+          if (ns === sym || ns === 'WILD'){
+            visited.add(n);
+            cluster.push(n);
+            q.push(n);
+            if (ns === sym) hasReal = true;
+          }
+        }
+      }
+      if (cluster.length >= CONFIG.minCluster && hasReal){
+        clusters.push({ symbol: sym, cells: cluster });
+      }
+    }
+    return clusters;
+  }
+
+  /* Find ALL clusters on the board.
+     Returns a list where each cell belongs to at most one cluster. */
+  function findAll(board){
+    const candidates = [];
+    for (const sym of REGULARS){
+      const list = findForSymbol(board, sym);
+      candidates.push(...list);
+    }
+    /* Greedy: biggest clusters get first pick of cells */
+    candidates.sort((a, b) => b.cells.length - a.cells.length);
+    const claimed = new Set();
+    const winners = [];
+    for (const c of candidates){
+      /* skip if any cell already claimed */
+      let conflict = false;
+      for (const cell of c.cells){
+        if (claimed.has(cell)){ conflict = true; break; }
+      }
+      if (conflict) continue;
+      c.cells.forEach(cell => claimed.add(cell));
+      winners.push(c);
+    }
+    return winners;
+  }
+
+  function countScatters(board){
+    let n = 0;
+    for (let i = 0; i < N; i++) if (board[i] === 'SCATTER') n++;
+    return n;
+  }
+
+  function centroid(cells){
+    let sx = 0, sy = 0;
+    for (const idx of cells){
+      sx += idx % CONFIG.cols;
+      sy += Math.floor(idx / CONFIG.cols);
+    }
+    return { x: sx / cells.length, y: sy / cells.length };
+  }
+
+  return { findAll, countScatters, centroid, neighbors };
+})();
+
+/* ---------------------------------------------------------------------
+   GAME ENGINE
+   --------------------------------------------------------------------- */
+const GameEngine = (function(){
+  const state = {
+    phase: 'IDLE',              // IDLE | SPINNING | RESOLVING | CASCADING
+    balance: CONFIG.startingBalance,
+    betIndex: CONFIG.defaultBetIndex,
+    board: new Array(CONFIG.cols * CONFIG.rows).fill('A'),
+    lastWin: 0,
+    lastNet: 0,
+    inFreeSpins: false,
+    freeSpinsLeft: 0,
+    freeSpinsTotal: 0,
+    autoActive: false,
+    autoSpinsLeft: 0,
+    history: [],
+    soundOn: false,
+    speed: 1,
+    spinCount: 0,
+    roamingWildPos: 14,         // center-ish start
+    roamingTrail: [],           // [{ pos, t }] — recent positions for the trail effect
+    stats: { spins:0, wagered:0, regularWon:0, bonusWon:0 }
+  };
+
+  const bet = () => CONFIG.betSteps[state.betIndex];
+
+  function generateBoard(){
+    const b = new Array(CONFIG.cols * CONFIG.rows);
+    for (let i = 0; i < b.length; i++) b[i] = RNG.weighted(POOL).id;
+    return b;
+  }
+
+  function placeRoamingWild(board){
+    /* Always overwrite the roaming wild's current cell with a wild */
+    board[state.roamingWildPos] = 'WILD';
+  }
+
+  function moveRoamingWild(){
+    const cur = state.roamingWildPos;
+    const neigh = ClusterEngine.neighbors(cur);
+    /* pick a random adjacent cell that isn't a scatter */
+    const valid = neigh.filter(n => state.board[n] !== 'SCATTER');
+    const target = valid.length ? valid[RNG.int(valid.length)] : neigh[RNG.int(neigh.length)];
+    /* record trail */
+    state.roamingTrail.push({ pos: cur, t: performance.now() });
+    if (state.roamingTrail.length > 6) state.roamingTrail.shift();
+    state.roamingWildPos = target;
+  }
+
+  function canSpin(){
+    if (state.phase !== 'IDLE') return false;
+    if (state.inFreeSpins && state.freeSpinsLeft > 0) return true;
+    return state.balance >= bet();
+  }
+
+  function chargeBet(){
+    if (state.balance < bet()) return false;
+    state.balance -= bet();
+    state.stats.wagered += bet();
+    return true;
+  }
+
+  function creditWin(amount, isBonus){
+    if (!Number.isFinite(amount) || amount <= 0) return 0;
+    const rounded = Math.round(amount);
+    state.balance += rounded;
+    if (isBonus) state.stats.bonusWon += rounded;
+    else state.stats.regularWon += rounded;
+    return rounded;
+  }
+
+  return {
+    state,
+    bet,
+    generateBoard,
+    placeRoamingWild,
+    moveRoamingWild,
+    canSpin,
+    chargeBet,
+    creditWin,
+    setBetIndex: i => { state.betIndex = Math.max(0, Math.min(CONFIG.betSteps.length - 1, i)); }
+  };
+})();
+
+/* ---------------------------------------------------------------------
+   SOUND
+   --------------------------------------------------------------------- */
+const Sound = (function(){
+  let ac = null;
+  function ensure(){
+    if (!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ ac = null; } }
+    if (ac && ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function tone(freq, dur, type, vol, when){
+    if (!GameEngine.state.soundOn) return;
+    const c = ensure(); if (!c) return;
+    const t0 = c.currentTime + (when || 0);
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol || 0.05, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g).connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.03);
+  }
+  return {
+    spin:      () => { tone(240,0.08,'square',0.03); tone(180,0.1,'square',0.028,0.06); },
+    click:     () => tone(880,0.04,'triangle',0.02),
+    settle:    () => tone(660,0.05,'triangle',0.03),
+    cascade:   () => { tone(523,0.09,'triangle',0.05); tone(784,0.11,'sine',0.05,0.06); },
+    explode:   () => { tone(140,0.2,'sawtooth',0.045); tone(90,0.26,'square',0.03,0.05); },
+    win:       (big) => {
+      const notes = big ? [523,659,784,1047,1319,1568] : [523,659,784,1047];
+      notes.forEach((f,i) => tone(f, 0.18, 'triangle', 0.06, i*0.07));
+    },
+    scatter:   () => { [440,554,659,880,1108].forEach((f,i) => tone(f,0.2,'sine',0.07,i*0.07)); },
+    roam:      () => { tone(330,0.08,'sine',0.05); tone(440,0.1,'triangle',0.05,0.06); },
+    toggle:    () => { GameEngine.state.soundOn = !GameEngine.state.soundOn; return GameEngine.state.soundOn; }
+  };
+})();
+
+/* =====================================================================
+   UI LAYER
+   ===================================================================== */
+const state = GameEngine.state;
+const el = id => document.getElementById(id);
+const canvas = el('board');
+const ctx = canvas.getContext('2d');
+
+let CW = 1, CH = 1;
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+let cellRects = [];
+
+function computeCellRects(){
+  cellRects = [];
+  const padX = Math.max(10, CW * 0.014);
+  const padY = Math.max(46, CH * 0.09);
+  const padB = Math.max(14, CH * 0.03);
+  const cw = (CW - padX * 2) / CONFIG.cols;
+  const ch = (CH - padY - padB) / CONFIG.rows;
+  for (let r = 0; r < CONFIG.rows; r++){
+    for (let c = 0; c < CONFIG.cols; c++){
+      cellRects.push({ x: padX + c * cw, y: padY + r * ch, w: cw, h: ch });
+    }
+  }
+}
+
+function resize(){
+  const r = canvas.parentElement.getBoundingClientRect();
+  CW = Math.max(1, Math.floor(r.width));
+  CH = Math.max(1, Math.floor(r.height));
+  canvas.width = CW * DPR;
+  canvas.height = CH * DPR;
+  canvas.style.width = CW + 'px';
+  canvas.style.height = CH + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  computeCellRects();
+}
+window.addEventListener('resize', resize);
+
+function cellRect(idx){ return cellRects[idx] || { x:0, y:0, w:0, h:0 }; }
+
+/* ---------- animation state ---------- */
+const anim = {
+  phase: 'idle',                 // idle | flashing | settling | blasting | falling
+  flashStart: 0,
+  flashDur: 0,
+  settleOrder: [],               // order in which cells settle
+  settleStart: 0,
+  settleStagger: 0,
+  settleDur: 0,
+  blastProgress: 0,
+  blastCells: new Set(),
+  winCells: new Set(),
+  clusterRings: [],              // { x, y, r, maxR, life, color }
+  particles: [],
+  glowPhase: 0,
+  lastFrame: performance.now(),
+  shake: 0,
+  cascadeMult: 1
+};
+
+/* ---------- background ---------- */
+function setBg(kind){
+  const layer = el('bgLayer');
+  const url = kind === 'free' ? '../../assets/bg10.gif'
+            : kind === 'big'  ? '../../assets/bg11.gif'
+            : '../../assets/bg9.gif';
+  layer.style.backgroundImage = "url('" + url + "')";
+  layer.classList.remove('free','big');
+  if (kind === 'free') layer.classList.add('free');
+  if (kind === 'big')  layer.classList.add('big');
+}
+['../../assets/bg9.gif','../../assets/bg10.gif','../../assets/bg11.gif'].forEach(u => {
+  const im = new Image(); im.src = u;
+});
+
+/* ---------- particles ---------- */
+function spawnParticles(cx, cy, count, colors, opts){
+  opts = opts || {};
+  for (let i = 0; i < count; i++){
+    const a = RNG.int(360) * Math.PI / 180;
+    const sp = (opts.speed || 80) + RNG.int(160);
+    anim.particles.push({
+      x:cx, y:cy,
+      vx:Math.cos(a) * sp * 0.1,
+      vy:Math.sin(a) * sp * 0.1 - (opts.upBias || 1.5),
+      size:(opts.minSize || 1.8) + RNG.int(opts.sizeRange || 3),
+      rot:RNG.int(360) * Math.PI / 180,
+      vr:(RNG.int(200) - 100) / 300,
+      col:colors[RNG.int(colors.length)],
+      life:1, maxLife:(opts.maxLife || 800) + RNG.int(500),
+      circle: opts.circle !== false
+    });
+  }
+  if (anim.particles.length > 260) anim.particles.splice(0, anim.particles.length - 260);
+}
+
+function addClusterRing(cx, cy, maxR, color){
+  anim.clusterRings.push({ x:cx, y:cy, r: maxR * 0.2, maxR, life: 1, color });
+  if (anim.clusterRings.length > 12) anim.clusterRings.shift();
+}
+
+function roundRect(c, x, y, w, h, r){
+  c.beginPath();
+  if (c.roundRect){ c.roundRect(x, y, w, h, r); return; }
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+function easeOutBack(t){
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+/* ---------- draw symbol ---------- */
+function drawSymbolOn(target, cx, cy, box, symId, alpha){
+  const def = SYMBOLS[symId];
+  if (!def) return;
+  target.save();
+  target.globalAlpha = alpha === undefined ? 1 : alpha;
+  if (def.special){
+    const pulse = 0.6 + Math.sin(anim.glowPhase * 3) * 0.4;
+    target.shadowColor = def.special === 'wild' ? '#ff2fb9' : '#22ff88';
+    target.shadowBlur = 14 + pulse * 12;
+    target.fillStyle = 'rgba(0,0,0,0.01)';
+    target.beginPath();
+    target.arc(cx, cy, box * 0.44, 0, Math.PI * 2);
+    target.fill();
+    target.shadowBlur = 0;
+  }
+  SpriteSheet.draw(target, def.sprite, cx - box/2, cy - box/2, box, box, 1);
+  target.restore();
+}
+
+/* =====================================================================
+   RENDER LOOP
+   ===================================================================== */
+function render(){
+  const now = performance.now();
+  const dt = Math.min(50, now - anim.lastFrame);
+  anim.lastFrame = now;
+  anim.glowPhase += dt / 250;
+
+  ctx.save();
+  if (anim.shake > 0){
+    anim.shake = Math.max(0, anim.shake - dt / 80);
+    ctx.translate((Math.random()-0.5)*anim.shake, (Math.random()-0.5)*anim.shake);
+  }
+  ctx.clearRect(-30, -30, CW + 60, CH + 60);
+
+  /* board backdrop */
+  const bg = ctx.createLinearGradient(0, 0, 0, CH);
+  bg.addColorStop(0, 'rgba(24,4,52,.4)');
+  bg.addColorStop(1, 'rgba(10,3,22,.72)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, CW, CH);
+
+  /* header */
+  ctx.font = '900 13px "Orbitron", Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = state.inFreeSpins ? '#22ff88' : '#00f0ff';
+  ctx.shadowColor = ctx.fillStyle;
+  ctx.shadowBlur = 16;
+  ctx.fillText(
+    state.inFreeSpins
+      ? '⚡ FREE SPINS ×' + CONFIG.freeSpinMultiplier + ' ⚡'
+      : '✦ CLUSTER PAYS · 6×6 ✦',
+    CW / 2, 20
+  );
+  ctx.shadowBlur = 0;
+
+  /* roaming wild trail ghosts */
+  const now2 = performance.now();
+  state.roamingTrail.forEach(t => {
+    const age = (now2 - t.t) / 1400;
+    if (age > 1) return;
+    const r = cellRect(t.pos);
+    const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    ctx.save();
+    ctx.globalAlpha = (1 - age) * 0.35;
+    ctx.fillStyle = '#ff2fb9';
+    ctx.shadowColor = '#ff2fb9';
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(r.w, r.h) * 0.35 * (1 - age * 0.4), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  /* cells */
+  for (let i = 0; i < CONFIG.cols * CONFIG.rows; i++) drawCell(i, now, dt);
+
+  /* cluster rings */
+  anim.clusterRings = anim.clusterRings.filter(cr => cr.life > 0);
+  anim.clusterRings.forEach(cr => {
+    cr.r += (cr.maxR - cr.r) * 0.14;
+    cr.life -= dt / 700;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, cr.life) * 0.85;
+    ctx.strokeStyle = cr.color;
+    ctx.lineWidth = 4 * cr.life + 1;
+    ctx.shadowColor = cr.color;
+    ctx.shadowBlur = 22;
+    ctx.beginPath();
+    ctx.arc(cr.x, cr.y, cr.r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  /* particles */
+  anim.particles = anim.particles.filter(p => p.life > 0);
+  anim.particles.forEach(p => {
+    p.x += p.vx * dt * 0.06;
+    p.y += p.vy * dt * 0.06;
+    p.vy += 0.05 * dt * 0.06;
+    p.rot += p.vr * dt * 0.06;
+    p.life -= dt / p.maxLife;
+    const a = Math.max(0, p.life);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.col;
+    ctx.shadowColor = p.col;
+    ctx.shadowBlur = 10;
+    const size = p.size * Math.max(0.15, p.life);
+    if (p.circle){ ctx.beginPath(); ctx.arc(0,0,size,0,Math.PI*2); ctx.fill(); }
+    else ctx.fillRect(-size, -size, size * 2, size * 2);
+    ctx.restore();
+  });
+
+  ctx.restore();
+  requestAnimationFrame(render);
+}
+
+function drawCell(idx, now, dt){
+  const rect = cellRect(idx);
+  if (!rect.w) return;
+  const pad = Math.min(rect.w, rect.h) * 0.05;
+  const px = rect.x + pad, py = rect.y + pad;
+  const pw = rect.w - pad * 2, ph = rect.h - pad * 2;
+  const cx = px + pw / 2, cy = py + ph / 2;
+
+  const isWin = anim.winCells.has(idx);
+  const isBlast = anim.blastCells.has(idx);
+  const isRoaming = idx === state.roamingWildPos;
+  const isSettled = !anim.settleOrder.includes(idx) || isPastSettleTime(idx);
+
+  /* ---- animations ---- */
+  let dy = 0, scale = 1, rot = 0, alpha = 1;
+
+  /* flashing phase — random symbol flicker */
+  if (anim.phase === 'flashing'){
+    const t = Math.min(1, (now - anim.flashStart) / anim.flashDur);
+    /* as time progresses, some cells start to lock in */
+    const settleProgress = 1 - t;
+    const willSettle = (idx * 7 + Math.floor(t * 36)) % 20 < 3 ? true : false;
+    alpha = 0.55 + Math.random() * 0.45;
+    scale = 0.9 + Math.random() * 0.15;
+    /* flash a random symbol inside */
+    if (!willSettle){
+      const r = cellRect(idx);
+      /* draw inside will use a random id override below */
+    }
+  }
+
+  /* settling phase — appear with rotate + scale overshoot */
+  if (anim.phase === 'settling'){
+    const orderIdx = anim.settleOrder.indexOf(idx);
+    if (orderIdx >= 0){
+      const start = anim.settleStart + orderIdx * anim.settleStagger;
+      const t = Math.max(0, Math.min(1, (now - start) / anim.settleDur));
+      if (t < 1){
+        const e = easeOutBack(t);
+        scale = 0.1 + 0.9 * e;
+        rot = (1 - e) * Math.PI * 1.6;
+        alpha = Math.min(1, 0.2 + t * 1.6);
+      }
+    } else {
+      scale = 0.1; alpha = 0;
+    }
+  }
+
+  /* blasting */
+  if (isBlast){
+    const b = anim.blastProgress || 0;
+    scale = 1 + b * 0.8;
+    alpha = 1 - b * 0.95;
+    rot += b * 1.4;
+  }
+
+  /* idle breathing */
+  if (anim.phase === 'idle' && anim.winCells.size === 0 && anim.blastCells.size === 0){
+    const bob = Math.sin(anim.glowPhase * 1.3 + idx * 0.4);
+    scale *= 1 + bob * 0.012;
+    dy += bob * 1.0;
+  }
+
+  ctx.save();
+  ctx.translate(cx, cy + dy);
+  ctx.scale(scale, scale);
+  ctx.rotate(rot);
+
+  /* ---- cell plate (beveled square — octagonal shape) ---- */
+  const bevel = Math.min(pw, ph) * 0.24;
+  ctx.beginPath();
+  ctx.moveTo(-pw/2 + bevel, -ph/2);
+  ctx.lineTo(pw/2 - bevel, -ph/2);
+  ctx.lineTo(pw/2, -ph/2 + bevel);
+  ctx.lineTo(pw/2, ph/2 - bevel);
+  ctx.lineTo(pw/2 - bevel, ph/2);
+  ctx.lineTo(-pw/2 + bevel, ph/2);
+  ctx.lineTo(-pw/2, ph/2 - bevel);
+  ctx.lineTo(-pw/2, -ph/2 + bevel);
+  ctx.closePath();
+
+  if (isBlast){
+    const pulse = 0.6 + Math.sin(now / 40) * 0.4;
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.4 + pulse * 0.3) + ')';
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 32 + pulse * 20;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#fff';
+  } else if (isWin){
+    const pulse = 0.6 + Math.sin(anim.glowPhase * 4) * 0.4;
+    ctx.fillStyle = 'rgba(0,240,255,' + (0.18 + pulse * 0.18) + ')';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 22 + pulse * 16;
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(0,240,255,.95)';
+  } else if (isRoaming){
+    const pulse = 0.6 + Math.sin(anim.glowPhase * 5) * 0.4;
+    ctx.fillStyle = 'rgba(255,47,185,' + (0.16 + pulse * 0.16) + ')';
+    ctx.shadowColor = '#ff2fb9';
+    ctx.shadowBlur = 22 + pulse * 14;
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(255,47,185,.95)';
+  } else {
+    ctx.fillStyle = 'rgba(10,3,22,.62)';
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(0,240,255,.16)';
+  }
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  /* inner border */
+  const inset = 3;
+  ctx.beginPath();
+  ctx.moveTo(-pw/2 + bevel + inset, -ph/2 + inset);
+  ctx.lineTo(pw/2 - bevel - inset, -ph/2 + inset);
+  ctx.lineTo(pw/2 - inset, -ph/2 + bevel + inset);
+  ctx.lineTo(pw/2 - inset, ph/2 - bevel - inset);
+  ctx.lineTo(pw/2 - bevel - inset, ph/2 - inset);
+  ctx.lineTo(-pw/2 + bevel + inset, ph/2 - inset);
+  ctx.lineTo(-pw/2 + inset, ph/2 - bevel - inset);
+  ctx.lineTo(-pw/2 + inset, -ph/2 + bevel + inset);
+  ctx.closePath();
+  ctx.strokeStyle = isWin ? 'rgba(255,47,185,.8)' : 'rgba(0,240,255,.12)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  /* symbol */
+  if (!isBlast){
+    let symId = state.board[idx];
+    /* during the flashing phase, randomize the displayed symbol */
+    if (anim.phase === 'flashing'){
+      const flashT = (now - anim.flashStart) / anim.flashDur;
+      const flickers = Math.floor(now / 60);
+      const rIdx = (idx * 31 + flickers) % POOL.length;
+      /* late flashing shows final symbols for some cells */
+      if (flashT > 0.75 && (idx % 3 === 0)) symId = state.board[idx];
+      else symId = POOL[rIdx].id;
+    }
+    drawSymbolOn(ctx, 0, 0, Math.min(pw, ph) * 0.82, symId, alpha);
+
+    /* roaming wild has an extra ring */
+    if (isRoaming && !isBlast){
+      ctx.save();
+      ctx.strokeStyle = '#ff2fb9';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#ff2fb9';
+      ctx.shadowBlur = 16;
+      ctx.setLineDash([6, 5]);
+      ctx.lineDashOffset = -(now / 40);
+      const rr = Math.min(pw, ph) * 0.4;
+      ctx.beginPath();
+      ctx.arc(0, 0, rr, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+}
+
+function isPastSettleTime(idx){
+  if (anim.phase !== 'settling') return true;
+  const orderIdx = anim.settleOrder.indexOf(idx);
+  if (orderIdx < 0) return false;
+  const start = anim.settleStart + orderIdx * anim.settleStagger;
+  return performance.now() >= start + anim.settleDur;
+}
+
+/* =====================================================================
+   SPIN ANIMATION — flash & settle in random order
+   ===================================================================== */
+function spinAnimation(finalBoard, callback){
+  anim.phase = 'flashing';
+  anim.winCells.clear();
+  anim.blastCells.clear();
+  anim.clusterRings = [];
+  anim.flashStart = performance.now();
+  anim.flashDur = Math.max(500, 900 / state.speed);
+
+  const flashEnd = anim.flashStart + anim.flashDur;
+
+  let finished = false;
+  function finish(){
+    if (finished) return;
+    finished = true;
+    for (let i = 0; i < finalBoard.length; i++) state.board[i] = finalBoard[i];
+    anim.phase = 'idle';
+    callback(finalBoard);
+  }
+
+  /* build a random settle order */
+  const order = [];
+  const N = CONFIG.cols * CONFIG.rows;
+  for (let i = 0; i < N; i++) order.push(i);
+  /* Fisher-Yates shuffle */
+  for (let i = order.length - 1; i > 0; i--){
+    const j = RNG.int(i + 1);
+    const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+  }
+
+  setTimeout(() => {
+    anim.phase = 'settling';
+    anim.settleOrder = order;
+    anim.settleStart = performance.now();
+    anim.settleStagger = Math.max(15, 40 / state.speed);
+    anim.settleDur = Math.max(180, 340 / state.speed);
+
+    /* when cells settle we override the board */
+    for (let i = 0; i < finalBoard.length; i++) state.board[i] = finalBoard[i];
+
+    const totalSettleTime = anim.settleStart + order.length * anim.settleStagger + anim.settleDur;
+    const checkInterval = setInterval(() => {
+      if (performance.now() > totalSettleTime){
+        clearInterval(checkInterval);
+        anim.phase = 'idle';
+        finish();
+      }
+    }, 60);
+
+    /* per-cell sounds */
+    order.forEach((idx, i) => {
+      setTimeout(() => {
+        const rect = cellRect(idx);
+        spawnParticles(rect.x + rect.w / 2, rect.y + rect.h / 2, 3,
+          ['#00f0ff','#ff2fb9','#fff'], { speed:50, circle:true, maxLife:500 });
+        if (i % 4 === 0) Sound.settle();
+        /* occasional shake */
+        if (i % 6 === 0) anim.shake = Math.min(4, anim.shake + 0.8);
+      }, i * anim.settleStagger);
+    });
+  }, anim.flashDur);
+}
+
+/* =====================================================================
+   CASCADE LOOP
+   ===================================================================== */
+function runCascade(board, baseBet, isFree, onComplete){
+  let depth = 0;
+  let totalWin = 0;
+  const allSteps = [];
+
+  function doStep(){
+    if (depth >= CONFIG.cascadeMaxSteps){ onComplete(totalWin, allSteps, depth); return; }
+
+    const clusters = ClusterEngine.findAll(board);
+    if (clusters.length === 0){ onComplete(totalWin, allSteps, depth); return; }
+
+    const mult = CONFIG.cascadeMults[Math.min(depth, CONFIG.cascadeMults.length - 1)];
+    const fsMult = isFree ? CONFIG.freeSpinMultiplier : 1;
+
+    let stepWin = 0;
+    const winsDetail = [];
+    for (const c of clusters){
+      const def = SYMBOLS[c.symbol];
+      if (!def || !def.basePay) continue;
+      const sz = c.cells.length;
+      const sizeM = sizeMultiplier(sz);
+      const payout = Math.round(def.basePay * sizeM * baseBet * mult * fsMult);
+      stepWin += payout;
+      winsDetail.push({ symbol: c.symbol, size: sz, sizeM, payout, cells: c.cells });
+
+      /* cluster ring from centroid */
+      const cen = ClusterEngine.centroid(c.cells);
+      const cenRect = cellRect(0);
+      const cw = cenRect.w, ch = cenRect.h;
+      const padX = cenRect.x, padY = cenRect.y;
+      const cx = padX + (cen.x + 0.5) * cw;
+      const cy = padY + (cen.y + 0.5) * ch;
+      addClusterRing(cx, cy, Math.min(cw, ch) * (1.5 + sz * 0.1), def.color);
+    }
+
+    if (stepWin === 0){ onComplete(totalWin, allSteps, depth); return; }
+
+    totalWin += stepWin;
+    GameEngine.creditWin(stepWin, false);
+    state.lastWin = totalWin;
+
+    /* highlight */
+    anim.winCells.clear();
+    clusters.forEach(c => c.cells.forEach(idx => anim.winCells.add(idx)));
+
+    /* particles */
+    clusters.forEach(c => {
+      c.cells.forEach(idx => {
+        const r = cellRect(idx);
+        const col = SYMBOLS[c.symbol].color;
+        spawnParticles(r.x + r.w / 2, r.y + r.h / 2, 4,
+          [col, '#fff', '#00f0ff'], { speed:70, maxLife:600, circle:true });
+      });
+    });
+
+    /* cascade badge */
+    anim.cascadeMult = mult;
+    el('cascadeMult').textContent = mult;
+    el('cascadeBadge').classList.add('on');
+
+    allSteps.push({ depth, mult, fsMult, stepWin, wins: winsDetail });
+    Sound.cascade();
+    if (mult >= 5) Sound.win(true);
+    anim.shake = Math.min(18, anim.shake + 3 + mult * 0.6);
+
+    /* ---- blast phase ---- */
+    setTimeout(() => {
+      anim.blastCells = new Set();
+      clusters.forEach(c => c.cells.forEach(idx => anim.blastCells.add(idx)));
+      Sound.explode();
+
+      /* particles on blast */
+      anim.blastCells.forEach(idx => {
+        const r = cellRect(idx);
+        const sym = state.board[idx];
+        const col = (SYMBOLS[sym] && SYMBOLS[sym].color) || '#fff';
+        spawnParticles(r.x + r.w / 2, r.y + r.h / 2, 8,
+          [col, '#fff', '#ff2fb9', '#00f0ff'],
+          { speed:150, minSize:2, sizeRange:4, maxLife:900, circle:true });
+      });
+
+      const bStart = performance.now();
+      const bDur = 380 / state.speed;
+      function blastStep(){
+        const bp = Math.min(1, (performance.now() - bStart) / bDur);
+        anim.blastProgress = bp;
+        if (bp < 1) requestAnimationFrame(blastStep);
+        else {
+          /* remove blasted cells (except roaming wild) and cascade */
+          const exploded = new Set();
+          clusters.forEach(c => c.cells.forEach(idx => exploded.add(idx)));
+          exploded.delete(state.roamingWildPos);
+          dropAndRefill(board, exploded);
+          anim.blastCells.clear();
+          anim.winCells.clear();
+          depth++;
+          setTimeout(doStep, 260 / state.speed);
+        }
+      }
+      blastStep();
+    }, 450 / state.speed);
+  }
+
+  doStep();
+}
+
+/* Drop surviving symbols down and refill from top */
+function dropAndRefill(board, blasted){
+  for (let c = 0; c < CONFIG.cols; c++){
+    const survivors = [];
+    for (let r = CONFIG.rows - 1; r >= 0; r--){
+      const idx = r * CONFIG.cols + c;
+      if (!blasted.has(idx)) survivors.push(board[idx]);
+    }
+    let w = 0;
+    for (let r = CONFIG.rows - 1; r >= 0; r--){
+      const idx = r * CONFIG.cols + c;
+      if (w < survivors.length){
+        board[idx] = survivors[w++];
+      } else {
+        board[idx] = RNG.weighted(POOL).id;
+      }
+    }
+  }
+  /* re-place roaming wild just in case its cell was wiped */
+  board[state.roamingWildPos] = 'WILD';
+}
+
+/* =====================================================================
+   UI UPDATE
+   ===================================================================== */
+function updateUI(pop){
+  el('balanceVal').textContent = state.balance.toLocaleString();
+  el('winVal').textContent = state.lastWin.toLocaleString();
+  el('netVal').textContent = (state.lastNet >= 0 ? '+' : '') + state.lastNet.toLocaleString();
+  el('netVal').style.color = state.lastNet >= 0 ? '#ff2fb9' : '#f87171';
+  el('betVal').textContent = GameEngine.bet().toLocaleString();
+  el('fsCount').textContent = state.freeSpinsLeft;
+  el('fsBadge').classList.toggle('on', state.inFreeSpins);
+  el('spinBtn').disabled = state.autoActive || state.phase !== 'IDLE' || !GameEngine.canSpin();
+  el('autoCnt').textContent = state.autoActive ? 'AUTO: ' + state.autoSpinsLeft : '';
+  el('autoBtn').classList.toggle('on', state.autoActive);
+  el('betDown').disabled = state.phase !== 'IDLE' || state.betIndex <= 0;
+  el('betUp').disabled = state.phase !== 'IDLE' || state.betIndex >= CONFIG.betSteps.length - 1;
+  if (pop){
+    ['balanceVal','winVal'].forEach(id => {
+      const n = el(id);
+      n.classList.remove('pop');
+      void n.offsetWidth;
+      n.classList.add('pop');
+    });
+  }
+}
+
+/* ---------- toasts / win overlay ---------- */
+function toast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  el('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+let winOverlayTimer = null;
+function showWinOverlay(amount){
+  const betRef = Math.max(1, GameEngine.bet());
+  const ratio = amount / betRef;
+  let tier = 'WIN!';
+  if (ratio >= 300) tier = 'COSMIC WIN!';
+  else if (ratio >= 150) tier = 'MEGA WIN!';
+  else if (ratio >= 75) tier = 'BIG WIN!';
+  else if (ratio >= 25) tier = 'GREAT WIN!';
+  else if (ratio >= 8) tier = 'NICE WIN!';
+
+  el('winTier').textContent = tier;
+  el('winAmt').textContent = '+' + amount.toLocaleString();
+  el('winSub').textContent = state.inFreeSpins ? 'FREE SPIN ×' + CONFIG.freeSpinMultiplier : '';
+  el('winOv').classList.add('on');
+  Sound.win(ratio >= 25);
+  if (ratio >= 50) anim.shake = 18;
+  if (ratio >= 25) setBg('big');
+
+  const colors = ['#00f0ff','#ff2fb9','#8b3dff','#22ff88','#fff'];
+  for (let i = 0; i < 4; i++){
+    setTimeout(() => {
+      for (let j = 0; j < 30; j++){
+        const a = RNG.int(360) * Math.PI / 180;
+        anim.particles.push({
+          x:CW/2, y:CH/2,
+          vx:Math.cos(a) * 9, vy:Math.sin(a) * 9 - 2.5,
+          size:2.5, rot:RNG.int(360) * Math.PI / 180,
+          vr:(RNG.int(200) - 100) / 100,
+          col:colors[RNG.int(colors.length)],
+          life:1, maxLife:1300, circle:true
+        });
+      }
+    }, i * 150);
+  }
+
+  if (winOverlayTimer) clearTimeout(winOverlayTimer);
+  winOverlayTimer = setTimeout(() => {
+    el('winOv').classList.remove('on');
+    if (!state.inFreeSpins) setBg('normal');
+  }, Math.max(1500, 2600 / state.speed));
+}
+
+/* =====================================================================
+   SPIN FLOW
+   ===================================================================== */
+function doSpin(){
+  if (!GameEngine.canSpin()) return;
+
+  const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+  if (!isFree){
+    if (!GameEngine.chargeBet()){
+      toast('Not enough credits.');
+      return;
+    }
+  } else {
+    state.freeSpinsLeft--;
+  }
+
+  state.phase = 'SPINNING';
+  state.lastWin = 0;
+  state.lastNet = 0;
+  updateUI(true);
+  Sound.spin();
+
+  /* generate new board + place roaming wild */
+  const finalBoard = GameEngine.generateBoard();
+  GameEngine.placeRoamingWild(finalBoard);
+
+  spinAnimation(finalBoard, function(){
+    state.phase = 'RESOLVING';
+
+    const scatterCount = ClusterEngine.countScatters(finalBoard);
+
+    runCascade(finalBoard, GameEngine.bet(), isFree, function(totalWin, steps, depth){
+      state.lastWin = totalWin;
+      state.lastNet = totalWin - (isFree ? 0 : GameEngine.bet());
+
+      /* free spins from scatters */
+      let triggeredFS = 0;
+      if (scatterCount >= 3){
+        if (isFree) triggeredFS = CONFIG.scatterRetriggerAdd;
+        else {
+          const th = CONFIG.scatterThresholds;
+          for (let i = 0; i < th.length; i++){
+            if (scatterCount >= th[i].min){ triggeredFS = th[i].freeSpins; break; }
+          }
+        }
+      }
+      if (triggeredFS > 0){
+        Sound.scatter();
+        if (!state.inFreeSpins){
+          state.inFreeSpins = true;
+          state.freeSpinsLeft = triggeredFS;
+          state.freeSpinsTotal = triggeredFS;
+          setBg('free');
+          toast('⚡ ' + triggeredFS + ' FREE SPINS! ⚡');
+        } else {
+          state.freeSpinsLeft += triggeredFS;
+          toast('⚡ RETRIGGER +' + triggeredFS + ' ⚡');
+        }
+      }
+
+      /* history */
+      state.history.unshift({
+        ts: new Date(),
+        bet: isFree ? 0 : GameEngine.bet(),
+        win: totalWin,
+        cascades: depth,
+        free: isFree,
+        scatters: scatterCount
+      });
+      if (state.history.length > 60) state.history.pop();
+
+      /* overlay */
+      if (totalWin > 0){
+        setTimeout(() => showWinOverlay(totalWin), 340 / state.speed);
+      } else {
+        anim.cascadeMult = 1;
+        el('cascadeBadge').classList.remove('on');
+      }
+
+      /* move roaming wild to a new adjacent cell */
+      setTimeout(() => {
+        GameEngine.moveRoamingWild();
+        Sound.roam();
+        /* after moving, if we're starting a new spin the wild will be at its new spot */
+        state.board[state.roamingWildPos] = 'WILD';
+      }, 900 / state.speed);
+
+      state.phase = 'IDLE';
+      updateUI(true);
+
+      if (state.inFreeSpins && state.freeSpinsLeft <= 0){
+        state.inFreeSpins = false;
+        setBg('normal');
+        toast('Free spins complete.');
+      }
+
+      const waitMs = (totalWin > 0 ? 900 : 400) / state.speed;
+      setTimeout(() => {
+        if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden){
+          if (GameEngine.canSpin()){
+            state.autoSpinsLeft--;
+            updateUI();
+            doSpin();
+          } else stopAuto('Auto-spin stopped — insufficient credits.');
+        } else if (state.autoActive && state.autoSpinsLeft <= 0){
+          stopAuto('Auto-spin complete.');
+        } else {
+          anim.cascadeMult = 1;
+          el('cascadeBadge').classList.remove('on');
+        }
+      }, Math.max(500, waitMs));
+    });
+  });
+}
+
+/* =====================================================================
+   AUTO
+   ===================================================================== */
+function startAuto(){
+  if (state.autoActive){ stopAuto(); return; }
+  if (state.phase !== 'IDLE') return;
+  if (!GameEngine.canSpin()){ toast('Not enough credits.'); return; }
+  state.autoActive = true;
+  state.autoSpinsLeft = CONFIG.autoSpinMax;
+  Sound.click();
+  updateUI();
+  doSpin();
+}
+function stopAuto(msg){
+  state.autoActive = false;
+  state.autoSpinsLeft = 0;
+  if (msg) toast(msg);
+  updateUI();
+}
+
+/* =====================================================================
+   MODALS
+   ===================================================================== */
+function openModal(id){ el(id).classList.add('on'); }
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove('on');
+  });
+});
+
+function buildPaytable(){
+  const grid = el('paytableGrid');
+  grid.innerHTML = '';
+  SYMBOL_ORDER.forEach(id => {
+    const def = SYMBOLS[id];
+    if (!def) return;
+    const card = document.createElement('div');
+    card.className = 'sym-card';
+    if (def.special === 'wild') card.classList.add('wild');
+    else if (def.special === 'scatter') card.classList.add('scatter');
+
+    const ic = document.createElement('div');
+    ic.className = 'ic';
+    const img = document.createElement('img');
+    img.src = SpriteSheet.preview(def.sprite, 96);
+    img.alt = def.name;
+    ic.appendChild(img);
+    card.appendChild(ic);
+
+    const nm = document.createElement('div');
+    nm.className = 'nm';
+    nm.textContent = def.name;
+    card.appendChild(nm);
+
+    const py = document.createElement('div');
+    py.className = 'py';
+    if (def.special === 'scatter') py.textContent = '3/4/5 → FS';
+    else if (def.special === 'wild') py.textContent = 'WILD · any symbol';
+    else py.textContent = '5-6: ×1 · 7-9: ×2 · 10+: ×4+';
+    card.appendChild(py);
+    grid.appendChild(card);
+  });
+}
+
+function buildHistory(){
+  const list = el('historyList');
+  if (!state.history.length){
+    list.innerHTML = '<li class="empty">No spins yet.</li>';
+    return;
+  }
+  list.innerHTML = state.history.map(h => {
+    const cls = h.win > 0 ? '' : 'loss';
+    const tag = h.free ? ' [FREE]' : '';
+    const casc = h.cascades ? ' 💥×' + h.cascades : '';
+    return '<li class="' + cls + '"><span>' +
+      h.ts.toLocaleTimeString() + tag +
+      ' · Bet ' + h.bet +
+      ' · ⚡' + h.scatters + casc +
+      '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+  }).join('');
+}
+
+/* =====================================================================
+   EVENT WIRING
+   ===================================================================== */
+el('spinBtn').addEventListener('click', () => { Sound.click(); doSpin(); });
+el('autoBtn').addEventListener('click', startAuto);
+el('stopBtn').addEventListener('click', () => stopAuto('Auto-spin stopped.'));
+
+el('betDown').addEventListener('click', () => {
+  if (state.phase !== 'IDLE' || state.autoActive) return;
+  GameEngine.setBetIndex(state.betIndex - 1);
+  Sound.click();
+  updateUI();
+});
+el('betUp').addEventListener('click', () => {
+  if (state.phase !== 'IDLE' || state.autoActive) return;
+  GameEngine.setBetIndex(state.betIndex + 1);
+  Sound.click();
+  updateUI();
+});
+
+el('speedSel').addEventListener('change', () => {
+  state.speed = parseFloat(el('speedSel').value) || 1;
+  Sound.click();
+});
+el('paytableBtn').addEventListener('click', () => { buildPaytable(); openModal('paytableModal'); });
+el('helpBtn').addEventListener('click', () => openModal('helpModal'));
+el('historyBtn').addEventListener('click', () => { buildHistory(); openModal('historyModal'); });
+el('soundBtn').addEventListener('click', () => {
+  const on = Sound.toggle();
+  el('soundBtn').textContent = on ? '🔊 Sound' : '🔇 Muted';
+  el('soundBtn').classList.toggle('on', on);
+  if (on) Sound.click();
+});
+el('resetBtn').addEventListener('click', () => {
+  if (!confirm('Reset the demo? Balance returns to ' + CONFIG.startingBalance + '.')) return;
+  stopAuto();
+  state.balance = CONFIG.startingBalance;
+  state.betIndex = CONFIG.defaultBetIndex;
+  state.inFreeSpins = false;
+  state.freeSpinsLeft = 0;
+  state.freeSpinsTotal = 0;
+  state.lastWin = 0;
+  state.lastNet = 0;
+  state.spinCount = 0;
+  state.history = [];
+  state.phase = 'IDLE';
+  state.stats = { spins:0, wagered:0, regularWon:0, bonusWon:0 };
+  state.roamingWildPos = 14;
+  state.roamingTrail = [];
+  anim.winCells.clear();
+  anim.blastCells.clear();
+  anim.clusterRings = [];
+  anim.particles = [];
+  anim.shake = 0;
+  anim.cascadeMult = 1;
+  el('cascadeBadge').classList.remove('on');
+  setBg('normal');
+  state.board = GameEngine.generateBoard();
+  GameEngine.placeRoamingWild(state.board);
+  updateUI(true);
+  toast('Demo reset.');
+});
+
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'SELECT' || tag === 'INPUT' || tag === 'BUTTON') return;
+  if (e.code === 'Space' || e.code === 'Enter'){
+    e.preventDefault();
+    if (!el('spinBtn').disabled) doSpin();
+  }
+  if (e.code === 'Escape'){
+    document.querySelectorAll('.modal.on').forEach(m => m.classList.remove('on'));
+  }
+  if (e.key === 'a' || e.key === 'A') startAuto();
+  if (e.key === 's' || e.key === 'S') stopAuto('Auto-spin stopped.');
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.autoActive) stopAuto('Auto-spin paused (tab inactive).');
+});
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+async function boot(){
+  state.speed = parseFloat(el('speedSel').value) || 1;
+  state.board = GameEngine.generateBoard();
+  GameEngine.placeRoamingWild(state.board);
+  setBg('normal');
+  resize();
+  updateUI();
+  requestAnimationFrame(render);
+  await SpriteSheet.load();
+  setTimeout(() => toast('Welcome to Neon Cluster — press SPIN!'), 400);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>

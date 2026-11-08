@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phoenix Rising — Scatter Pays Mystery Grid</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#1a0505;
+  --ember:#2a0808;
+  --ember-2:#3a0f0f;
+  --ember-3:#4a1515;
+  --fire:#e63946;
+  --fire-2:#ff5c3c;
+  --fire-3:#ff8c42;
+  --gold:#f4b923;
+  --gold-2:#ffd968;
+  --gold-3:#fff6c8;
+  --gold-dark:#8a5b0a;
+  --ash:#4a3a2a;
+  --smoke:#2a201a;
+  --text:#f5e0d0;
+  --text-dim:#a88878;
+  --radius:12px;
+  --radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Rajdhani',system-ui,sans-serif;
+  background:var(--night);color:var(--text);
+  overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;user-select:none;
+}
+
+/* Background GIF */
+#bgLayer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#1a0505 center/cover no-repeat url('../../assets/bg2.gif');
+  transition:filter .7s,opacity .7s;
+  filter:brightness(.4) saturate(1.4) hue-rotate(-15deg);
+  opacity:.92;
+}
+#bgLayer::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(244,185,35,.28),transparent 55%),
+    radial-gradient(ellipse at 15% 90%,rgba(230,57,70,.22),transparent 55%),
+    radial-gradient(ellipse at 85% 90%,rgba(255,140,66,.18),transparent 55%),
+    linear-gradient(180deg,rgba(26,5,5,.55),rgba(26,5,5,.94));
+}
+#bgLayer.free{filter:brightness(.52) saturate(1.5) hue-rotate(-25deg)}
+#bgLayer.big{filter:brightness(.62) saturate(1.7) hue-rotate(-40deg)}
+
+/* Embers */
+#embers{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+#embers span{
+  position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#fff6c8,rgba(244,185,35,.5) 55%,transparent 75%);
+  box-shadow:0 0 5px rgba(244,185,35,.8);
+  animation:emberRise linear infinite;
+}
+@keyframes emberRise{
+  0%{transform:translateY(0) translateX(0) scale(.6);opacity:0}
+  10%{opacity:1}
+  90%{opacity:.5}
+  100%{transform:translateY(-115vh) translateX(30px) scale(1.2);opacity:0}
+}
+
+/* Shell */
+#game{
+  position:relative;z-index:5;
+  width:min(1220px,97vw);height:min(830px,96vh);
+  background:linear-gradient(155deg,rgba(58,15,15,.9),rgba(26,5,5,.95));
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(244,185,35,.42);
+  border-radius:var(--radius-lg);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.9),
+    inset 0 0 80px rgba(230,57,70,.14),
+    0 0 100px rgba(244,185,35,.18),
+    0 0 40px rgba(255,140,66,.14);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#game::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(120deg,transparent 42%,rgba(255,246,200,.12) 50%,transparent 58%);
+  animation:shine 8s ease-in-out infinite;
+}
+@keyframes shine{0%,58%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+
+/* Flame-edge top */
+#game::after{
+  content:"";position:absolute;left:10px;right:10px;top:5px;height:5px;pointer-events:none;z-index:58;
+  background-image:
+    repeating-linear-gradient(90deg,
+      var(--fire) 0 4px,
+      transparent 4px 6px,
+      var(--gold) 6px 9px,
+      transparent 9px 12px,
+      var(--fire-2) 12px 15px,
+      transparent 15px 19px
+    );
+  filter:drop-shadow(0 0 4px var(--fire));
+  border-radius:3px;
+  animation:crawl 3s linear infinite;
+}
+@keyframes crawl{to{background-position:19px 0}}
+
+/* Top bar */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px 12px;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(26,5,5,.85),transparent);
+  border-bottom:1px solid rgba(244,185,35,.24);
+  position:relative;z-index:2;
+}
+.brand{
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.4rem;letter-spacing:4px;
+  color:var(--gold-2);
+  display:flex;align-items:center;gap:10px;
+  text-shadow:0 0 18px rgba(255,217,104,.75),0 0 30px rgba(230,57,70,.5);
+}
+.brand .fire{
+  font-size:1.25rem;
+  filter:drop-shadow(0 0 8px var(--fire)) drop-shadow(0 0 16px var(--gold));
+  animation:flicker 1.6s ease-in-out infinite;
+}
+@keyframes flicker{
+  0%,100%{opacity:1;transform:scale(1)}
+  30%{opacity:.7;transform:scale(1.12) rotate(-4deg)}
+  60%{opacity:.95;transform:scale(.96) rotate(2deg)}
+}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.55);
+  border:1px solid rgba(244,185,35,.5);color:var(--gold-2);
+  font-size:.7rem;font-weight:600;letter-spacing:1.5px;cursor:pointer;
+  transition:.2s;font-family:'Rajdhani',sans-serif;text-transform:uppercase;
+}
+.pill:hover{background:rgba(244,185,35,.22);color:#fff;transform:translateY(-1px);
+  box-shadow:0 0 14px rgba(244,185,35,.55)}
+.pill.on{background:rgba(230,57,70,.32);border-color:var(--fire-2);color:#fff;
+  box-shadow:0 0 14px var(--fire-2)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--gold-2) 50%),
+    linear-gradient(135deg,var(--gold-2) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+  background-size:5px 5px;background-repeat:no-repeat}
+
+/* Main */
+.main{flex:1;display:grid;grid-template-columns:1fr 285px;gap:14px;padding:14px;
+  min-height:0;position:relative;z-index:2}
+
+.board-wrap{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(58,15,15,.65),rgba(26,5,5,.92));
+  border:1px solid rgba(244,185,35,.4);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.85),
+    0 0 40px rgba(230,57,70,.3),
+    0 0 30px rgba(244,185,35,.16);
+  overflow:hidden;min-height:0;
+  transition:border-color .3s ease,box-shadow .3s ease;
+}
+.board-wrap::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 4px);
+}
+.board-wrap.cascade{
+  border-color:var(--fire-2);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,.85),
+    0 0 60px rgba(255,92,60,.6),
+    0 0 100px rgba(255,92,60,.35);
+}
+canvas#board{display:block;width:100%;height:100%;position:relative;z-index:2}
+
+/* Chain multiplier badge */
+#chainBadge{
+  position:absolute;top:14px;left:14px;z-index:22;
+  padding:6px 14px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(255,92,60,.96),rgba(26,5,5,.92));
+  border:2px solid var(--gold-2);color:#fff;
+  font-family:'Cinzel',serif;font-weight:900;
+  letter-spacing:2px;font-size:.78rem;
+  text-shadow:0 0 8px #fff,0 0 16px var(--gold);
+  box-shadow:0 0 24px rgba(255,92,60,.9);
+  display:none;
+}
+#chainBadge.on{display:block;animation:chainPop .35s cubic-bezier(.2,.7,.3,1.7)}
+@keyframes chainPop{
+  0%{transform:scale(.3) rotate(-10deg);opacity:0}
+  70%{transform:scale(1.15) rotate(3deg);opacity:1}
+  100%{transform:scale(1) rotate(0deg)}
+}
+
+/* Free Spins banner */
+#fsBanner{
+  position:absolute;top:14px;right:14px;z-index:22;
+  padding:8px 20px;border-radius:30px;
+  background:linear-gradient(160deg,rgba(230,57,70,.94),rgba(26,5,5,.9));
+  border:2px solid #fff;color:#fff;
+  font-family:'Cinzel',serif;font-weight:900;
+  letter-spacing:3px;font-size:.88rem;
+  text-shadow:0 0 10px var(--gold-2),0 0 20px #fff;
+  box-shadow:0 0 30px rgba(230,57,70,.9),0 0 50px rgba(244,185,35,.5);
+  display:none;
+}
+#fsBanner.on{display:block;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* Dashboard */
+.dash{display:flex;flex-direction:column;gap:12px;min-height:0}
+.stat{
+  background:linear-gradient(160deg,rgba(58,15,15,.82),rgba(26,5,5,.92));
+  border:1px solid rgba(244,185,35,.35);
+  border-radius:var(--radius);padding:12px 14px;position:relative;overflow:hidden;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(244,185,35,.14) 50%,transparent 60%);
+  animation:shine 6s ease-in-out infinite;
+}
+.stat .lbl{font-size:.6rem;letter-spacing:2.5px;color:var(--text-dim);
+  font-weight:600;text-transform:uppercase}
+.stat .val{font-family:'Cinzel',serif;font-weight:900;font-size:1.5rem;
+  margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.stat.balance .val{color:var(--gold-2);text-shadow:0 0 14px rgba(255,217,104,.8)}
+.stat.win .val{color:var(--fire-2);text-shadow:0 0 14px rgba(255,92,60,.8)}
+.stat .val.pop{animation:pop .55s cubic-bezier(.2,.7,.3,1.6)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3);filter:brightness(1.8)}100%{transform:scale(1)}}
+
+.controls{display:flex;flex-direction:column;gap:10px}
+.bet-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(244,185,35,.4);
+  border-radius:12px;padding:6px;
+}
+.bet-row .btn{
+  width:38px;height:38px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--gold-2),var(--gold));
+  border:none;border-radius:50%;color:#3a1a05;font-weight:900;font-size:1.15rem;
+  cursor:pointer;transition:.15s;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.7),
+    0 0 12px rgba(244,185,35,.5);
+}
+.bet-row .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 22px var(--gold-2)}
+.bet-row .btn:active:not(:disabled){transform:translateY(1px)}
+.bet-row .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7);box-shadow:none}
+.bet-row .amt{
+  flex:1;text-align:center;font-family:'Cinzel',serif;
+  font-weight:900;font-size:1.2rem;color:#fff;font-variant-numeric:tabular-nums;
+  letter-spacing:2px;
+}
+.bet-row .amt small{display:block;font-size:.52rem;color:var(--text-dim);
+  letter-spacing:1.8px;font-weight:600;margin-top:0;font-family:'Rajdhani',sans-serif;
+  text-transform:uppercase}
+
+.preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.preset-row button{
+  padding:6px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(244,185,35,.15),rgba(138,91,10,.08));
+  border:1px solid rgba(244,185,35,.4);color:var(--gold-2);
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.preset-row button:hover{background:rgba(244,185,35,.28);color:#fff;box-shadow:0 0 12px rgba(244,185,35,.5)}
+
+.auto-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.auto-row button{
+  padding:6px 2px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(230,57,70,.16),rgba(26,5,5,.06));
+  border:1px solid rgba(230,57,70,.42);color:var(--fire-2);
+  font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:.15s;
+}
+.auto-row button:hover{background:rgba(230,57,70,.3);color:#fff}
+.auto-row button.active{background:linear-gradient(160deg,var(--fire),var(--fire-2));
+  color:#fff;border-color:#fff;box-shadow:0 0 14px rgba(230,57,70,.7)}
+
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{
+  padding:10px 6px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(244,185,35,.16),rgba(138,91,10,.08));
+  border:1px solid rgba(244,185,35,.45);color:var(--gold-2);
+  font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:1.4px;cursor:pointer;transition:.15s;text-transform:uppercase;
+}
+.mini:hover{background:rgba(244,185,35,.28);color:#fff;box-shadow:0 0 14px rgba(244,185,35,.6)}
+.mini.on{background:linear-gradient(160deg,var(--fire),var(--fire-2));
+  color:#fff;border-color:#fff;box-shadow:0 0 22px var(--fire);
+  animation:pulse 1.3s ease-in-out infinite}
+
+.spin{
+  padding:22px 10px;border-radius:16px;border:none;cursor:pointer;
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.35rem;letter-spacing:5px;
+  color:#3a1a05;
+  background:radial-gradient(circle at 32% 28%,#fff8d6 0%,var(--gold-2) 40%,var(--fire-2) 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.5),0 0 45px rgba(244,185,35,.65),
+    inset 0 2px 0 rgba(255,255,255,.7);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.spin::after{
+  content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(var(--gold-2),#fff,var(--fire-2),var(--gold-2));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  animation:spinGlow 3.5s linear infinite;opacity:.78;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.spin:hover:not(:disabled){transform:translateY(-2px);
+  box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 70px var(--gold-2),
+  0 0 110px rgba(230,57,70,.6),inset 0 2px 0 rgba(255,255,255,.7)}
+.spin:active:not(:disabled){transform:translateY(3px);
+  box-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px var(--gold-2)}
+.spin:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+.spin .autocnt{display:block;font-size:.6rem;letter-spacing:2px;
+  color:rgba(0,0,0,.65);margin-top:2px;font-weight:700;font-family:'Rajdhani',sans-serif}
+
+/* Modals */
+.modal{
+  position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(10,2,2,.95);backdrop-filter:blur(10px);
+  padding:18px;overflow-y:auto;
+}
+.modal.on{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  width:min(880px,95vw);max-height:88vh;overflow:auto;
+  background:linear-gradient(165deg,rgba(58,15,15,.98),rgba(26,5,5,.98));
+  border:2px solid rgba(244,185,35,.6);
+  border-radius:20px;padding:24px 28px;
+  box-shadow:0 0 60px rgba(244,185,35,.35),0 0 90px rgba(230,57,70,.25);
+}
+.modal-card h2{
+  font-family:'Cinzel',serif;font-weight:900;font-size:1.5rem;
+  letter-spacing:3px;color:var(--gold-2);margin-bottom:12px;
+  text-shadow:0 0 20px rgba(255,217,104,.6);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.modal-card h2 button{
+  background:rgba(244,185,35,.15);border:1px solid var(--gold-2);
+  color:var(--gold-2);padding:6px 14px;border-radius:10px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:1px;
+}
+.modal-card h2 button:hover{background:rgba(244,185,35,.32);color:#fff}
+.modal-card p{line-height:1.7;color:#e6cfc0;font-size:.9rem;margin:8px 0}
+.modal-card .rules{color:#c9a890;font-size:.87rem}
+.modal-card .rules b{color:var(--gold-2)}
+
+.sym-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;margin:16px 0;
+}
+.sym-card{
+  background:rgba(0,0,0,.5);border:1px solid rgba(244,185,35,.3);
+  border-radius:12px;padding:10px;text-align:center;
+}
+.sym-card .ic{
+  width:64px;height:64px;margin:0 auto 6px;
+  border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);border:1px solid rgba(244,185,35,.28);
+}
+.sym-card .ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.sym-card .nm{font-size:.65rem;color:#c9a890;letter-spacing:1.2px;
+  text-transform:uppercase;font-weight:700}
+.sym-card .py{font-family:'Cinzel',serif;font-size:.75rem;
+  color:var(--gold-2);font-weight:900;margin-top:4px;letter-spacing:1px}
+.sym-card.bonus .ic{border-color:var(--fire-2);box-shadow:0 0 14px rgba(230,57,70,.7)}
+.sym-card.bonus .py{color:var(--fire-2)}
+.sym-card.mystery .ic{
+  background:radial-gradient(circle,rgba(150,60,220,.35),rgba(0,0,0,.9));
+  border-color:#a78bfa;box-shadow:0 0 14px rgba(167,139,250,.7);
+}
+.sym-card.mystery .py{color:#a78bfa}
+
+.tier-list{list-style:none;margin:12px 0}
+.tier-list li{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:.85rem;
+}
+.tier-list li b{
+  color:var(--fire-2);font-family:'Cinzel',serif;font-weight:900;
+  letter-spacing:1px;
+}
+.tier-list li.top b{color:var(--gold-2);text-shadow:0 0 8px rgba(255,217,104,.7)}
+
+.history{list-style:none;font-size:.78rem}
+.history li{display:flex;justify-content:space-between;gap:10px;
+  padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.history li b{color:var(--gold-2);font-family:'Cinzel',serif;font-size:.85rem;letter-spacing:1px}
+.history li.loss b{color:#f87171}
+
+#winOv{
+  position:fixed;inset:0;z-index:850;display:none;
+  align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(26,5,5,.55),rgba(26,5,5,.94));
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+#winOv.on{display:flex;animation:fadeIn .25s ease}
+#winOv .box{
+  text-align:center;padding:32px 56px;border-radius:26px;
+  background:linear-gradient(160deg,rgba(58,15,15,.97),rgba(26,5,5,.97));
+  border:3px solid var(--gold-2);
+  box-shadow:0 0 90px var(--gold-2),0 0 130px rgba(230,57,70,.55),
+    inset 0 0 50px rgba(244,185,35,.22);
+  animation:winPop .6s cubic-bezier(.2,.7,.3,1.5);
+  position:relative;overflow:hidden;
+}
+#winOv .box::before{
+  content:"";position:absolute;inset:-50%;pointer-events:none;
+  background:conic-gradient(transparent 30%,rgba(255,246,200,.42) 50%,transparent 70%);
+  animation:spinGlow 3s linear infinite;
+}
+@keyframes winPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+#winOv .tier{
+  font-family:'Cinzel',serif;font-weight:900;font-size:2.2rem;letter-spacing:5px;
+  color:#fff;text-shadow:0 0 30px var(--gold-2),0 0 60px var(--fire);
+  position:relative;z-index:2;
+}
+#winOv .amt{
+  font-family:'Cinzel',serif;font-weight:900;font-size:2.7rem;
+  color:var(--gold-2);text-shadow:0 0 30px var(--gold-2),0 0 60px #fff;
+  margin-top:6px;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+  letter-spacing:3px;
+}
+#winOv .sub{font-size:.72rem;color:var(--text-dim);letter-spacing:3px;
+  margin-top:12px;font-weight:600;text-transform:uppercase;position:relative;z-index:2}
+
+#toasts{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:950;
+  display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;
+}
+.toast{
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(58,15,15,.96),rgba(26,5,5,.96));
+  border:1px solid var(--gold-2);color:var(--gold-2);
+  font-size:.82rem;font-weight:700;letter-spacing:1.2px;
+  box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(244,185,35,.5);
+  animation:toastIn .3s ease,toastOut .3s ease 2.8s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px)}}
+
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:10px;padding:10px}
+  .dash{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .dash .stat{flex:1;min-width:120px;padding:8px 10px}
+  .dash .stat .val{font-size:1.1rem}
+  .controls{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .bet-row{flex:1 1 100%}
+  .preset-row{flex:1 1 100%}
+  .auto-row{flex:1 1 100%}
+  .mini-row{flex:1 1 45%}
+  .spin{flex:1 1 100%;padding:15px;font-size:1.2rem}
+  .brand{font-size:1.1rem;letter-spacing:2px}
+  .topbar{padding:10px 12px}
+  .pill{padding:5px 10px;font-size:.58rem}
+  #fsBanner{font-size:.72rem;padding:6px 14px;right:8px}
+  #chainBadge{font-size:.68rem;padding:5px 10px;left:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  #embers{display:none}
+}
+</style>
+<link rel="stylesheet" href="../../static/css/game-shell.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div id="embers"></div>
+
+<div id="game">
+  <div class="topbar">
+    <div class="brand">
+      <span class="fire">🔥</span>
+      <span>PHOENIX RISING</span>
+      <span class="fire">🔥</span>
+    </div>
+    <div class="topbar-right">
+      <select id="speedSel" class="pill">
+        <option value="0.7">🐢 Slow</option>
+        <option value="1" selected>⚡ Normal</option>
+        <option value="1.6">🚀 Fast</option>
+        <option value="2.4">💨 Turbo</option>
+      </select>
+      <button class="pill" id="paytableBtn">Paytable</button>
+      <button class="pill" id="tiersBtn">Tiers</button>
+      <button class="pill" id="helpBtn">Rules</button>
+      <button class="pill" id="historyBtn">History</button>
+      <button class="pill" id="soundBtn">🔊</button>
+      <button class="pill" id="resetBtn">♻</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="board-wrap" id="boardWrap">
+      <div id="chainBadge">CASCADE ×<span id="chainVal">1</span></div>
+      <div id="fsBanner">🔥 FREE SPINS: <span id="fsCount">0</span></div>
+      <canvas id="board"></canvas>
+    </div>
+
+    <div class="dash">
+      <div class="stat balance">
+        <div class="lbl">Ash Credits</div>
+        <div class="val" id="balanceVal">1,000</div>
+      </div>
+      <div class="stat win">
+        <div class="lbl">Last Rebirth</div>
+        <div class="val" id="winVal">0</div>
+      </div>
+
+      <div class="controls">
+        <div class="bet-row">
+          <button class="btn" id="betDown">−</button>
+          <div class="amt">
+            <span id="betVal">100</span>
+            <small>BET PER SPIN</small>
+          </div>
+          <button class="btn" id="betUp">+</button>
+        </div>
+        <div class="preset-row">
+          <button data-preset="min">MIN</button>
+          <button data-preset="std">STD</button>
+          <button data-preset="max">MAX</button>
+        </div>
+        <div class="auto-row" id="autoRow">
+          <button data-auto="10">10</button>
+          <button data-auto="25" class="active">25</button>
+          <button data-auto="50">50</button>
+          <button data-auto="100">100</button>
+        </div>
+        <div class="mini-row">
+          <button class="mini" id="autoBtn">🔁 AUTO</button>
+          <button class="mini" id="stopBtn">⏹ STOP</button>
+        </div>
+        <button class="spin" id="spinBtn">
+          IGNITE
+          <span class="autocnt" id="autoCnt"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYTABLE -->
+<div class="modal" id="paytableModal">
+  <div class="modal-card">
+    <h2>🔥 Paytable <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">This game has <b>NO PAYLINES</b>. Symbols pay simply for appearing anywhere on the 6×5 grid. Each symbol's payout depends on <b>how many</b> of it appear.</p>
+    <div class="sym-grid" id="paytableGrid"></div>
+    <p class="rules" style="margin-top:14px">
+      <b>🔮 MYSTERY REVEAL:</b> 3–5 random cells turn into <b>"?" symbols</b> before the spin. When the spin lands, all mystery cells <b>reveal as the same symbol</b> — potentially adding to a big count.<br>
+      <b>🔥 CASCADE:</b> When a symbol type reaches <b>8+ occurrences</b>, those cells explode, new symbols drop, and the <b>Cascade Multiplier grows</b> ×1 → ×2 → ×3 → ×5 → ×8 → ×12 → ×20 → ×30 → ×50 → ×100.<br>
+      <b>☀ SUN SCATTER:</b> 4+ suns anywhere → 10 Free Spins · 5 → 15 · 6+ → 20. During Free Spins all wins are <b>×2</b> and every spin has <b>8–12 mystery cells</b>!
+    </p>
+  </div>
+</div>
+
+<!-- TIERS -->
+<div class="modal" id="tiersModal">
+  <div class="modal-card">
+    <h2>🔥 Count Tiers <button data-close>✕ CLOSE</button></h2>
+    <p class="rules">Total count of a symbol on the 30-cell grid determines the tier multiplier. Final payout = <b>symbol base × tier multiplier × (bet ÷ 100)</b>.</p>
+    <ul class="tier-list" id="tierList"></ul>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <h2>🔥 How To Play <button data-close>✕ CLOSE</button></h2>
+    <p>1. Set your bet with + / − or MIN / STD / MAX.</p>
+    <p>2. Press <b>IGNITE</b> or SPACE. The 6×5 board fills with symbols.</p>
+    <p>3. <b>8 or more</b> of the same symbol anywhere on the board = WIN. The more you have, the bigger the multiplier.</p>
+    <p>4. Watch the <b>mystery "?" cells</b> — 3–5 per spin. They all reveal as the SAME symbol mid-spin, which may push you past the 8+ threshold.</p>
+    <p>5. Any winning symbol explodes and the board cascades with the <b>Cascade Multiplier</b> growing each step.</p>
+    <p>6. <b>Sun scatters</b> (4+ anywhere) trigger Free Spins — 4/5/6+ → 10/15/20 spins. All wins are ×2.</p>
+    <p>7. During Free Spins, every spin has <b>8–12 mystery cells</b> — much bigger chances!</p>
+    <p style="color:var(--text-dim);font-size:.82rem;margin-top:14px">🎮 Virtual-credit demo — for entertainment only. Not for real-money wagering.</p>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal" id="historyModal">
+  <div class="modal-card">
+    <h2>🔥 Rebirth Log <button data-close>✕ CLOSE</button></h2>
+    <ul class="history" id="historyList"><li style="color:var(--text-dim)">No spins yet.</li></ul>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div class="box">
+    <div class="tier" id="winTier">WIN!</div>
+    <div class="amt" id="winAmt">+0</div>
+    <div class="sub" id="winSub"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   PHOENIX RISING — Scatter Pays Mystery Grid
+   ------------------------------------------------------------------
+   NEW WINNING SYSTEM: no paylines at all.
+     • 6×5 grid (30 cells)
+     • Symbols pay by COUNT ANYWHERE (8+ = win)
+     • Tiered multipliers by total count
+     • Mystery Reveal: 3-5 cells become "?" that all flip to one symbol
+     • Cascade after win with growing multiplier
+     • Sun scatters (4+) trigger Free Spins
+   ===================================================================== */
+
+const GIF_ASSETS = {
+  normal:    "../../assets/bg2.gif",
+  freeSpins: "../../assets/bg1.gif",
+  bigWin:    "../../assets/bg3.gif"
+};
+
+const CONFIG = {
+  reels: 6,
+  rows: 5,
+  totalCells: 30,
+
+  startingBalance: 1000,
+  betSteps: [20, 40, 100, 200, 500, 1000, 2000],
+  defaultBetIndex: 2,
+
+  autoSpinMax: 25,
+
+  // Count tiers — min count of a symbol anywhere
+  tiers: [
+    { min: 30, mult: 5000 },
+    { min: 27, mult: 1000 },
+    { min: 24, mult: 250 },
+    { min: 21, mult: 100 },
+    { min: 18, mult: 25 },
+    { min: 15, mult: 10 },
+    { min: 12, mult: 5 },
+    { min: 10, mult: 2 },
+    { min: 8,  mult: 1 }
+  ],
+
+  // Cascade multipliers, indexed by cascade step
+  cascadeLadder: [1, 2, 3, 5, 8, 12, 20, 30, 50, 100],
+  maxCascadeSteps: 10,
+
+  // Mystery cells
+  mystery: {
+    minNormal: 3,
+    maxNormal: 5,
+    minFree: 8,
+    maxFree: 12
+  },
+
+  scatter: {
+    thresholds: [
+      { min: 6, freeSpins: 20 },
+      { min: 5, freeSpins: 15 },
+      { min: 4, freeSpins: 10 }
+    ]
+  },
+
+  freeSpins: {
+    multiplier: 2,
+    retrigger: true,
+    retriggerAdd: 5
+  }
+};
+
+/* ---------- SYMBOLS ---------- */
+/* 8 symbols. 7 regulars that pay by count, plus 1 sun scatter. */
+const SYMBOLS = {
+  sun:      { id:"sun",      name:"Sun",      sprite:13, weight:6,  base:0,   bonus:true },
+  firebird: { id:"firebird", name:"Firebird", sprite:5,  weight:8,  base:500 },
+  phoenix:  { id:"phoenix",  name:"Phoenix",  sprite:6,  weight:12, base:200 },
+  volcano:  { id:"volcano",  name:"Volcano",  sprite:7,  weight:18, base:100 },
+  torch:    { id:"torch",    name:"Torch",    sprite:8,  weight:22, base:50  },
+  ash:      { id:"ash",      name:"Ash Cloud",sprite:9,  weight:26, base:25  },
+  flame:    { id:"flame",    name:"Flame",    sprite:10, weight:30, base:15  },
+  ember:    { id:"ember",    name:"Ember",    sprite:11, weight:34, base:8   }
+};
+
+/* The order in which we iterate to build paytable UI */
+const ORDER = ["sun","firebird","phoenix","volcano","torch","ash","flame","ember"];
+
+/* Regular symbols that pay by count (everything except the sun) */
+const REGULAR_IDS = ["firebird","phoenix","volcano","torch","ash","flame","ember"];
+
+/* Mystery cells will reveal as one of these symbols */
+const MYSTERY_POOL = REGULAR_IDS;
+
+/* ---------- RNG ---------- */
+const RNG = (function() {
+  const buf = new Uint32Array(1);
+  const hasCrypto = (typeof crypto !== "undefined" && crypto.getRandomValues);
+  function uint32() {
+    if (hasCrypto) { crypto.getRandomValues(buf); return buf[0] >>> 0; }
+    return (Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+  function int(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error("RNG.int: " + n);
+    const limit = Math.floor(0xFFFFFFFF / n) * n;
+    let r; do { r = uint32(); } while (r >= limit);
+    return r % n;
+  }
+  function weighted(items) {
+    const total = items.reduce((s, x) => s + x.weight, 0);
+    if (total <= 0) throw new Error("RNG.weighted: total 0");
+    let roll = int(total);
+    for (let i = 0; i < items.length; i++) {
+      roll -= items[i].weight;
+      if (roll < 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  return { int, weighted, uint32 };
+})();
+
+/* ---------- SPRITE LOADER ---------- */
+const SPRITE_COORDS = [
+  {x:25,y:402,w:82,h:64},{x:115,y:401,w:78,h:67},{x:199,y:403,w:78,h:61},
+  {x:287,y:402,w:75,h:66},{x:376,y:401,w:73,h:69},{x:25,y:477,w:79,h:58},
+  {x:116,y:474,w:77,h:60},{x:202,y:474,w:75,h:60},{x:289,y:481,w:66,h:46},
+  {x:372,y:477,w:79,h:60},{x:27,y:569,w:69,h:84},{x:112,y:568,w:66,h:85},
+  {x:197,y:569,w:65,h:84},{x:280,y:569,w:65,h:84},{x:479,y:125,w:67,h:68},
+  {x:562,y:207,w:66,h:67},{x:716,y:205,w:68,h:66},{x:799,y:207,w:63,h:62},
+  {x:881,y:204,w:58,h:70},{x:973,y:125,w:76,h:69},{x:1058,y:126,w:71,h:71},
+  {x:1141,y:126,w:71,h:69},{x:1224,y:130,w:71,h:64},{x:1304,y:126,w:76,h:68},
+  {x:976,y:606,w:128,h:49}
+];
+
+const SpriteLoader = (function() {
+  const img = new Image();
+  let ready = false;
+  const url = "../../assets/ultimate_multi_slot_sprite.jpg";
+  function load() {
+    return new Promise(resolve => {
+      img.onload = () => { ready = true; resolve(true); };
+      img.onerror = () => { console.warn("[sprite] missing " + url); resolve(false); };
+      img.src = url;
+      setTimeout(() => { if (!ready) resolve(false); }, 8000);
+    });
+  }
+  function drawTo(c, idx, dx, dy, dw, dh, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const s = SPRITE_COORDS[idx];
+    c.save(); c.globalAlpha = alpha;
+    if (ready && s) {
+      try { c.drawImage(img, s.x, s.y, s.w, s.h, dx, dy, dw, dh); }
+      catch (e) { fallback(c, idx, dx, dy, dw, dh); }
+    } else fallback(c, idx, dx, dy, dw, dh);
+    c.restore();
+  }
+  function fallback(c, idx, x, y, w, h) {
+    const p = ["#f4b923","#e63946","#ff5c3c","#ff8c42","#fff6c8","#8a5b0a","#c95b23","#ffd968"];
+    c.fillStyle = p[idx % p.length];
+    c.beginPath(); c.arc(x+w/2, y+h/2, Math.min(w,h)*0.4, 0, Math.PI*2); c.fill();
+    c.fillStyle = "#1a0505";
+    c.font = "bold " + Math.floor(h*0.32) + "px Cinzel,Arial";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(String(idx+1), x+w/2, y+h/2);
+  }
+  function dataUrl(idx, w, h) {
+    if (w === undefined) w = 64;
+    if (h === undefined) h = 64;
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    drawTo(c.getContext("2d"), idx, 0, 0, w, h, 1);
+    return c.toDataURL();
+  }
+  return { load, drawTo, dataUrl, isReady: () => ready };
+})();
+
+/* =====================================================================
+   SCATTER-PAYS ENGINE
+   ===================================================================== */
+const ScatterEngine = (function() {
+  function getTier(count) {
+    const tiers = CONFIG.tiers;
+    for (let i = 0; i < tiers.length; i++) {
+      if (count >= tiers[i].min) return tiers[i].mult;
+    }
+    return 0;
+  }
+
+  /* Evaluate the board: for each regular symbol id, count occurrences.
+     If count >= 8, apply tier multiplier × symbol base × bet/100. */
+  function evaluate(board, bet) {
+    // board is flat array of length 30
+    const counts = {};
+    for (const id of REGULAR_IDS) counts[id] = 0;
+    let sunCount = 0;
+    for (let i = 0; i < board.length; i++) {
+      const s = board[i];
+      if (s === "sun") { sunCount++; continue; }
+      if (counts[s] !== undefined) counts[s]++;
+    }
+
+    const wins = [];
+    let total = 0;
+    for (const id of REGULAR_IDS) {
+      const count = counts[id];
+      if (count < 8) continue;
+      const tier = getTier(count);
+      if (tier <= 0) continue;
+      const def = SYMBOLS[id];
+      const payout = Math.round(def.base * tier * (bet / 100));
+      if (payout <= 0) continue;
+      // Collect the cell indices of this symbol for explode highlighting
+      const cells = [];
+      for (let i = 0; i < board.length; i++) {
+        if (board[i] === id) cells.push(i);
+      }
+      wins.push({ symbol: id, count, tier, cells, payout });
+      total += payout;
+    }
+    return { wins, total, sunCount, counts };
+  }
+
+  return { evaluate, getTier };
+})();
+
+/* =====================================================================
+   GAME ENGINE
+   ===================================================================== */
+const GameEngine = (function() {
+  const state = {
+    phase: "idle",
+    balance: CONFIG.startingBalance,
+    betIndex: CONFIG.defaultBetIndex,
+    board: new Array(CONFIG.totalCells).fill("ember"),   // flat
+    hiddenMask: new Array(CONFIG.totalCells).fill(false),// true = still showing "?"
+    spinWin: 0,
+    cascadeStep: 0,
+    cascadeMultiplier: 1,
+    lastWin: 0,
+    lastNet: 0,
+    inFreeSpins: false,
+    freeSpinsLeft: 0,
+    autoActive: false,
+    autoSpinsLeft: 0,
+    autoSpinTarget: 25
+  };
+
+  const bet = () => CONFIG.betSteps[state.betIndex];
+
+  /* Pick a random symbol by weight (includes sun) */
+  function pickSymbol() {
+    const pool = ORDER.map(id => SYMBOLS[id]);
+    return RNG.weighted(pool).id;
+  }
+  /* Pick a random regular symbol (for mystery reveal) */
+  function pickRegular() {
+    const pool = MYSTERY_POOL.map(id => SYMBOLS[id]);
+    return RNG.weighted(pool).id;
+  }
+
+  /* Generate a fresh board (flat array of length 30) */
+  function generateBoard() {
+    const b = new Array(CONFIG.totalCells);
+    for (let i = 0; i < CONFIG.totalCells; i++) b[i] = pickSymbol();
+    return b;
+  }
+
+  /* Choose which cells become mystery. Returns a Set of indices. */
+  function chooseMysteryIndices() {
+    const minM = state.inFreeSpins ? CONFIG.mystery.minFree : CONFIG.mystery.minNormal;
+    const maxM = state.inFreeSpins ? CONFIG.mystery.maxFree : CONFIG.mystery.maxNormal;
+    const target = minM + RNG.int(maxM - minM + 1);
+    const chosen = new Set();
+    let guard = 0;
+    while (chosen.size < target && guard++ < 200) {
+      const idx = RNG.int(CONFIG.totalCells);
+      chosen.add(idx);
+    }
+    return chosen;
+  }
+
+  /* Apply mystery: set those cells to the same random regular symbol,
+     return a mask so UI can show "?" first. */
+  function applyMystery(board, mysterySet) {
+    const revealSymbol = pickRegular();
+    const mask = new Array(CONFIG.totalCells).fill(false);
+    mysterySet.forEach(idx => {
+      board[idx] = revealSymbol;
+      mask[idx] = true;
+    });
+    return { revealSymbol, mask };
+  }
+
+  function canSpin() {
+    if (state.phase === "spinning" || state.phase === "evaluating" ||
+        state.phase === "tumbling") return false;
+    if (state.inFreeSpins && state.freeSpinsLeft > 0) return true;
+    return state.balance >= bet();
+  }
+
+  /* Start a new spin — deduct bet, generate board, apply mystery. */
+  function startSpin() {
+    const isFree = state.inFreeSpins && state.freeSpinsLeft > 0;
+    if (!isFree) {
+      if (state.balance < bet()) return { error: "Insufficient balance" };
+      state.balance -= bet();
+    } else {
+      state.freeSpinsLeft--;
+    }
+
+    const board = generateBoard();
+    const mysterySet = chooseMysteryIndices();
+    const { revealSymbol, mask } = applyMystery(board, mysterySet);
+
+    state.board = board;
+    state.hiddenMask = mask;
+    state.spinWin = 0;
+    state.cascadeStep = 0;
+    state.cascadeMultiplier = CONFIG.cascadeLadder[0];
+
+    // Count sun scatters (they don't move with mystery reveal)
+    let sunCount = 0;
+    for (let i = 0; i < board.length; i++) if (board[i] === "sun") sunCount++;
+
+    return {
+      board: board.slice(),
+      mask: mask.slice(),
+      revealSymbol,
+      mysteryCount: mysterySet.size,
+      sunCount,
+      isFree
+    };
+  }
+
+  /* Evaluate current board. Applies cascade multiplier and free-spin ×2. */
+  function evaluateCurrent() {
+    const result = ScatterEngine.evaluate(state.board, bet());
+    let total = 0;
+    result.wins.forEach(w => {
+      w.credits = Math.round(w.payout * state.cascadeMultiplier);
+      total += w.credits;
+    });
+    if (state.inFreeSpins && CONFIG.freeSpins.multiplier > 1) {
+      total = total * CONFIG.freeSpins.multiplier;
+    }
+    total = Math.round(total);
+    return { wins: result.wins, total, sunCount: result.sunCount };
+  }
+
+  /* Remove winning cells, drop everything down, refill from top. Returns
+     a list of moves for animation: { index, fromRow, isNew } */
+  function tumble(board, winningIndices) {
+    const winSet = new Set(winningIndices);
+    const newBoard = board.slice();
+    const moves = [];
+
+    // Per column, walk from bottom to top, compacting
+    const cols = CONFIG.reels;
+    const rows = CONFIG.rows;
+    for (let c = 0; c < cols; c++) {
+      // read from bottom
+      let writeRow = rows - 1;
+      for (let r = rows - 1; r >= 0; r--) {
+        const idx = r * cols + c;
+        if (!winSet.has(idx)) {
+          if (writeRow !== r) {
+            const newIdx = writeRow * cols + c;
+            newBoard[newIdx] = board[idx];
+            moves.push({ index: newIdx, fromRow: r - writeRow, isNew: false });
+          }
+          writeRow--;
+        }
+      }
+      // Fill remaining top rows with new random symbols
+      for (let r = writeRow; r >= 0; r--) {
+        const idx = r * cols + c;
+        newBoard[idx] = pickSymbol();
+        moves.push({ index: idx, fromRow: -(r + 1), isNew: true });
+      }
+    }
+
+    state.board = newBoard;
+    state.hiddenMask = new Array(CONFIG.totalCells).fill(false);
+    state.cascadeStep++;
+    state.cascadeMultiplier = CONFIG.cascadeLadder[
+      Math.min(state.cascadeStep, CONFIG.cascadeLadder.length - 1)
+    ];
+
+    return { board: newBoard, moves };
+  }
+
+  function addWin(credits) {
+    if (credits > 0) {
+      state.balance += credits;
+      state.spinWin += credits;
+    }
+  }
+
+  function finalizeSpin() {
+    state.lastWin = state.spinWin;
+    state.lastNet = state.spinWin;
+    if (state.inFreeSpins && state.freeSpinsLeft <= 0) {
+      state.inFreeSpins = false;
+    }
+    state.phase = "idle";
+    return {
+      total: state.spinWin,
+      freeSpinsLeft: state.freeSpinsLeft,
+      inFreeSpins: state.inFreeSpins
+    };
+  }
+
+  return {
+    state, bet, canSpin, generateBoard, pickSymbol, pickRegular,
+    startSpin, evaluateCurrent, tumble, addWin, finalizeSpin
+  };
+})();
+
+/* =====================================================================
+   UI LAYER
+   ===================================================================== */
+(function() {
+  const canvas = document.getElementById("board");
+  const ctx = canvas.getContext("2d");
+  const el = id => document.getElementById(id);
+
+  const ui = {
+    balance: el("balanceVal"),
+    win: el("winVal"),
+    bet: el("betVal"),
+    spin: el("spinBtn"),
+    auto: el("autoBtn"),
+    stop: el("stopBtn"),
+    autoCnt: el("autoCnt"),
+    winOv: el("winOv"),
+    winTier: el("winTier"),
+    winAmt: el("winAmt"),
+    winSub: el("winSub"),
+    speed: el("speedSel"),
+    sound: el("soundBtn"),
+    bgLayer: el("bgLayer"),
+    boardWrap: el("boardWrap"),
+    chainBadge: el("chainBadge"),
+    chainVal: el("chainVal"),
+    fsBanner: el("fsBanner"),
+    fsCount: el("fsCount"),
+    history: []
+  };
+  const state = GameEngine.state;
+
+  /* Background */
+  function setBg(kind) {
+    const url = kind === "free" ? GIF_ASSETS.freeSpins
+              : kind === "big"  ? GIF_ASSETS.bigWin
+              : GIF_ASSETS.normal;
+    ui.bgLayer.style.backgroundImage = "url('" + url + "')";
+    ui.bgLayer.classList.remove("free","big");
+    if (kind === "free") ui.bgLayer.classList.add("free");
+    if (kind === "big")  ui.bgLayer.classList.add("big");
+  }
+  [GIF_ASSETS.normal, GIF_ASSETS.freeSpins, GIF_ASSETS.bigWin].forEach(u => {
+    const im = new Image(); im.src = u;
+  });
+
+  /* Embers */
+  (function() {
+    const wrap = el("embers");
+    if (!wrap) return;
+    for (let i = 0; i < 32; i++) {
+      const s = document.createElement("span");
+      s.style.left = RNG.int(100) + "%";
+      s.style.animationDuration = (7 + RNG.int(13)) + "s";
+      s.style.animationDelay = (-RNG.int(20)) + "s";
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* Canvas sizing */
+  let CW = 1, CH = 1, BX = 0, BY = 0, CWc = 0, CHc = 0;
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    CW = Math.max(1, Math.floor(r.width));
+    CH = Math.max(1, Math.floor(r.height));
+    canvas.width = CW * DPR; canvas.height = CH * DPR;
+    canvas.style.width = CW + "px"; canvas.style.height = CH + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const padX = 14, padTop = 34, padBot = 14;
+    const availW = CW - padX * 2;
+    const availH = CH - padTop - padBot;
+    CWc = availW / CONFIG.reels;
+    CHc = availH / CONFIG.rows;
+    BX = padX;
+    BY = padTop;
+
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  function cellRect(idx) {
+    const c = idx % CONFIG.reels;
+    const r = Math.floor(idx / CONFIG.reels);
+    return { x: BX + c * CWc, y: BY + r * CHc, w: CWc, h: CHc };
+  }
+  function cellCenter(idx) {
+    const rect = cellRect(idx);
+    return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+  }
+
+  /* Animation state */
+  const anim = {
+    phase: "idle",
+    winCells: {},          // index → true (highlight)
+    winGroups: [],         // [{ symbol, cells, color }]
+    particles: [],
+    ripples: [],
+    glowPhase: 0,
+    lastFrame: performance.now(),
+    shake: 0,
+    // per-cell y offset for falling animation
+    falls: {},             // idx → { offset (in cells), t0, dur, isNew }
+    // per-cell reveal progress for mystery flip
+    reveals: {},           // idx → t (0..1)
+    // per-cell pop (dying winner)
+    pops: {},              // idx → t (0..1)
+    // banner text
+    banner: null
+  };
+
+  state.board = GameEngine.generateBoard();
+  state.hiddenMask = new Array(CONFIG.totalCells).fill(false);
+
+  /* Helpers */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  function spawnParticles(cx, cy, count, colors, opts) {
+    opts = opts || {};
+    for (let i = 0; i < count; i++) {
+      const a = RNG.int(360) * Math.PI / 180;
+      const sp = (opts.speed || 100) + RNG.int(160);
+      anim.particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp * 0.1,
+        vy: Math.sin(a) * sp * 0.1 - 1.6,
+        size: (opts.minSize || 2) + RNG.int(opts.sizeRange || 3),
+        rot: RNG.int(360) * Math.PI / 180,
+        vr: (RNG.int(200) - 100) / 300,
+        col: colors[RNG.int(colors.length)],
+        life: 1, maxLife: 700 + RNG.int(600),
+        square: opts.square !== false
+      });
+    }
+  }
+  function spawnRipple(cx, cy, maxR, col) {
+    anim.ripples.push({ x: cx, y: cy, r: maxR * 0.2, maxR, col, life: 1 });
+  }
+
+  /* Draw a "?" cell */
+  function drawMysteryCell(x, y, w, h, t) {
+    // t: 0 = still "?", 1 = fully revealed
+    // We show the ? for t < 0.5, and flip to the symbol after
+    const pad = Math.min(w, h) * 0.06;
+    const px = x + pad, py = y + pad;
+    const pw = w - pad * 2, ph = h - pad * 2;
+
+    // Plate
+    ctx.save();
+    ctx.beginPath();
+    roundRect(ctx, px, py, pw, ph, Math.min(pw, ph) * 0.16);
+    const grad = ctx.createRadialGradient(px + pw / 2, py + ph / 2, 4, px + pw / 2, py + ph / 2, pw);
+    grad.addColorStop(0, "rgba(120,60,200,0.35)");
+    grad.addColorStop(1, "rgba(20,4,26,0.85)");
+    ctx.fillStyle = grad;
+    ctx.fill();
+    const pulse = 0.6 + Math.sin(anim.glowPhase * 4) * 0.4;
+    ctx.shadowColor = "#a78bfa";
+    ctx.shadowBlur = 14 + pulse * 12;
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = "rgba(167,139,250,0.9)";
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // "?" glyph
+    const bigQ = t < 0.5;
+    const scaleX = bigQ ? 1 : Math.max(0.05, Math.abs(1 - (t - 0.5) * 2));
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2);
+    ctx.scale(scaleX, 1);
+    ctx.font = "900 " + Math.floor(Math.min(pw, ph) * 0.55) + "px 'Cinzel', serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#a78bfa";
+    ctx.shadowBlur = 20;
+    ctx.fillText("?", 0, 0);
+    ctx.restore();
+
+    // Reveal flash
+    if (t > 0.4 && t < 0.8) {
+      const flash = 1 - Math.abs(t - 0.6) / 0.2;
+      ctx.globalAlpha = Math.max(0, flash) * 0.6;
+      ctx.fillStyle = "#a78bfa";
+      ctx.fillRect(px, py, pw, ph);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
+  /* Draw a symbol cell */
+  function drawSymbolCell(idx, now, dt) {
+    const rect = cellRect(idx);
+    const pad = Math.min(rect.w, rect.h) * 0.06;
+    const px = rect.x + pad, py = rect.y + pad;
+    const pw = rect.w - pad * 2, ph = rect.h - pad * 2;
+    const symId = state.board[idx];
+    const sym = SYMBOLS[symId];
+    if (!sym) return;
+
+    const isWin = anim.winCells[idx] === true;
+    const isMysteryHidden = state.hiddenMask[idx] === true;
+
+    // If this cell is mystery and hasn't been revealed yet, we still draw
+    // the "?" for the reveal animation.  The reveal t value comes from
+    // anim.reveals[idx] or 0 if not started.
+    if (isMysteryHidden && anim.reveals[idx] !== undefined) {
+      drawMysteryCell(rect.x, rect.y, rect.w, rect.h, anim.reveals[idx]);
+      return;
+    }
+    if (isMysteryHidden) {
+      drawMysteryCell(rect.x, rect.y, rect.w, rect.h, 0);
+      return;
+    }
+
+    // Falling animation
+    let dy = 0, alpha = 1;
+    const fall = anim.falls[idx];
+    if (fall) {
+      const p = Math.min(1, (now - fall.t0) / fall.dur);
+      const eased = easeOutCubic(p);
+      dy = fall.offset * CHc * (1 - eased);
+      if (fall.isNew) alpha = Math.min(1, 0.2 + eased * 0.8);
+      if (p >= 1) delete anim.falls[idx];
+    }
+
+    // Pop (dying winner)
+    let popScale = 1, popAlpha = 1, popRot = 0;
+    const pop = anim.pops[idx];
+    if (pop) {
+      const p = Math.min(1, (now - pop.t0) / pop.dur);
+      popScale = 1 + p * 0.35;
+      popAlpha = 1 - p * p;
+      popRot = p * 0.35;
+      if (p >= 1) delete anim.pops[idx];
+    }
+
+    // Spin flicker: while spinning, cells show random symbols
+    let symbolToDraw = symId;
+    const isSpinning = anim.phase === "spinning";
+    if (isSpinning) {
+      const pool = ORDER.map(k => SYMBOLS[k]);
+      symbolToDraw = pool[RNG.int(pool.length)].id;
+    }
+
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2 + dy);
+    ctx.rotate(popRot);
+    ctx.scale(popScale, popScale);
+    ctx.globalAlpha = popAlpha * alpha;
+
+    // Plate
+    ctx.beginPath();
+    roundRect(ctx, -pw / 2, -ph / 2, pw, ph, Math.min(pw, ph) * 0.16);
+    if (isWin) {
+      const pulse = 0.6 + Math.sin(anim.glowPhase * 4) * 0.4;
+      ctx.fillStyle = "rgba(244,185,35," + (0.18 + pulse * 0.22) + ")";
+      ctx.shadowColor = "#f4b923";
+      ctx.shadowBlur = 22 + pulse * 16;
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(255,217,104,0.95)";
+    } else {
+      ctx.fillStyle = "rgba(26,5,5,0.72)";
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(244,185,35,0.18)";
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Flame corner ticks (idle)
+    if (!isWin && !isSpinning) {
+      ctx.strokeStyle = "rgba(244,185,35,0.32)";
+      ctx.lineWidth = 1.2;
+      const len = Math.min(pw, ph) * 0.12;
+      const off = Math.min(pw, ph) * 0.13;
+      ctx.beginPath();
+      ctx.moveTo(-pw/2 + off, -ph/2 + off + len);
+      ctx.lineTo(-pw/2 + off, -ph/2 + off);
+      ctx.lineTo(-pw/2 + off + len, -ph/2 + off);
+      ctx.moveTo(pw/2 - off, ph/2 - off - len);
+      ctx.lineTo(pw/2 - off, ph/2 - off);
+      ctx.lineTo(pw/2 - off - len, ph/2 - off);
+      ctx.stroke();
+    }
+
+    // Sprite
+    SpriteLoader.drawTo(ctx, SYMBOLS[symbolToDraw].sprite,
+      -pw / 2 + 5, -ph / 2 + 5, pw - 10, ph - 10, 1);
+
+    ctx.restore();
+  }
+
+  /* Render loop */
+  function render() {
+    const now = performance.now();
+    const dt = Math.min(50, now - anim.lastFrame);
+    anim.lastFrame = now;
+    anim.glowPhase += dt / 220;
+
+    ctx.save();
+    if (anim.shake > 0) {
+      anim.shake = Math.max(0, anim.shake - dt / 100);
+      const s = anim.shake;
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    ctx.clearRect(-20, -20, CW + 40, CH + 40);
+
+    const g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, "rgba(58,15,15,.6)");
+    g.addColorStop(1, "rgba(26,5,5,.85)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // header
+    ctx.font = "900 18px 'Cinzel', Arial";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = state.inFreeSpins ? "#ff5c3c" : "#ffd968";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 18;
+    ctx.fillText(
+      state.inFreeSpins ? "🔥 PHOENIX AWAKENS 🔥" : "🔥 PHOENIX RISING 🔥",
+      CW / 2, BY - 16
+    );
+    ctx.shadowBlur = 0;
+
+    // cells
+    for (let i = 0; i < CONFIG.totalCells; i++) drawSymbolCell(i, now, dt);
+
+    // reveal timers
+    for (const k in anim.reveals) {
+      anim.reveals[k] += dt / 900;
+      if (anim.reveals[k] >= 1) {
+        delete anim.reveals[k];
+        state.hiddenMask[parseInt(k, 10)] = false;
+      }
+    }
+
+    // spin blur overlay
+    if (anim.phase === "spinning") {
+      const grad = ctx.createLinearGradient(0, BY, 0, BY + CONFIG.rows * CHc);
+      grad.addColorStop(0, "rgba(244,185,35,0)");
+      grad.addColorStop(0.5, "rgba(255,246,200,0.14)");
+      grad.addColorStop(1, "rgba(244,185,35,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(BX, BY, CWc * CONFIG.reels, CHc * CONFIG.rows);
+    }
+
+    // ripples
+    anim.ripples = anim.ripples.filter(r => r.life > 0);
+    anim.ripples.forEach(r => {
+      r.r += (r.maxR - r.r) * 0.14;
+      r.life -= dt / 620;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, r.life) * 0.85;
+      ctx.strokeStyle = r.col;
+      ctx.lineWidth = 3.5 * r.life + 0.6;
+      ctx.shadowColor = r.col;
+      ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    });
+
+    // particles
+    anim.particles = anim.particles.filter(p => p.life > 0);
+    anim.particles.forEach(p => {
+      p.x += p.vx * dt * 0.06;
+      p.y += p.vy * dt * 0.06;
+      p.vy += 0.06 * dt * 0.06;
+      p.rot += p.vr * dt * 0.06;
+      p.life -= dt / p.maxLife;
+      const a = Math.max(0, p.life);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.shadowColor = p.col;
+      ctx.shadowBlur = 10;
+      const size = p.size * Math.max(0.15, p.life);
+      if (p.square) ctx.fillRect(-size, -size, size * 2, size * 2);
+      else { ctx.beginPath(); ctx.arc(0,0,size,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+
+    // banner
+    if (anim.banner) {
+      const b = anim.banner;
+      b.life -= dt / 1400;
+      if (b.life <= 0) anim.banner = null;
+      else {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, b.life * 2);
+        ctx.font = "900 32px 'Cinzel', Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 30;
+        ctx.fillText(b.text, CW / 2, BY + (CONFIG.rows * CHc) / 2);
+        ctx.restore();
+      }
+    }
+
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+
+  /* Reveal animation: for each mystery cell, set anim.reveals[idx] = 0 */
+  function playMysteryReveal(mask, onDone) {
+    let anyHidden = false;
+    for (let i = 0; i < mask.length; i++) {
+      if (mask[i]) { anim.reveals[i] = 0; anyHidden = true; }
+    }
+    if (!anyHidden) { onDone(); return; }
+    const revealMs = 900 / (parseFloat(ui.speed.value) || 1);
+    // Particles around mystery cells
+    for (let i = 0; i < mask.length; i++) {
+      if (mask[i]) {
+        const cp = cellCenter(i);
+        spawnParticles(cp.x, cp.y, 6, ["#a78bfa", "#e0e7ff", "#fff"], { square: true });
+        spawnRipple(cp.x, cp.y, 44, "rgba(167,139,250,0.8)");
+      }
+    }
+    Sound.mystery();
+    setTimeout(onDone, revealMs + 200);
+  }
+
+  /* Spin animation for the initial landing */
+  function spinAnimation(board, mask, revealSymbol, callback) {
+    anim.phase = "spinning";
+    anim.winCells = {};
+    anim.winGroups = [];
+    anim.pops = {};
+    anim.falls = {};
+    anim.reveals = {};
+
+    const speed = parseFloat(ui.speed.value) || 1;
+    const dur = 900 / speed;
+    const t0 = performance.now();
+
+    function step() {
+      const p = Math.min(1, (performance.now() - t0) / dur);
+      if (p >= 1) {
+        anim.phase = "evaluating";
+        callback();
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+    step();
+
+    // Random flicker cells during spin: handled in drawSymbolCell
+
+    // Safety auto-finish
+    setTimeout(() => {
+      if (anim.phase === "spinning") {
+        anim.phase = "evaluating";
+        callback();
+      }
+    }, dur + 500);
+  }
+
+  /* Cascade animation: pop winners, fall, drop, then evaluate */
+  function playTumble(moves, onDone) {
+    anim.phase = "tumbling";
+
+    // Pop winners
+    const speed = parseFloat(ui.speed.value) || 1;
+    const popDur = 320 / speed;
+    const popT0 = performance.now();
+    Object.keys(anim.winCells).forEach(k => {
+      const idx = parseInt(k, 10);
+      const cp = cellCenter(idx);
+      anim.pops[idx] = popT0;
+      spawnParticles(cp.x, cp.y, 6, ["#ffd968", "#e63946", "#fff"], { square: true });
+      spawnRipple(cp.x, cp.y, 44, "#e63946");
+    });
+    anim.shake = Math.min(12, anim.shake + 6);
+    Sound.tumble(GameEngine.state.cascadeStep);
+
+    setTimeout(function() {
+      anim.winCells = {};
+      anim.winGroups = [];
+
+      // Fall animation
+      const fallDur = 420 / speed;
+      const fallT0 = performance.now();
+      moves.forEach(m => {
+        anim.falls[m.index] = {
+          offset: m.fromRow,
+          t0: fallT0,
+          dur: fallDur,
+          isNew: m.isNew
+        };
+      });
+      setTimeout(onDone, fallDur + 80 / speed);
+    }, popDur);
+  }
+
+  /* The main spin flow */
+  function runSpin() {
+    const init = GameEngine.startSpin();
+    if (init.error) {
+      toast("Not enough credits — lower your bet or reset.");
+      return;
+    }
+    state.phase = "spinning";
+    state.lastWin = 0;
+    state.spinWin = 0;
+    updateUI(true);
+    Sound.spin();
+
+    // Update badge
+    ui.chainBadge.classList.add("on");
+    ui.chainVal.textContent = "1";
+
+    // 1. Play the initial spin landing
+    spinAnimation(init.board, init.mask, init.revealSymbol, function() {
+      // 2. Reveal mystery cells
+      playMysteryReveal(init.mask, function() {
+        // 3. Check free spin trigger
+        let triggeredFS = 0;
+        if (init.sunCount >= 4) {
+          if (state.inFreeSpins) {
+            triggeredFS = CONFIG.freeSpins.retrigger ? CONFIG.freeSpins.retriggerAdd : 0;
+          } else {
+            const th = CONFIG.scatter.thresholds;
+            for (let i = 0; i < th.length; i++) {
+              if (init.sunCount >= th[i].min) { triggeredFS = th[i].freeSpins; break; }
+            }
+          }
+          if (triggeredFS > 0) {
+            if (!state.inFreeSpins) {
+              state.inFreeSpins = true;
+              state.freeSpinsLeft = triggeredFS;
+              ui.boardWrap.classList.add("fs");
+              setBg("free");
+              anim.banner = { text: "🔥 " + triggeredFS + " FREE SPINS", color: "#ff5c3c", life: 1 };
+              Sound.scatter();
+              toast("🔥 " + triggeredFS + " FREE SPINS TRIGGERED");
+            } else {
+              state.freeSpinsLeft += triggeredFS;
+              toast("🔥 RETRIGGER +" + triggeredFS + " SPINS");
+              Sound.scatter();
+            }
+            updateUI();
+          }
+        }
+
+        // 4. Begin cascade chain
+        beginChain();
+      });
+    });
+  }
+
+  function beginChain() {
+    const ev = GameEngine.evaluateCurrent();
+
+    if (ev.total <= 0 || ev.wins.length === 0) {
+      setTimeout(finishChain, 300 / (parseFloat(ui.speed.value) || 1));
+      return;
+    }
+
+    // Highlight winning cells
+    anim.winCells = {};
+    anim.winGroups = [];
+    const palette = ["#ffd968", "#ff5c3c", "#e63946", "#ff8c42", "#fff6c8", "#a78bfa"];
+    ev.wins.forEach((w, i) => {
+      const col = palette[i % palette.length];
+      w.cells.forEach(idx => { anim.winCells[idx] = true; });
+      anim.winGroups.push({ symbol: w.symbol, cells: w.cells, color: col });
+    });
+
+    // Credit the win
+    GameEngine.addWin(ev.total);
+    Sound.win(ev.total >= GameEngine.bet() * 5);
+    updateUI(true);
+
+    if (state.cascadeStep > 0) {
+      toast("🔥 CASCADE ×" + state.cascadeMultiplier + " · +" + ev.total.toLocaleString());
+    }
+
+    // Build the winning set and tumble
+    const winningIdx = Object.keys(anim.winCells).map(k => parseInt(k, 10));
+    const { moves } = GameEngine.tumble(state.board, winningIdx);
+
+    // Update chain badge
+    ui.chainVal.textContent = String(state.cascadeMultiplier);
+
+    // Give the player a beat to see the highlight before popping
+    setTimeout(function() {
+      playTumble(moves, function() {
+        beginChain();
+      });
+    }, 600 / (parseFloat(ui.speed.value) || 1));
+  }
+
+  function finishChain() {
+    ui.chainBadge.classList.remove("on");
+
+    const res = GameEngine.finalizeSpin();
+    state.phase = "idle";
+
+    ui.history.unshift({
+      ts: new Date(),
+      bet: state.inFreeSpins ? 0 : GameEngine.bet(),
+      win: res.total,
+      free: state.inFreeSpins
+    });
+    if (ui.history.length > 50) ui.history.pop();
+
+    if (res.total > 0) {
+      const ratio = res.total / Math.max(1, GameEngine.bet());
+      let tier = "WIN";
+      if (ratio >= 300) tier = "MEGA WIN";
+      else if (ratio >= 100) tier = "BIG WIN";
+      else if (ratio >= 40) tier = "GREAT WIN";
+      else if (ratio >= 12) tier = "WIN";
+
+      showWinOverlay(res.total, GameEngine.bet(), tier,
+        state.cascadeStep > 0 ? "CASCADE ×" + state.cascadeMultiplier : "");
+    }
+
+    if (!state.inFreeSpins) {
+      ui.boardWrap.classList.remove("fs");
+      setBg("normal");
+    }
+
+    updateUI(true);
+
+    const delay = 700 / (parseFloat(ui.speed.value) || 1);
+    setTimeout(function() {
+      if (state.autoActive && state.autoSpinsLeft > 0 && !document.hidden) {
+        if (GameEngine.canSpin()) {
+          state.autoSpinsLeft--;
+          updateUI();
+          runSpin();
+        } else {
+          stopAuto("Auto-spin stopped — insufficient credits.");
+        }
+      } else if (state.autoActive && state.autoSpinsLeft <= 0) {
+        stopAuto("Auto-spin complete.");
+      } else {
+        updateUI();
+      }
+    }, delay + 400);
+  }
+
+  function showWinOverlay(totalWin, bet, tier, subtitle) {
+    ui.winTier.textContent = tier;
+    ui.winAmt.textContent = "+" + totalWin.toLocaleString();
+    ui.winSub.textContent = subtitle || "";
+    ui.winOv.classList.add("on");
+    const dur = Math.max(1500, 2500 / (parseFloat(ui.speed.value) || 1));
+    setTimeout(() => { ui.winOv.classList.remove("on"); }, dur);
+  }
+
+  function updateUI(pop) {
+    ui.balance.textContent = state.balance.toLocaleString();
+    ui.win.textContent = state.lastWin.toLocaleString();
+    ui.bet.textContent = GameEngine.bet().toLocaleString();
+    if (pop) {
+      ui.balance.classList.remove("pop"); ui.win.classList.remove("pop");
+      void ui.balance.offsetWidth;
+      ui.balance.classList.add("pop"); ui.win.classList.add("pop");
+    }
+    ui.spin.disabled = state.autoActive || !GameEngine.canSpin();
+    ui.autoCnt.textContent = state.autoActive ? "AUTO: " + state.autoSpinsLeft : "";
+    ui.auto.classList.toggle("on", state.autoActive);
+    ui.fsBanner.classList.toggle("on", state.inFreeSpins);
+    ui.fsCount.textContent = state.freeSpinsLeft;
+  }
+
+  /* Sound */
+  const Sound = (function() {
+    let ctxA = null, enabled = true;
+    function ensure() {
+      if (!ctxA) { try { ctxA = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { ctxA = null; } }
+      if (ctxA && ctxA.state === "suspended") ctxA.resume();
+      return ctxA;
+    }
+    function tone(freq, dur, type, vol, when) {
+      if (type === undefined) type = "sine";
+      if (vol === undefined) vol = 0.06;
+      if (when === undefined) when = 0;
+      if (!enabled) return;
+      const c = ensure(); if (!c) return;
+      const t0 = c.currentTime + when;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    return {
+      spin() { tone(240, 0.1, "triangle", 0.05); tone(180, 0.14, "sine", 0.045, 0.05); },
+      win(small) {
+        const notes = small ? [523, 659, 784, 1047] : [523, 659, 784, 1047, 1319, 1568];
+        notes.forEach((f, i) => tone(f, 0.2, "sine", 0.08, i * 0.07));
+      },
+      scatter() {
+        [440, 554, 659, 880, 1108, 1319].forEach((f, i) => tone(f, 0.22, "sine", 0.09, i * 0.07));
+      },
+      tumble(level) {
+        const base = 400 + level * 70;
+        [0, 1.15, 1.35].forEach((m, i) =>
+          tone(base * m, 0.16, "triangle", 0.07, i * 0.05));
+      },
+      mystery() {
+        [620, 740, 880, 1040].forEach((f, i) =>
+          tone(f, 0.14, "triangle", 0.06, i * 0.05));
+      },
+      click() { tone(880, 0.04, "triangle", 0.03); },
+      toggle() { enabled = !enabled; return enabled; }
+    };
+  })();
+
+  /* Auto-spin */
+  function startAuto() {
+    if (state.autoActive) { stopAuto(); return; }
+    if (!GameEngine.canSpin()) { toast("Not enough credits to auto-spin."); return; }
+    state.autoActive = true;
+    state.autoSpinsLeft = state.autoSpinTarget || 25;
+    Sound.click(); updateUI(); runSpin();
+  }
+  function stopAuto(msg) {
+    state.autoActive = false;
+    state.autoSpinsLeft = 0;
+    if (msg) toast(msg);
+    updateUI();
+  }
+
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    el("toasts").appendChild(t);
+    setTimeout(() => t.remove(), 3400);
+  }
+
+  function openModal(id) { el(id).classList.add("on"); }
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.dataset.close !== undefined) m.classList.remove("on");
+    });
+  });
+
+  /* Build paytable modal */
+  function buildPaytable() {
+    const grid = el("paytableGrid");
+    grid.innerHTML = "";
+
+    // Mystery card first
+    const mystery = document.createElement("div");
+    mystery.className = "sym-card mystery";
+    mystery.innerHTML =
+      '<div class="ic">?</div>' +
+      '<div class="nm">Mystery</div>' +
+      '<div class="py">Reveals one symbol</div>';
+    grid.appendChild(mystery);
+
+    // Regular + sun cards
+    ORDER.forEach(id => {
+      const sym = SYMBOLS[id];
+      if (!sym) return;
+      const card = document.createElement("div");
+      card.className = "sym-card" + (sym.bonus ? " bonus" : "");
+      const ic = document.createElement("div"); ic.className = "ic";
+      const img = document.createElement("img");
+      img.src = SpriteLoader.dataUrl(sym.sprite, 96, 96);
+      img.alt = sym.name;
+      ic.appendChild(img); card.appendChild(ic);
+      const nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = sym.name;
+      card.appendChild(nm);
+      const py = document.createElement("div"); py.className = "py";
+      if (sym.bonus) py.textContent = "4+ → FS";
+      else py.textContent = "BASE " + sym.base;
+      card.appendChild(py);
+      grid.appendChild(card);
+    });
+  }
+
+  /* Build tiers modal */
+  function buildTiers() {
+    const list = el("tierList");
+    list.innerHTML = "";
+    CONFIG.tiers.forEach((t, i) => {
+      const li = document.createElement("li");
+      if (i === 0) li.classList.add("top");
+      li.innerHTML = "<span>" + t.min + " symbols</span><b>×" + t.mult + "</b>";
+      list.appendChild(li);
+    });
+  }
+
+  /* Build history */
+  function buildHistory() {
+    const list = el("historyList");
+    if (!ui.history.length) { list.innerHTML = '<li style="color:var(--text-dim)">No spins yet.</li>'; return; }
+    list.innerHTML = ui.history.map(h => {
+      const cls = h.win > 0 ? "" : "loss";
+      const tag = h.free ? " [FS]" : "";
+      return '<li class="' + cls + '"><span>' + h.ts.toLocaleTimeString() + tag +
+        ' · ' + h.bet +
+        '</span><b>+' + h.win.toLocaleString() + '</b></li>';
+    }).join("");
+  }
+
+  /* Events */
+  ui.spin.addEventListener("click", () => { Sound.click(); runSpin(); });
+  ui.auto.addEventListener("click", startAuto);
+  ui.stop.addEventListener("click", () => stopAuto("Auto-spin stopped."));
+
+  el("betDown").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.state.betIndex = Math.max(0, GameEngine.state.betIndex - 1);
+    Sound.click(); updateUI();
+  });
+  el("betUp").addEventListener("click", () => {
+    if (state.phase !== "idle" || state.autoActive) return;
+    GameEngine.state.betIndex = Math.min(CONFIG.betSteps.length - 1, GameEngine.state.betIndex + 1);
+    Sound.click(); updateUI();
+  });
+
+  document.querySelectorAll(".preset-row button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.phase !== "idle" || state.autoActive) return;
+      const p = btn.dataset.preset;
+      if (p === "min") GameEngine.state.betIndex = 0;
+      else if (p === "std") GameEngine.state.betIndex = Math.floor(CONFIG.betSteps.length / 2);
+      else if (p === "max") GameEngine.state.betIndex = CONFIG.betSteps.length - 1;
+      Sound.click(); updateUI();
+    });
+  });
+
+  document.querySelectorAll("#autoRow button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.autoActive) return;
+      state.autoSpinTarget = parseInt(btn.dataset.auto, 10);
+      document.querySelectorAll("#autoRow button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      Sound.click();
+      toast("Auto-spin target: " + state.autoSpinTarget);
+    });
+  });
+
+  el("paytableBtn").addEventListener("click", () => { buildPaytable(); openModal("paytableModal"); });
+  el("tiersBtn").addEventListener("click", () => { buildTiers(); openModal("tiersModal"); });
+  el("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  el("historyBtn").addEventListener("click", () => { buildHistory(); openModal("historyModal"); });
+
+  ui.sound.addEventListener("click", () => {
+    const on = Sound.toggle();
+    ui.sound.textContent = on ? "🔊" : "🔇";
+    ui.sound.classList.toggle("on", on);
+    if (on) Sound.click();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset the demo? Balance will return to " + CONFIG.startingBalance + ".")) return;
+    stopAuto();
+    state.balance = CONFIG.startingBalance;
+    state.betIndex = CONFIG.defaultBetIndex;
+    state.inFreeSpins = false;
+    state.freeSpinsLeft = 0;
+    state.lastWin = 0;
+    state.lastNet = 0;
+    state.spinWin = 0;
+    state.cascadeStep = 0;
+    state.cascadeMultiplier = 1;
+    state.phase = "idle";
+    state.board = GameEngine.generateBoard();
+    state.hiddenMask = new Array(CONFIG.totalCells).fill(false);
+    ui.history = [];
+    anim.winCells = {};
+    anim.winGroups = [];
+    anim.particles = [];
+    anim.ripples = [];
+    anim.falls = {};
+    anim.pops = {};
+    anim.reveals = {};
+    anim.banner = null;
+    ui.chainBadge.classList.remove("on");
+    ui.boardWrap.classList.remove("fs");
+    setBg("normal");
+    updateUI(true);
+    toast("Demo reset.");
+  });
+
+  document.addEventListener("keydown", e => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (!ui.spin.disabled) runSpin();
+    }
+    if (e.code === "Escape") document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on"));
+    if (e.key === "a" || e.key === "A") startAuto();
+    if (e.key === "s" || e.key === "S") stopAuto();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.autoActive) stopAuto("Auto-spin paused (tab inactive).");
+  });
+
+  /* Boot */
+  async function boot() {
+    setBg("normal");
+    await SpriteLoader.load();
+    state.board = GameEngine.generateBoard();
+    state.hiddenMask = new Array(CONFIG.totalCells).fill(false);
+    resize();
+    updateUI();
+    requestAnimationFrame(render);
+    setTimeout(() => toast("Welcome to Phoenix Rising — press IGNITE."), 500);
+  }
+  boot();
+})();
+</script>
+<script src="../../static/js/game-common.js"></script>
+
+<div id="gp-bg"></div>
+<div id="gp-shine"></div>
+<div id="gp-overlay-loading" class="gp-overlay"><img src="../../assets/loading&win.gif" alt="loading"></div>
+<div id="gp-overlay-win" class="gp-overlay"><img src="../../assets/win.gif" alt="win"></div>
+<div id="gp-overlay-tx" class="gp-overlay"><img src="../../assets/transaction.gif" alt="transaction"></div>
+
+<!-- GP-WIN-GIF engine -->
+<style id="gp-win-gif-style">
+.gp-overlay{position:fixed;inset:0;z-index:9990;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-direction:column;pointer-events:none}
+.gp-overlay img{max-width:min(82vw,430px);max-height:72vh;animation:gp-ov-pop .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 14px 40px rgba(0,0,0,.55))}
+@keyframes gp-ov-pop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.12);opacity:.92}100%{transform:scale(1);opacity:1}}
+#gp-overlay-loading{z-index:9991}
+#gp-overlay-win{z-index:9992}
+#gp-overlay-tx{z-index:9993}
+</style>
+<script id="gp-win-gif-script">
+(function(){
+  if (window.__gpWinGif) return; window.__gpWinGif = true;
+  var BIG = /\b(?:(?:SUPERNOVA|NOVA|MEGA|BIG|SUPER|ULTRA|EPIC|GRAND|JACKPOT|LEGENDARY|MYTHIC)\b[\s!]*WIN|MEGAWIN)\b/i;
+  var busy = false;
+  function ov(id){ return document.getElementById(id); }
+  function show(el){ if (el) el.style.display = 'flex'; }
+  function hide(el){ if (el) el.style.display = 'none'; }
+  function visible(el){
+    if (!el) return false;
+    var st = window.getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    if (parseFloat(st.opacity || '1') < 0.05) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+  function overlayish(el){
+    for (var p = el, i = 0; p && i < 4; p = p.parentElement, i++){
+      var st = window.getComputedStyle(p);
+      if (st.position === 'fixed' || st.position === 'absolute') return true;
+      var idc = ((p.id || '') + ' ' + (typeof p.className === 'string' ? p.className : '')).toLowerCase();
+      if (/win|tier|ov|modal|box/.test(idc)) return true;
+    }
+    return false;
+  }
+  window.gpPlayBigWinGif = function(){
+    if (busy) return; busy = true;
+    var lo = ov('gp-overlay-loading'), w = ov('gp-overlay-win');
+    show(lo);
+    setTimeout(function(){
+      hide(lo); show(w);
+      setTimeout(function(){ hide(w); busy = false; }, 2100);
+    }, 650);
+  };
+  function check(node, defer){
+    if (!node || node.nodeType !== 1) return;
+    if (!visible(node)){
+      if (!defer){
+        var probe = ((node.id || '') + ' ' + (typeof node.className === 'string' ? node.className : '')).toLowerCase();
+        var probeTxt = (node.textContent || '').slice(0, 160);
+        if (/win|overlay|modal|tier|box/.test(probe) || BIG.test(probeTxt)){
+          setTimeout(function(){ check(node, true); }, 260);
+        }
+      }
+      return;
+    }
+    if (!overlayish(node)) return;
+    var t = (node.textContent || '').slice(0, 160);
+    var dt = (node.getAttribute && node.getAttribute('data-tier')) || '';
+    if (BIG.test(t) || BIG.test(dt)) window.gpPlayBigWinGif();
+  }
+  function start(){
+    var mo = new MutationObserver(function(muts){
+      for (var i = 0; i < muts.length; i++){
+        var m = muts[i];
+        if (m.type === 'attributes') check(m.target);
+        else if (m.type === 'childList'){
+          for (var j = 0; j < m.addedNodes.length; j++){
+            var n = m.addedNodes[j];
+            check(n && n.nodeType === 3 ? n.parentElement : n);
+          }
+        }
+        else if (m.type === 'characterData'){
+          check(m.target && m.target.parentElement);
+        }
+      }
+    });
+    mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'data-tier'], childList: true, characterData: true });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+<a class="static-demo-lobby" href="../../index.html">← LOBBY</a>
+<style>.static-demo-lobby{position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,215,120,.65);border-radius:999px;background:rgba(9,11,27,.88);color:#ffe08b;font:700 11px system-ui,sans-serif;letter-spacing:1px;text-decoration:none;box-shadow:0 4px 20px #0008;backdrop-filter:blur(8px)}.static-demo-lobby:hover{background:#21183a}</style>
+</body>
+</html>
